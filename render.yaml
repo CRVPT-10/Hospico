@@ -22,7 +22,7 @@ services:
     dockerfilePath: ./hospico-frontend-main/Dockerfile
     envVars:
       - key: REACT_APP_API_URL
-        value: https://your-backend-service.onrender.com
+        value: https://hospital-finder-backend-ls4y.onrender.com
 
 databases:
   - name: hospital-db
