@@ -1,4 +1,3 @@
-import React from 'react';
 import { Phone, MapPin, AlertTriangle, Ambulance, ChevronFirst as FirstAid, Clock } from 'lucide-react';
 
 export default function Emergency() {

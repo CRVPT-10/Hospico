@@ -35,7 +35,7 @@ export default function Profile() {
   useEffect(() => {
     console.log("Auth state:", { user, isAuthenticated });
     if (user?.id) {
-      fetchUserProfile(parseInt(user.id));
+      fetchUserProfile();
     } else {
       // If we don't have user data, try to fetch it
       fetchCurrentUserProfile();
@@ -101,7 +101,7 @@ export default function Profile() {
     }
   };
 
-  const fetchUserProfile = async (userId: number) => {
+  const fetchUserProfile = async () => {
     try {
       setLoading(true);
       // Use the users/me endpoint instead of users/{id}
@@ -228,7 +228,7 @@ export default function Profile() {
     setError(null);
     setLoading(true);
     if (user?.id) {
-      fetchUserProfile(parseInt(user.id));
+      fetchUserProfile();
     } else {
       fetchCurrentUserProfile();
     }

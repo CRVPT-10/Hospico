@@ -1,5 +1,4 @@
-import React from 'react';
-import { Building2, Target, Users, Award } from 'lucide-react';
+import { Target, Users, Award } from 'lucide-react';
 
 export default function About() {
   return (

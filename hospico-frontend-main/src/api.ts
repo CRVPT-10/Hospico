@@ -1,7 +1,7 @@
 import axios, { AxiosError, type Method } from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080"; // Updated to match backend
+  import.meta.env.REACT_APP_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 // Function to get JWT token from localStorage or cookies
 const getAuthToken = (): string | null => {
@@ -13,7 +13,7 @@ const getAuthToken = (): string | null => {
   
   // If not in localStorage, try to get from cookies
   const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
+  for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
     if (name === 'jwt_token') {
       return value;

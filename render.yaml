@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: hospital-finder-backend
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        value: jdbc:postgresql://hospital-db:5432/hospital_booking
+      - key: DATABASE_USERNAME
+        value: postgres
+      - key: DATABASE_PASSWORD
+        value: postgres
+
+  - type: web
+    name: hospital-finder-frontend
+    env: docker
+    plan: free
+    dockerfilePath: ./hospico-frontend-main/Dockerfile
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://your-backend-service.onrender.com
+
+databases:
+  - name: hospital-db
+    databaseName: hospital_booking
+    user: postgres
+    plan: free

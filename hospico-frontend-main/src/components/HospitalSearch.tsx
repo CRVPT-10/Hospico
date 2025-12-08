@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
-import NearbyHospitals from "./NearbyHospitals";
-
-interface Props {
-  defaultCity?: string;
-}
 
 interface Specialization {
   id: number;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, Clock, Bell, Shield, Building2, BarChart as ChartBar, Users, Smartphone } from 'lucide-react';
 
 export default function Services() {

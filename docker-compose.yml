@@ -1,0 +1,53 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:13
+    container_name: hospital_db
+    environment:
+      POSTGRES_DB: hospital_booking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hospital_network
+
+  # Backend Spring Boot Application
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hospital_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://db:5432/hospital_booking
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=postgres
+    depends_on:
+      - db
+    networks:
+      - hospital_network
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./hospico-frontend-main
+      dockerfile: Dockerfile
+    container_name: hospital_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - hospital_network
+
+volumes:
+  postgres_data:
+
+networks:
+  hospital_network:
+    driver: bridge
