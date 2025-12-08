@@ -47,7 +47,7 @@ export default function Profile() {
       setLoading(true);
       // First try to get current user info from users/me endpoint
       const authUserData = await apiRequest<any>(
-        "http://localhost:8080/api/users/me",
+        "/api/users/me",
         "GET"
       );
       
@@ -80,22 +80,10 @@ export default function Profile() {
         if (err.response.status === 401) {
           errorMessage = "Session expired: Please log in again";
         } else if (err.response.status === 403) {
-          errorMessage = "Access denied: Please log in again";
-        } else if (err.response.data && err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else {
-          errorMessage = `Server error: ${err.response.status}`;
+          errorMessage = "Access denied: Insufficient permissions";
         }
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = "Network error: Unable to connect to server";
-      } else if (err.message) {
-        // Something else happened
-        errorMessage = err.message;
       }
-      
       setError(errorMessage);
-      console.error("Profile fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -104,67 +92,34 @@ export default function Profile() {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      // Use the users/me endpoint instead of users/{id}
-      const authUserData = await apiRequest<any>(
-        "http://localhost:8080/api/users/me",
+      const userData = await apiRequest<any>(
+        `/api/users/${user?.id}`,
         "GET"
       );
       
-      if (authUserData && authUserData.id) {
-        // Create a UserProfile object from the auth data
-        const userProfile: UserProfile = {
-          id: authUserData.id,
-          name: authUserData.name || "",
-          email: authUserData.email || "",
-          phone: authUserData.phone || "",
-          role: authUserData.role || ""
-        };
-        
-        setProfile(userProfile);
-        setEditData({
-          name: userProfile.name || "",
-          phone: userProfile.phone || "",
-          newPassword: "",
-          confirmPassword: ""
-        });
-      } else {
-        setError("Unable to fetch user profile");
-      }
+      setProfile(userData);
+      setEditData({
+        name: userData.name || "",
+        phone: userData.phone || "",
+        newPassword: "",
+        confirmPassword: ""
+      });
     } catch (err: any) {
-      let errorMessage = "Failed to fetch profile data.";
+      let errorMessage = "Failed to fetch profile data";
       if (err.response) {
-        // Server responded with error status
         if (err.response.status === 401) {
           errorMessage = "Session expired: Please log in again";
         } else if (err.response.status === 403) {
-          errorMessage = "Access denied";
-        } else if (err.response.status === 404) {
-          errorMessage = "User not found";
-        } else if (err.response.data && err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else {
-          errorMessage = `Server error: ${err.response.status}`;
+          errorMessage = "Access denied: Insufficient permissions";
         }
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = "Network error: Unable to connect to server";
-      } else if (err.message) {
-        // Something else happened
-        errorMessage = err.message;
       }
-      
       setError(errorMessage);
-      console.error("Profile fetch error:", err);
-      // If fetching by ID fails, try fetching current user
-      fetchCurrentUserProfile();
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!profile) return;
-
     if (editData.newPassword !== editData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -174,69 +129,41 @@ export default function Profile() {
       setSaving(true);
       setError(null);
       
-      const payload: UpdateProfilePayload = {};
-      if (editData.name) payload.name = editData.name;
-      if (editData.phone) payload.phone = editData.phone;
-      if (editData.newPassword) payload.password = editData.newPassword;
+      const updateData: UpdateProfilePayload = {};
+      if (editData.name !== profile?.name) updateData.name = editData.name;
+      if (editData.phone !== profile?.phone) updateData.phone = editData.phone;
+      if (editData.newPassword) updateData.password = editData.newPassword;
 
-      // Call the update API endpoint
-      const response = await apiRequest<any>(
-        `http://localhost:8080/api/users/${profile.id}`,
-        "PATCH",
-        payload
+      const updatedProfile = await apiRequest<UserProfile>(
+        `/api/users/${user?.id}`,
+        "PUT",
+        updateData
       );
-      
-      if (response) {
-        setSaving(false);
-        setIsEditing(false);
-        // Refresh profile data
-        fetchCurrentUserProfile();
-      } else {
-        throw new Error("Failed to update profile");
-      }
+
+      setProfile(updatedProfile);
+      setIsEditing(false);
     } catch (err: any) {
       let errorMessage = "Failed to update profile";
       if (err.response) {
-        // Server responded with error status
-        if (err.response.status === 401) {
-          errorMessage = "Unauthorized: Please log in again";
+        if (err.response.status === 400) {
+          errorMessage = "Invalid input data";
+        } else if (err.response.status === 401) {
+          errorMessage = "Session expired: Please log in again";
         } else if (err.response.status === 403) {
-          errorMessage = "Forbidden: You don't have permission to update this profile";
+          errorMessage = "Access denied: Cannot update this profile";
         } else if (err.response.status === 404) {
           errorMessage = "User not found";
-        } else if (err.response.data && err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else {
-          errorMessage = `Server error: ${err.response.status}`;
         }
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = "Network error: Unable to connect to server";
-      } else if (err.message) {
-        // Something else happened
-        errorMessage = err.message;
       }
-      
       setError(errorMessage);
-      console.error("Profile update error:", err);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleRetry = () => {
-    setError(null);
-    setLoading(true);
-    if (user?.id) {
-      fetchUserProfile();
-    } else {
-      fetchCurrentUserProfile();
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -244,12 +171,12 @@ export default function Profile() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <p className="text-red-800">{error}</p>
+          <p className="text-red-800 text-center">{error}</p>
           <button
-            onClick={handleRetry}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            onClick={() => window.location.reload()}
+            className="mt-4 w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
             Retry
           </button>
@@ -260,14 +187,14 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md">
-          <p className="text-yellow-800">No profile data available</p>
+      <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
+        <div className="text-center">
+          <p className="text-gray-600">No profile data available</p>
           <button
-            onClick={handleRetry}
-            className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            Retry
+            Reload
           </button>
         </div>
       </div>
@@ -275,191 +202,145 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center">
-                <div className="bg-white p-3 rounded-full">
-                  <User className="h-12 w-12 text-blue-600" />
-                </div>
-                <div className="ml-4 text-white">
-                  <h1 className="text-2xl font-bold">{profile.name || "User"}</h1>
-                  <p className="text-blue-100">{profile.role || "USER"}</p>
-                </div>
-              </div>
-              <div className="mt-4 md:mt-0">
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="flex items-center px-4 py-2 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saving ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Profile Details */}
-          <div className="p-6">
-            {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800">{error}</p>
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex justify-between items-start mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+            {!isEditing ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Save
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditData({
+                      name: profile.name || "",
+                      phone: profile.phone || "",
+                      newPassword: "",
+                      confirmPassword: ""
+                    });
+                    setError(null);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
               </div>
             )}
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Personal Information */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
-                    </label>
+          {error && (
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {/* Avatar and Basic Info */}
+            <div className="flex items-start gap-6">
+              <div className="flex-shrink-0">
+                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
+                  <User className="text-gray-500" size={24} />
+                </div>
+              </div>
+              <div className="flex-1">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) => setEditData({...editData, name: e.target.value})}
+                    className="text-xl font-semibold text-gray-900 border-b border-gray-300 focus:border-blue-500 focus:outline-none pb-1 w-full"
+                  />
+                ) : (
+                  <h2 className="text-xl font-semibold text-gray-900">{profile.name}</h2>
+                )}
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Mail size={16} />
+                    <span>{profile.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone size={16} />
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editData.name}
-                        onChange={(e) => setEditData({...editData, name: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter full name"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{profile.name || "Not provided"}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </label>
-                    <div className="flex items-center">
-                      <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                      <p className="text-gray-900">{profile.email || "Not provided"}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
                         value={editData.phone}
                         onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter phone number"
+                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none pb-1"
                       />
                     ) : (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                        <p className="text-gray-900">{profile.phone || "Not provided"}</p>
-                      </div>
+                      <span>{profile.phone || "No phone number"}</span>
                     )}
                   </div>
                 </div>
               </div>
-
-              {/* Account Settings */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
-                
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        value={editData.newPassword}
-                        onChange={(e) => setEditData({...editData, newPassword: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter new password"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password
-                      </label>
-                      <input
-                        type="password"
-                        value={editData.confirmPassword}
-                        onChange={(e) => setEditData({...editData, confirmPassword: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Confirm new password"
-                      />
-                    </div>
-                    
-                    <div className="text-sm text-gray-500">
-                      <p>Leave password fields empty to keep current password</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password
-                      </label>
-                      <p className="text-gray-900">••••••••</p>
-                      <p className="text-sm text-gray-500 mt-1">Last updated: Not available</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Account Type
-                      </label>
-                      <p className="text-gray-900 capitalize">{profile.role?.toLowerCase() || "user"}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
 
-            {/* Additional Information */}
-            <div className="mt-6 bg-gray-50 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-500">Member Since</p>
-                  <p className="font-medium">Not available</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-500">Total Appointments</p>
-                  <p className="font-medium">0</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-500">Last Login</p>
-                  <p className="font-medium">Not available</p>
+            {/* Role */}
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Role</h3>
+              <p className="mt-1 text-gray-900 capitalize">{profile.role.toLowerCase()}</p>
+            </div>
+
+            {/* Change Password (Edit Mode Only) */}
+            {isEditing && (
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Change Password</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      value={editData.newPassword}
+                      onChange={(e) => setEditData({...editData, newPassword: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      value={editData.confirmPassword}
+                      onChange={(e) => setEditData({...editData, confirmPassword: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

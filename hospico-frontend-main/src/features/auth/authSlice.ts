@@ -3,7 +3,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { apiRequest } from "../../api";
+import { apiRequest, API_BASE_URL } from "../../api";
 
 export type AuthUser = {
   id: string;
@@ -36,7 +36,7 @@ export const login = createAsyncThunk<AuthResponse, Credentials>(
   async (body, { rejectWithValue }) => {
     try {
       const result = await apiRequest<AuthResponse, Credentials>(
-        "http://localhost:8080/api/auth/login",
+        "/api/auth/login",
         "POST",
         body
       );
@@ -53,24 +53,11 @@ export const signup = createAsyncThunk<AuthResponse, SignupPayload>(
   async (body, { rejectWithValue }) => {
     try {
       const result = await apiRequest<AuthResponse, SignupPayload>(
-        "http://localhost:8080/api/auth/signup",
+        "/api/auth/signup",
         "POST",
         body
       );
 
-      return result;
-    } catch (err) {
-      return rejectWithValue((err as Error).message);
-    }
-  }
-);
-
-export const fetchMe = createAsyncThunk<AuthUser>(
-  "api/v1/auth/me",
-  async (_, { rejectWithValue }) => {
-    try {
-      // This endpoint checks JWT validity from cookie
-      const result = await apiRequest<AuthUser>("api/v1/auth/me", "GET");
       return result;
     } catch (err) {
       return rejectWithValue((err as Error).message);
@@ -79,47 +66,16 @@ export const fetchMe = createAsyncThunk<AuthUser>(
 );
 
 export const partnerLogin = createAsyncThunk<AuthResponse, Credentials>(
-  "api/v1/auth/partner/login",
+  "auth/partnerLogin",
   async (body, { rejectWithValue }) => {
     try {
       const result = await apiRequest<AuthResponse, Credentials>(
-        "api/v1/auth/partner/login",
+        "/api/auth/partner/login",
         "POST",
         body
       );
 
       return result;
-    } catch (error) {
-      return rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const partnerGoogleLogin = createAsyncThunk<AuthResponse>(
-  "api/v1/auth/partner/google",
-  async (_body, { rejectWithValue }) => {
-    try {
-      const result = await apiRequest<AuthResponse>(
-        "api/v1/auth/partner/google",
-        "GET"
-      );
-
-      return result;
-    } catch (error) {
-      return rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const logout = createAsyncThunk<void, void>(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      // Clear cookies by setting them to expire in the past
-      document.cookie = "jwt_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      document.cookie = "user_info=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      // Also clear localStorage
-      localStorage.removeItem('jwt_token');
     } catch (err) {
       return rejectWithValue((err as Error).message);
     }
@@ -138,7 +94,25 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearError(state) {
+    logout: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+      // Remove the JWT token from localStorage
+      localStorage.removeItem('jwt_token');
+    },
+    initializeAuth: (state) => {
+      // Check if we have a stored token
+      const token = localStorage.getItem('jwt_token');
+      if (token) {
+        // For now, we'll just set isAuthenticated to true
+        // In a real app, you might want to verify the token
+        state.isAuthenticated = true;
+        state.initialized = true;
+      } else {
+        state.initialized = true;
+      }
+    },
+    clearError: (state) => {
       state.error = null;
     },
   },
@@ -147,8 +121,8 @@ const authSlice = createSlice({
     builder
       .addCase(login.pending, (state) => {
         state.status = "loading";
-        state.initialized = false;
         state.error = null;
+        state.initialized = false;
       })
       .addCase(
         login.fulfilled,
@@ -209,39 +183,40 @@ const authSlice = createSlice({
         state.initialized = true;
       });
 
-    // FETCH ME
+    // PARTNER LOGIN
     builder
-      .addCase(fetchMe.pending, (state) => {
+      .addCase(partnerLogin.pending, (state) => {
         state.status = "loading";
-      })
-      .addCase(fetchMe.fulfilled, (state, action: PayloadAction<AuthUser>) => {
-        state.status = "succeeded";
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.initialized = true;
-      })
-      .addCase(fetchMe.rejected, (state, action) => {
-        state.status = "failed";
-        state.user = null;
-        state.isAuthenticated = false;
-        state.initialized = true;
-        state.error =
-          (action.payload as string) ?? "Failed to fetch user session";
-      });
-
-    // LOGOUT
-    builder
-      .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.status = "idle";
         state.error = null;
+        state.initialized = false;
       })
-      .addCase(logout.rejected, (state, action) => {
+      .addCase(
+        partnerLogin.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.status = "succeeded";
+          if (action.payload && action.payload.id) {
+            state.user = {
+              id: action.payload.id.toString(),
+              email: action.payload.email,
+            };
+          }
+          // Store the JWT token in localStorage
+          if (action.payload && action.payload.token) {
+            localStorage.setItem('jwt_token', action.payload.token);
+          }
+          state.isAuthenticated = true;
+          state.initialized = true;
+        }
+      )
+      .addCase(partnerLogin.rejected, (state, action) => {
         state.status = "failed";
-        state.error = (action.payload as string) ?? "Logout failed";
+        state.error =
+          (action.payload as string) ?? action.error.message ?? "Partner login failed";
+        state.isAuthenticated = false;
+        state.initialized = true;
       });
   },
 });
 
+export const { logout, initializeAuth, clearError } = authSlice.actions;
 export default authSlice.reducer;
