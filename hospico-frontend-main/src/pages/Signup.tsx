@@ -1,21 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppDispatch } from "../store/store";
-import { signup } from "../features/auth/authSlice";
-import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { signup } from "../features/auth/authSlice";
+import { Link, useNavigate } from "react-router-dom";
 import type { RootState } from "../store/store";
 
 const Signup = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { status, isAuthenticated, error } = useSelector((state: RootState) => state.auth);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const { error } = useSelector((state: RootState) => state.auth);
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(signup({ email, password, name }));
+    const resultAction = await dispatch(signup({ email, password, name }));
+    
+    if (signup.fulfilled.match(resultAction)) {
+      navigate("/dashboard"); // Redirect to dashboard after successful signup
+    }
   };
 
   return (
@@ -50,10 +61,11 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
             <button
+              type="submit"
               className="w-full px-4 py-2 sm:py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors text-sm sm:text-base"
-              disabled={!email || !password}
+              disabled={!email || !password || status === "loading"}
             >
-              Create account
+              {status === "loading" ? "Creating account..." : "Create account"}
             </button>
             <p className="text-xs sm:text-sm text-gray-600 text-center">
               Have an account?{" "}
