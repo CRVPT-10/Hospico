@@ -1,7 +1,7 @@
 import DomainAddIcon from "@mui/icons-material/DomainAdd";
 import { useState } from "react";
 import { useAppDispatch } from "../store/store";
-import { partnerLogin } from "../features/auth/authSlice";
+import { login } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 
@@ -13,9 +13,9 @@ const PartnerLogin = () => {
   const [password, setPassword] = useState("");
 
   const handlePartnerLogin = async () => {
-    const resultAction = await dispatch(partnerLogin({ email, password }));
+    const resultAction = await dispatch(login({ email, password }));
 
-    if (partnerLogin.fulfilled.match(resultAction)) {
+    if (login.fulfilled.match(resultAction)) {
       navigate("/");
     }
   };

@@ -65,23 +65,6 @@ export const signup = createAsyncThunk<AuthResponse, SignupPayload>(
   }
 );
 
-export const partnerLogin = createAsyncThunk<AuthResponse, Credentials>(
-  "auth/partnerLogin",
-  async (body, { rejectWithValue }) => {
-    try {
-      const result = await apiRequest<AuthResponse, Credentials>(
-        "/api/auth/partner/login",
-        "POST",
-        body
-      );
-
-      return result;
-    } catch (err) {
-      return rejectWithValue((err as Error).message);
-    }
-  }
-);
-
 const initialState: AuthState = {
   user: null,
   status: "idle",
@@ -179,39 +162,6 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error =
           (action.payload as string) ?? action.error.message ?? "Signup failed";
-        state.isAuthenticated = false;
-        state.initialized = true;
-      });
-
-    // PARTNER LOGIN
-    builder
-      .addCase(partnerLogin.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-        state.initialized = false;
-      })
-      .addCase(
-        partnerLogin.fulfilled,
-        (state, action: PayloadAction<AuthResponse>) => {
-          state.status = "succeeded";
-          if (action.payload && action.payload.id) {
-            state.user = {
-              id: action.payload.id.toString(),
-              email: action.payload.email,
-            };
-          }
-          // Store the JWT token in localStorage
-          if (action.payload && action.payload.token) {
-            localStorage.setItem('jwt_token', action.payload.token);
-          }
-          state.isAuthenticated = true;
-          state.initialized = true;
-        }
-      )
-      .addCase(partnerLogin.rejected, (state, action) => {
-        state.status = "failed";
-        state.error =
-          (action.payload as string) ?? action.error.message ?? "Partner login failed";
         state.isAuthenticated = false;
         state.initialized = true;
       });
