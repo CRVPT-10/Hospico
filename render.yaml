@@ -11,7 +11,7 @@ services:
       - key: DATABASE_URL
         value: jdbc:postgresql://hospital-db:5432/hospital_booking
       - key: DATABASE_USERNAME
-        value: postgres
+        value: hospital_user
       - key: DATABASE_PASSWORD
         value: postgres
 
@@ -27,5 +27,5 @@ services:
 databases:
   - name: hospital-db
     databaseName: hospital_booking
-    user: postgres
+    user: hospital_user
     plan: free
