@@ -8,10 +8,10 @@ RUN apk add --no-cache maven
 WORKDIR /app
 
 # Copy the pom.xml and download dependencies
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-COPY src src
+COPY backend/pom.xml .
+COPY backend/.mvn .mvn
+COPY backend/mvnw .
+COPY backend/src src
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
