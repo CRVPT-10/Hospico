@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: hospital-finder-backend
+    name: hospico-backend
     env: docker
     plan: free
     dockerfilePath: ./backend/Dockerfile
@@ -16,13 +16,13 @@ services:
         value: postgres
 
   - type: web
-    name: hospital-finder-frontend
+    name: hospico-frontend
     env: docker
     plan: free
     dockerfilePath: ./hospico-frontend-main/Dockerfile
     envVars:
       - key: REACT_APP_API_URL
-        value: https://hospital-finder-backend-ls4y.onrender.com
+        value: https://hospico-backend-ls4y.onrender.com
 
 databases:
   - name: hospital-db
