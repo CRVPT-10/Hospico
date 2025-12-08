@@ -37,6 +37,9 @@ public class DataSeeder {
         return args -> {
             // Check if clinics already exist
             if (clinicRepository.count() == 0) {
+                // Get all specializations first
+                List<Specialization> specs = specializationRepository.findAll();
+                
                 // Create sample clinics
                 Clinic clinic1 = new Clinic();
                 clinic1.setName("City General Hospital");
@@ -47,10 +50,13 @@ public class DataSeeder {
                 clinic1.setPhone("+91-80-12345678");
                 clinic1.setImageUrl("/src/assets/images/default-hospital.jpeg");
                 
-                // Get some specializations
-                List<Specialization> specs = specializationRepository.findAll();
                 if (!specs.isEmpty()) {
-                    clinic1.setSpecializations(specs.subList(0, Math.min(3, specs.size())));
+                    // Create new specialization instances to avoid detached entity issues
+                    clinic1.setSpecializations(List.of(
+                        specs.get(0),
+                        specs.size() > 1 ? specs.get(1) : specs.get(0),
+                        specs.size() > 2 ? specs.get(2) : specs.get(0)
+                    ));
                 }
                 
                 clinicRepository.save(clinic1);
@@ -65,7 +71,11 @@ public class DataSeeder {
                 clinic2.setImageUrl("/src/assets/images/default-hospital.jpeg");
                 
                 if (!specs.isEmpty()) {
-                    clinic2.setSpecializations(specs.subList(0, Math.min(2, specs.size())));
+                    // Create new specialization instances to avoid detached entity issues
+                    clinic2.setSpecializations(List.of(
+                        specs.get(0),
+                        specs.size() > 1 ? specs.get(1) : specs.get(0)
+                    ));
                 }
                 
                 clinicRepository.save(clinic2);
