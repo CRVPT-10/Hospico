@@ -1,11 +1,23 @@
 # Use OpenJDK 21 as the base image
 FROM eclipse-temurin:21-jdk-alpine
 
+# Install Maven
+RUN apk add --no-cache maven
+
 # Set the working directory
 WORKDIR /app
 
-# Copy the JAR file from the target directory
-COPY target/backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy the pom.xml and download dependencies
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+COPY src src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests
+
+# Copy the JAR file
+RUN cp target/backend-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose port 8080
 EXPOSE 8080
