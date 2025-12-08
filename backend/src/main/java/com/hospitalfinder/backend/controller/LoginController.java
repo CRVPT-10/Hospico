@@ -49,7 +49,8 @@ public class LoginController {
         jwtCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         jwtCookie.setPath("/");
         jwtCookie.setHttpOnly(true); // For security - prevents XSS
-        jwtCookie.setSecure(false); // Allow HTTP for local development
+        jwtCookie.setSecure(true); // Only sent over HTTPS
+        jwtCookie.setAttribute("SameSite", "None");
         response.addCookie(jwtCookie);
 
         // Create user info cookie (for frontend convenience)
@@ -57,7 +58,8 @@ public class LoginController {
         userCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         userCookie.setPath("/");
         userCookie.setHttpOnly(false); // Allow JavaScript access
-        userCookie.setSecure(false); // Allow HTTP for local development
+        userCookie.setSecure(true);
+        userCookie.setAttribute("SameSite", "None");
         response.addCookie(userCookie);
 
         return ResponseEntity.ok(new LoginResponse(
@@ -67,7 +69,7 @@ public class LoginController {
             user.getEmail(),
             user.getName(),
             user.getRole(),
-            jwtToken  // using the actual JWT token instead of user ID
+            jwtToken
         ));
     }
 
@@ -80,44 +82,43 @@ public class LoginController {
         String token = null;
 
         if (authorization != null && authorization.startsWith("Bearer ")) {
-        token = authorization.substring(7);
+            token = authorization.substring(7);
         } else {
-        // Fallback to cookie named "jwt_token"
-        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (jakarta.servlet.http.Cookie c : cookies) {
-            if ("jwt_token".equals(c.getName())) {
-                token = c.getValue();
-                break;
-            }
+            // Fallback to cookie named "jwt_token"
+            jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (jakarta.servlet.http.Cookie c : cookies) {
+                    if ("jwt_token".equals(c.getName())) {
+                        token = c.getValue();
+                        break;
+                    }
+                }
             }
         }
-        }
-        System.out.println(token);
 
         if (token == null || token.isBlank()) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(new LoginResponse(false, "Missing token", null, null, null, null, null));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new LoginResponse(false, "Missing token", null, null, null, null, null));
         }
 
         String email;
         try {
-        // Assumes JwtService provides a method to extract username/email from token
-        email = jwtService.extractUsername(token);
-        // Optionally validate the token (if your JwtService exposes such method)
-        if (!jwtService.validateToken(token)) {
+            // Assumes JwtService provides a method to extract username/email from token
+            email = jwtService.extractUsername(token);
+            // Optionally validate the token (if your JwtService exposes such method)
+            if (!jwtService.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new LoginResponse(false, "Invalid token", null, null, null, null, null));
+            }
+        } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new LoginResponse(false, "Invalid token", null, null, null, null, null));
-        }
-        } catch (Exception ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(new LoginResponse(false, "Invalid token", null, null, null, null, null));
         }
 
         User user = userRepository.findByEmail(email);
         if (user == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(new LoginResponse(false, "User not found", null, null, null, null, null));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new LoginResponse(false, "User not found", null, null, null, null, null));
         }
 
         return ResponseEntity.ok(new LoginResponse(

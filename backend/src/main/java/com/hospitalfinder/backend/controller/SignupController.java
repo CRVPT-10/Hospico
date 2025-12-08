@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hospitalfinder.backend.dto.LoginResponse;
 import com.hospitalfinder.backend.dto.SignupRequest;
 import com.hospitalfinder.backend.entity.Role;
 import com.hospitalfinder.backend.entity.User;
@@ -31,9 +32,10 @@ public class SignupController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody SignupRequest request, HttpServletResponse response) {
+    public ResponseEntity<LoginResponse> signup(@RequestBody SignupRequest request, HttpServletResponse response) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already registered");
+            return ResponseEntity.badRequest()
+                .body(new LoginResponse(false, "Email already registered", null, null, null, null, null));
         }
 
         User user = new User();
@@ -54,7 +56,7 @@ public class SignupController {
         jwtCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         jwtCookie.setPath("/");
         jwtCookie.setHttpOnly(true); // For security - prevents XSS
-        jwtCookie.setSecure(false); // Only sent over HTTPS
+        jwtCookie.setSecure(true); // Only sent over HTTPS
         jwtCookie.setAttribute("SameSite", "None");
         response.addCookie(jwtCookie);
 
@@ -63,9 +65,18 @@ public class SignupController {
         userCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
         userCookie.setPath("/");
         userCookie.setHttpOnly(false); // Allow JavaScript access
-        userCookie.setSecure(false);
+        userCookie.setSecure(true);
+        userCookie.setAttribute("SameSite", "None");
         response.addCookie(userCookie);
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(new LoginResponse(
+            true,
+            "User registered successfully",
+            user.getId(),
+            user.getEmail(),
+            user.getName(),
+            user.getRole(),
+            jwtToken
+        ));
     }
 }
