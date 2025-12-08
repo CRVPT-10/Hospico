@@ -13,6 +13,9 @@ COPY backend/.mvn .mvn
 COPY backend/mvnw .
 COPY backend/src src
 
+# Make mvnw executable
+RUN chmod +x mvnw
+
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
