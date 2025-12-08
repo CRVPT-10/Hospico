@@ -3,7 +3,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { apiRequest, API_BASE_URL } from "../../api";
+import { apiRequest } from "../../api";
 
 export type AuthUser = {
   id: string;
