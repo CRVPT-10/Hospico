@@ -1,0 +1,194 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Building2, Phone, User, Menu, X, ChevronDown } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
+import { useAppDispatch } from "../store/store";
+import { logout } from "../features/auth/authSlice";
+
+export default function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isResourcesOpen, setIsResourcesOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const { isAuthenticated } = useSelector((s: RootState) => s.auth);
+
+  const mainLinks = [
+    { name: "Find Hospitals", to: "/find-hospitals" },
+    { name: "Emergency", to: "/emergency" },
+  ];
+
+  const resourceLinks = [
+    { name: "Health Resources", to: "/resources" },
+    { name: "Blog", to: "/blog" },
+    { name: "FAQs", to: "/faqs" },
+  ];
+
+  const userLinks = [
+    { name: "My Profile", to: "/profile" },
+    { name: "My Appointments", to: "/appointments" },
+    { name: "Medical Reports", to: "/reports" },
+  ];
+
+  const handleSignOut = async () => {
+    await dispatch(logout());
+    navigate("/");
+  };
+
+  return (
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center h-20">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-2 rounded-lg">
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 text-transparent bg-clip-text">
+              HospiCo
+            </span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden lg:flex items-center space-x-8 ml-12">
+            {mainLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
+
+            {/* Resources Dropdown (hover-based) */}
+            <div
+              className="relative"
+              onMouseEnter={() => setIsResourcesOpen(true)}
+              onMouseLeave={() => setIsResourcesOpen(false)}
+            >
+              <button className="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+                Resources <ChevronDown className="h-4 w-4 ml-1" />
+              </button>
+              {isResourcesOpen && (
+                <div className="absolute top-full left-0 w-48 bg-white rounded-lg shadow-lg py-2">
+                  {resourceLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Right Menu */}
+          <div className="hidden lg:flex items-center space-x-6 ml-auto">
+            <a
+              href="tel:1234567890"
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
+            >
+              <Phone className="h-5 w-5" />
+              <span>1-234-567-890</span>
+            </a>
+
+            {/* Account Dropdown (click-based) */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
+                >
+                  <User className="h-5 w-5" />
+                  <span>Account</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
+                    {userLinks.map((link) => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                    <hr className="my-2" />
+                    <button
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleSignOut();
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <></>
+            )}
+
+            <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200">
+              <Link
+                to="/find-hospitals"
+              >
+                Book Appointment
+              </Link>
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden ml-auto p-2 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden py-4 border-t border-gray-100 space-y-4">
+            {[...mainLinks, ...resourceLinks].map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="block py-2 text-gray-700 hover:text-blue-600"
+              >
+                {link.name}
+              </Link>
+            ))}
+
+            {userLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="block py-2 text-gray-700 hover:text-blue-600"
+              >
+                {link.name}
+              </Link>
+            ))}
+
+            <button className="w-full mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200">
+              Book Appointment
+            </button>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
