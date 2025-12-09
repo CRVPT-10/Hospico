@@ -20,7 +20,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "https://hospico.onrender.com")
+                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
                         .exposedHeaders("Set-Cookie")
@@ -34,7 +34,7 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "https://hospico.onrender.com"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Set-Cookie"));
