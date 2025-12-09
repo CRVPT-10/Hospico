@@ -38,26 +38,6 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Function to get JWT token from localStorage or cookies
-const getAuthToken = (): string | null => {
-  // First try to get from localStorage
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    return token;
-  }
-  
-  // If not in localStorage, try to get from cookies
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'jwt_token') {
-      return value;
-    }
-  }
-  
-  return null;
-};
-
 export async function apiRequest<TResponse, TBody = unknown>(
   path: string,
   method: Method = "GET",
