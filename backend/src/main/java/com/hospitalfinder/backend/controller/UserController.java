@@ -156,9 +156,71 @@ public class UserController {
 
     // 4. Get all users
     @GetMapping
-    public ResponseEntity<?> getAllUsers() {
-        var users = userRepository.findAll();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<?> getAllUsers(
+        @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+        jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            System.out.println("Get all users request");
+            
+            // Extract token from Authorization header or cookies
+            String token = null;
+            
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                token = authorizationHeader.substring(7);
+            } else {
+                // Fallback to cookie named "jwt_token"
+                jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (jakarta.servlet.http.Cookie c : cookies) {
+                        if ("jwt_token".equals(c.getName())) {
+                            token = c.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("Token: " + token);
+            
+            if (token == null || token.isBlank()) {
+                System.out.println("Missing authentication token");
+                return ResponseEntity.status(401).body("Missing authentication token");
+            }
+            
+            // Validate token
+            if (!jwtService.validateToken(token)) {
+                System.out.println("Invalid or expired token");
+                return ResponseEntity.status(401).body("Invalid or expired token");
+            }
+            
+            // Extract user email from token
+            String email = jwtService.extractUsername(token);
+            System.out.println("Email from token: " + email);
+            
+            // Find the user making the request
+            User requestingUser = userRepository.findByEmail(email);
+            if (requestingUser == null) {
+                System.out.println("Requesting user not found");
+                return ResponseEntity.status(401).body("User not found");
+            }
+            
+            System.out.println("Requesting user ID: " + requestingUser.getId() + ", Email: " + requestingUser.getEmail() + ", Role: " + requestingUser.getRole());
+            
+            // Check if the requesting user is an admin
+            if (!"ADMIN".equals(requestingUser.getRole().toString())) {
+                System.out.println("Authorization failed - User is not an admin");
+                return ResponseEntity.status(403).body("Access denied. Admin privileges required.");
+            }
+            
+            System.out.println("Admin authorization successful");
+            
+            var users = userRepository.findAll();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.err.println("Error processing request: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error processing request: " + e.getMessage());
+        }
     }
 
     // 5. Get current user profile (based on JWT token)
@@ -214,6 +276,74 @@ public class UserController {
             System.err.println("Error processing request: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error processing request: " + e.getMessage());
+        }
+    }
+    
+    // 6. Update current user profile (based on JWT token)
+    @PatchMapping("/me")
+    public ResponseEntity<?> updateCurrentUser(
+            @RequestBody UserUpdateDTO dto,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+            jakarta.servlet.http.HttpServletRequest request) {
+        
+        try {
+            System.out.println("Update current user request");
+            
+            // Extract token from Authorization header or cookies
+            String token = null;
+            
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                token = authorizationHeader.substring(7);
+            } else {
+                // Fallback to cookie named "jwt_token"
+                jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (jakarta.servlet.http.Cookie c : cookies) {
+                        if ("jwt_token".equals(c.getName())) {
+                            token = c.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("Token: " + token);
+            
+            if (token == null || token.isBlank()) {
+                return ResponseEntity.status(401).body("Missing authentication token");
+            }
+            
+            // Validate token
+            if (!jwtService.validateToken(token)) {
+                return ResponseEntity.status(401).body("Invalid or expired token");
+            }
+            
+            // Extract user email from token
+            String email = jwtService.extractUsername(token);
+            System.out.println("Email from token: " + email);
+            
+            // Find the user making the request
+            User requestingUser = userRepository.findByEmail(email);
+            if (requestingUser == null) {
+                System.out.println("Requesting user not found");
+                return ResponseEntity.status(401).body("User not found");
+            }
+            
+            System.out.println("Requesting user ID: " + requestingUser.getId() + ", Email: " + requestingUser.getEmail() + ", Role: " + requestingUser.getRole());
+            
+            // Proceed with the update for the current user
+            if (dto.getName() != null) requestingUser.setName(dto.getName());
+            if (dto.getPhone() != null) requestingUser.setPhone(dto.getPhone());
+            if (dto.getPassword() != null) {
+                requestingUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
+            userRepository.save(requestingUser);
+            
+            return ResponseEntity.ok("User updated successfully");
+        } catch (Exception e) {
+            System.err.println("Error updating user: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error updating user: " + e.getMessage());
         }
     }
 }

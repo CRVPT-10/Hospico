@@ -22,7 +22,6 @@ import lombok.Setter;
         name = "clinic",
         uniqueConstraints = @UniqueConstraint(columnNames = {"name", "address", "city"})
 )
-
 @Entity
 public class Clinic {
     @Id
@@ -43,7 +42,7 @@ public class Clinic {
     @JoinTable(
         name = "clinic_specializations",
         joinColumns = @JoinColumn(name = "clinic_id"),
-        inverseJoinColumns = @JoinColumn(name = "specialization_id")
+        inverseJoinColumns = @JoinColumn(name = "specializations_id")  // Changed from specialization_id to specializations_id
     )
     @Getter @Setter
     private Collection<Specialization> specializations = new ArrayList<>();

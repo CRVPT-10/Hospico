@@ -34,14 +34,10 @@ export default function Profile() {
 
   useEffect(() => {
     console.log("Auth state:", { user, isAuthenticated });
-    if (user?.id) {
-      fetchUserProfile();
-    } else {
-      // If we don't have user data, try to fetch it
-      fetchCurrentUserProfile();
-    }
+    // Always fetch the current user profile from the server
+    // This ensures we have the latest and complete user data
+    fetchCurrentUserProfile();
   }, [user, isAuthenticated]);
-
   const fetchCurrentUserProfile = async () => {
     try {
       setLoading(true);
@@ -89,36 +85,6 @@ export default function Profile() {
     }
   };
 
-  const fetchUserProfile = async () => {
-    try {
-      setLoading(true);
-      const userData = await apiRequest<any>(
-        `/api/users/${user?.id}`,
-        "GET"
-      );
-      
-      setProfile(userData);
-      setEditData({
-        name: userData.name || "",
-        phone: userData.phone || "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-    } catch (err: any) {
-      let errorMessage = "Failed to fetch profile data";
-      if (err.response) {
-        if (err.response.status === 401) {
-          errorMessage = "Session expired: Please log in again";
-        } else if (err.response.status === 403) {
-          errorMessage = "Access denied: Insufficient permissions";
-        }
-      }
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (editData.newPassword !== editData.confirmPassword) {
       setError("Passwords do not match");
@@ -135,8 +101,8 @@ export default function Profile() {
       if (editData.newPassword) updateData.password = editData.newPassword;
 
       const updatedProfile = await apiRequest<UserProfile>(
-        `/api/users/${user?.id}`,
-        "PUT",
+        `/api/users/me`,
+        "PATCH",
         updateData
       );
 
