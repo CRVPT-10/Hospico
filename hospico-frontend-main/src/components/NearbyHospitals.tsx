@@ -34,7 +34,7 @@ const NearbyHospitals = ({ latitude, longitude }: NearbyHospitalsProps) => {
       setError(null);
       try {
         const data = await apiRequest<NearbyHospital[]>(
-          `http://localhost:8080/api/clinics/nearby?lat=${latitude}&lng=${longitude}`,
+          `/api/clinics/nearby?lat=${latitude}&lng=${longitude}`,
           "GET"
         );
         setHospitals(data);

@@ -184,7 +184,7 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
     const fetchSpecialties = async () => {
       try {
         const data = await apiRequest<Specialization[]>(
-          "http://localhost:8080/api/specializations",
+          "/api/specializations",
           "GET"
         );
         setSpecialties(data);

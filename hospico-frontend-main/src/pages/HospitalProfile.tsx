@@ -36,11 +36,11 @@ const HospitalProfile = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await apiRequest<Hospital>(
-          `http://localhost:8080/api/clinics/id?id=${id}`,
+        const response = await apiRequest<any>(
+          `/api/clinics/id?id=${id}`,
           "GET"
         );
-        setHospital(data);
+        setHospital(response.data);
       } catch (err) {
         setError((err as Error)?.message || "Failed to load clinic details");
       } finally {

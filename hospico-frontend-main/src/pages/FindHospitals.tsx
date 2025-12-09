@@ -84,7 +84,7 @@ const FindHospitals = () => {
           }
           
           const queryString = params.toString();
-          const url = `http://localhost:8080/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`;
+          const url = `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`;
           
           // Call the sorted-by-distance endpoint
           data = await apiRequest<any[]>(
@@ -102,7 +102,7 @@ const FindHospitals = () => {
           }
           
           const queryString = params.toString();
-          const url = `http://localhost:8080/api/clinics${queryString ? `?${queryString}` : ""}`;
+          const url = `/api/clinics${queryString ? `?${queryString}` : ""}`;
           
           // Call the backend clinics endpoint. We use the absolute URL to ensure it hits port 8080.
           data = await apiRequest<any[]>(
