@@ -42,7 +42,7 @@ public class Clinic {
     @JoinTable(
         name = "clinic_specializations",
         joinColumns = @JoinColumn(name = "clinic_id"),
-        inverseJoinColumns = @JoinColumn(name = "specializations_id")  // Changed from specialization_id to specializations_id
+        inverseJoinColumns = @JoinColumn(name = "specialization_id")  // Reverted to specialization_id
     )
     @Getter @Setter
     private Collection<Specialization> specializations = new ArrayList<>();
