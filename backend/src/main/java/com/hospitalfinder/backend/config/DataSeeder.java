@@ -35,8 +35,9 @@ public class DataSeeder {
     @Bean
     public CommandLineRunner seedClinics(ClinicRepository clinicRepository, SpecializationRepository specializationRepository) {
         return args -> {
-            // Check if clinics already exist
-            if (clinicRepository.count() == 0) {
+            // Check if specific clinics already exist by name to avoid duplicates
+            if (!clinicRepository.existsByName("City General Hospital") && 
+                !clinicRepository.existsByName("Apollo Specialty Clinic")) {
                 // Get all specializations first
                 List<Specialization> specs = specializationRepository.findAll();
                 

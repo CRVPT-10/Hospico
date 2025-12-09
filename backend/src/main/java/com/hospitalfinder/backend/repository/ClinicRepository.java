@@ -21,7 +21,9 @@ public interface ClinicRepository extends JpaRepository<Clinic, Long> {
     List<Clinic> findBySpecialization(@Param("specialization") String specialization);
 
     boolean existsByNameIgnoreCaseAndAddressIgnoreCaseAndCityIgnoreCase(String name, String address, String city);
-
+    
+    boolean existsByName(String name);
+    
     @Query(value = """
     SELECT * FROM clinic c
     WHERE (
@@ -54,4 +56,3 @@ public interface ClinicRepository extends JpaRepository<Clinic, Long> {
     List<Clinic> findAllClinicsOrderedByDistance(@Param("lat") Double latitude, @Param("lng") Double longitude);
 
 }
-
