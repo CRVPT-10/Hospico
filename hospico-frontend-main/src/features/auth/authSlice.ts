@@ -19,7 +19,7 @@ export type AuthState = {
 };
 
 type Credentials = { email: string; password: string };
-type SignupPayload = { email: string; password: string; name?: string };
+type SignupPayload = { email: string; password: string; name?: string; phone?: string };
 // Updated AuthResponse type to match backend response
 export type AuthResponse = {
   success: boolean;

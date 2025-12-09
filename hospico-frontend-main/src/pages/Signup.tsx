@@ -13,6 +13,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -22,7 +23,7 @@ const Signup = () => {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const resultAction = await dispatch(signup({ email, password, name }));
+    const resultAction = await dispatch(signup({ email, password, name, phone }));
     
     if (signup.fulfilled.match(resultAction)) {
       navigate("/dashboard"); // Redirect to dashboard after successful signup
@@ -52,6 +53,13 @@ const Signup = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+              placeholder="Phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
             />
             <input
               className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
