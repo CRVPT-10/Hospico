@@ -119,7 +119,7 @@ const HospitalSearch = () => {
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 sm:p-6">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <div className="relative flex-1">
+          <div className="relative flex-1 sm:flex-[0.80]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
                 className="h-5 w-5 text-gray-400"
@@ -136,13 +136,13 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <input
-              className="block w-full pl-10 pr-16 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search hospitals, specialties…"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
-          <div className="relative flex-1 sm:flex-initial sm:w-48">
+          <div className="relative flex-1 sm:flex-[0.20]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
                 className="h-5 w-5 text-gray-400"
@@ -164,12 +164,23 @@ const HospitalSearch = () => {
                 />
               </svg>
             </div>
-            <input
-              className="block w-full pl-10 pr-16 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Location"
+            <select
+              className="block w-full pl-10 pr-20 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-            />
+            >
+              <option value="">Select City</option>
+              <option value="Vijayawada">Vijayawada</option>
+              <option value="Guntur">Guntur</option>
+              <option value="Visakhapatnam">Visakhapatnam</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Bangalore">Bangalore</option>
+            </select>
+            <div className="absolute inset-y-0 right-14 flex items-center pr-2 pointer-events-none">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
             <button
               className="absolute inset-y-0 right-0 m-1 px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md flex items-center justify-center bg-white hover:bg-blue-50"
               onClick={getCurrentLocation}
