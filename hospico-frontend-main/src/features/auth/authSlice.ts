@@ -8,6 +8,10 @@ import { apiRequest } from "../../api";
 export type AuthUser = {
   id: string;
   email: string;
+  name?: string;
+  phone?: string;
+  age?: number;
+  gender?: string;
 };
 
 export type AuthState = {

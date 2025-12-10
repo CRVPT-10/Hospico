@@ -26,7 +26,6 @@ interface AppointmentBookingProps {
 const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, onClose }: AppointmentBookingProps) => {
   const { user } = useSelector((state: RootState) => state.auth);
   
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
@@ -48,11 +47,10 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
       setLoading(true);
       setError(null);
       try {
-        const data = await apiRequest<Doctor[]>(
+        await apiRequest<Doctor[]>(
           `/api/clinics/${hospitalId}/doctors`,
           "GET"
         );
-        setDoctors(data);
         
         // Pre-fill doctor if provided from props
         if (doctorId) {
