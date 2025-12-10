@@ -55,4 +55,7 @@ public interface ClinicRepository extends JpaRepository<Clinic, Long> {
     """, nativeQuery = true)
     List<Clinic> findAllClinicsOrderedByDistance(@Param("lat") Double latitude, @Param("lng") Double longitude);
 
+    @Query("SELECT DISTINCT c FROM Clinic c LEFT JOIN FETCH c.specializations")
+    List<Clinic> findAllWithSpecializations();
+
 }
