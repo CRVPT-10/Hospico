@@ -22,7 +22,7 @@ public class ClinicService {
     private final SpecializationRepository specializationRepository;
 
 
-    public List<ClinicResponseDTO> getFilteredClinics(String city, String specialization) {
+    public List<ClinicResponseDTO> getFilteredClinics(String city, String specialization, String search) {
         List<Clinic> clinics;
 
         if (city != null && specialization != null) {
@@ -33,6 +33,16 @@ public class ClinicService {
             clinics = clinicRepository.findBySpecialization(specialization); // NEW case
         } else {
             clinics = clinicRepository.findAll();
+        }
+
+        // Apply search filter if provided
+        if (search != null && !search.isEmpty()) {
+            String searchLower = search.toLowerCase();
+            clinics = clinics.stream()
+                    .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
+                                      (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
+                                      (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)))
+                    .collect(Collectors.toList());
         }
 
         return clinics.stream()

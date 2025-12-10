@@ -10,9 +10,52 @@ interface Specialization {
 const HospitalSearch = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("Vijayawada");
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [isGettingLocation, setIsGettingLocation] = useState(true);
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Get user's location on component mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserCoordinates({ lat: latitude, lng: longitude });
+          
+          try {
+            // Use a reverse geocoding service to get the city name
+            const response = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            const data = await response.json();
+            
+            if (data.city) {
+              setSelectedLocation(data.city);
+            } else if (data.locality) {
+              setSelectedLocation(data.locality);
+            } else if (data.principalSubdivision) {
+              setSelectedLocation(data.principalSubdivision);
+            } else {
+              setSelectedLocation("Vijayawada"); // Fallback to default
+            }
+          } catch (error) {
+            console.error("Error getting location name:", error);
+            setSelectedLocation("Vijayawada"); // Fallback to default
+          } finally {
+            setIsGettingLocation(false);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setSelectedLocation("Vijayawada"); // Fallback to default
+          setIsGettingLocation(false);
+        }
+      );
+    } else {
+      setSelectedLocation("Vijayawada"); // Fallback to default
+      setIsGettingLocation(false);
+    }
+  }, []);
 
   const handleSearch = () => {
     // Navigate to protected page with query params

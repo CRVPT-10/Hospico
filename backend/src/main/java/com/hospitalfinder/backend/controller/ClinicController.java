@@ -32,9 +32,10 @@ public class ClinicController {
     @GetMapping
     public List<ClinicResponseDTO> getClinics(
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) String specialization
+            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) String search
     ) {
-        return clinicService.getFilteredClinics(city, specialization);
+        return clinicService.getFilteredClinics(city, specialization, search);
     }
 
     @GetMapping("/nearby")
@@ -94,7 +95,8 @@ public class ClinicController {
             @RequestParam double lat,
             @RequestParam double lng,
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) String specialization
+            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) String search
     ) {
         List<Clinic> clinics;
         
@@ -114,6 +116,15 @@ public class ClinicController {
             clinics = clinics.stream()
                 .filter(clinic -> clinic.getSpecializations().stream()
                        .anyMatch(spec -> spec.getSpecialization().equalsIgnoreCase(specialization)))
+                .collect(Collectors.toList());
+        }
+        
+        // Apply search filter if specified
+        if (search != null && !search.isEmpty()) {
+            String searchLower = search.toLowerCase();
+            clinics = clinics.stream()
+                .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
+                                  (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)))
                 .collect(Collectors.toList());
         }
         

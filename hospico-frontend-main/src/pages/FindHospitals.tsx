@@ -27,7 +27,7 @@ const FindHospitals = () => {
 
   // Parse URL params on mount
   const [query, setQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("Vijayawada");
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedSpecialization, setSelectedSpecialization] = useState("");
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   
@@ -42,8 +42,46 @@ const FindHospitals = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const locParam = urlParams.get("loc");
+    
+    // If location is in URL params, use it; otherwise it will be detected from geolocation
+    if (locParam) {
+      setSelectedLocation(decodeURIComponent(locParam));
+    } else {
+      // Try to detect user's city from geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              );
+              const data = await response.json();
+              if (data.city) {
+                setSelectedLocation(data.city);
+              } else if (data.locality) {
+                setSelectedLocation(data.locality);
+              } else if (data.principalSubdivision) {
+                setSelectedLocation(data.principalSubdivision);
+              } else {
+                setSelectedLocation("Vijayawada");
+              }
+            } catch (error) {
+              console.error("Error getting location:", error);
+              setSelectedLocation("Vijayawada");
+            }
+          },
+          () => {
+            setSelectedLocation("Vijayawada");
+          }
+        );
+      } else {
+        setSelectedLocation("Vijayawada");
+      }
+    }
+    
     setQuery(urlParams.get("q") || "");
-    setSelectedLocation(urlParams.get("loc") || "Vijayawada");
     setSelectedSpecialization(decodeURIComponent(urlParams.get("spec") || ""));
     
     // Check if we have coordinates in the URL for nearby hospitals
@@ -66,66 +104,48 @@ const FindHospitals = () => {
       try {
         let data;
         
-        // If user coordinates are available, fetch hospitals sorted by distance
+        // Build query parameters
+        const params = new URLSearchParams();
+        
+        // Always add city filter
+        if (selectedLocation) {
+          params.append("city", selectedLocation);
+        }
+        
+        // Add specialization filter if specified
+        if (selectedSpecialization) {
+          params.append("specialization", selectedSpecialization);
+        }
+        
+        // Add search query if specified
+        if (query) {
+          params.append("search", query);
+        }
+        
+        // If user coordinates are available, use the sorted-by-distance endpoint
         if (userCoordinates) {
-          // For "Available hospitals" section, use the sorted-by-distance endpoint
-          const params = new URLSearchParams();
           params.append("lat", userCoordinates.lat.toString());
           params.append("lng", userCoordinates.lng.toString());
-          
-          // Add city filter if specified
-          if (selectedLocation) {
-            params.append("city", selectedLocation);
-          }
-          
-          // Add specialization filter if specified
-          if (selectedSpecialization) {
-            params.append("specialization", selectedSpecialization);
-          }
           
           const queryString = params.toString();
           const url = `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`;
           
-          // Call the sorted-by-distance endpoint
-          data = await apiRequest<any[]>(
-            url,
-            "GET"
-          );
+          data = await apiRequest<Hospital[]>(url, "GET");
         } else {
-          // Build query parameters for regular clinics endpoint
-          const params = new URLSearchParams();
-          if (selectedLocation) {
-            params.append("city", selectedLocation);
-          }
-          if (selectedSpecialization) {
-            params.append("specialization", selectedSpecialization);
-          }
-          
           const queryString = params.toString();
           const url = `/api/clinics${queryString ? `?${queryString}` : ""}`;
           
-          // Call the backend clinics endpoint. We use the absolute URL to ensure it hits port 8080.
-          data = await apiRequest<any[]>(
-            url,
-            "GET"
-          );
+          data = await apiRequest<Hospital[]>(url, "GET");
         }
 
         if (!cancelled) {
-          let transformedData = (data || []).map((hospital) => ({
+          const transformedData = (data || []).map((hospital) => ({
             ...hospital,
-            id: hospital.clinicId ? hospital.clinicId.toString() : "unknown", // Ensure `id` is always a string
-            specialties: hospital.specializations || hospital.specializations, // Map `specializations` to `specialties`
-            imageUrl: hospital.imageurl || hospital.imageUrl, // Map `imageurl` to `imageUrl`
-            address: hospital.address, // Map `address` field
+            id: hospital.clinicId ? hospital.clinicId.toString() : "unknown",
+            specialties: hospital.specializations || hospital.specializations,
+            imageUrl: hospital.imageurl || hospital.imageUrl,
+            address: hospital.address,
           }));
-          
-          // If we're using the regular endpoint (not nearby), we need to filter by city if needed
-          if (!userCoordinates && selectedLocation) {
-            transformedData = transformedData.filter(hospital => 
-              hospital.city && hospital.city.toLowerCase() === selectedLocation.toLowerCase()
-            );
-          }
           
           setHospitals(transformedData);
         }
@@ -143,16 +163,14 @@ const FindHospitals = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedLocation, query, selectedSpecialization, userCoordinates]);
+  }, [selectedLocation, selectedSpecialization, userCoordinates, query]);
 
   useEffect(() => {
     console.log("Fetched hospitals:", hospitals);
   }, [hospitals]);
 
-  // Filter hospitals based on search query
-  const filteredHospitals = hospitals.filter((hospital) =>
-    hospital.name.toLowerCase().includes(query.toLowerCase())
-  );
+  // No need for client-side filtering anymore since backend handles it
+  const filteredHospitals = hospitals;
 
   // Function to get the correct image URL
   const getImageUrl = (imageUrl: string | undefined) => {
