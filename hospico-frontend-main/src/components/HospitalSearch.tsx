@@ -206,7 +206,6 @@ const HospitalSearch = () => {
         <span className="whitespace-nowrap">Filter by specialty:</span>
       </div>
       <SpecialtyFilters 
-        userCoordinates={userCoordinates} 
         searchText={searchText}
         selectedLocation={selectedLocation}
       />
@@ -214,8 +213,7 @@ const HospitalSearch = () => {
   );
 };
 
-function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: { 
-  userCoordinates: { lat: number; lng: number } | null; 
+function SpecialtyFilters({ searchText, selectedLocation }: { 
   searchText: string; 
   selectedLocation: string; 
 }) {
