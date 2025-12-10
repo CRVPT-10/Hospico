@@ -1,7 +1,7 @@
 import axios, { AxiosError, type Method } from "axios";
 
-// Use relative paths for all API calls to work with nginx proxy
-const API_BASE_URL = "";
+// Prefer env override in hosted envs; fall back to same-origin proxy
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 // Create an axios instance with default configuration
 const apiClient = axios.create({
