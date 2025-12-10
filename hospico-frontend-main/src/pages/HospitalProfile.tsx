@@ -22,7 +22,7 @@ interface Hospital {
   phone?: string;
   specializations: string[];
   imageUrl?: string;
-  doctors: Doctor[];
+  doctors?: Doctor[];
 }
 
 const HospitalProfile = () => {
@@ -82,25 +82,29 @@ const HospitalProfile = () => {
           ))}
         </ul>
         <h2 className="text-xl font-semibold mb-4">Doctors</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {hospital.doctors.map((doctor) => (
-            <div
-              key={doctor.id}
-              className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center"
-            >
-              <img
-                src={doctor.imageUrl || defaultDoctorImage}
-                alt={doctor.name}
-                className="w-24 h-24 object-cover rounded-full mb-4"
-              />
-              <h3 className="text-lg font-semibold mb-1">{doctor.name}</h3>
-              <p className="text-sm text-gray-600 mb-1">{doctor.qualification}</p>
-              <p className="text-sm text-gray-600 mb-1">{doctor.specialization}</p>
-              <p className="text-sm text-gray-600 mb-1">Experience: {doctor.experience}</p>
-              <p className="text-sm text-gray-600 text-center">{doctor.biography}</p>
-            </div>
-          ))}
-        </div>
+        {hospital.doctors && hospital.doctors.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hospital.doctors.map((doctor) => (
+              <div
+                key={doctor.id}
+                className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center"
+              >
+                <img
+                  src={doctor.imageUrl || defaultDoctorImage}
+                  alt={doctor.name}
+                  className="w-24 h-24 object-cover rounded-full mb-4"
+                />
+                <h3 className="text-lg font-semibold mb-1">{doctor.name}</h3>
+                <p className="text-sm text-gray-600 mb-1">{doctor.qualification}</p>
+                <p className="text-sm text-gray-600 mb-1">{doctor.specialization}</p>
+                <p className="text-sm text-gray-600 mb-1">Experience: {doctor.experience}</p>
+                <p className="text-sm text-gray-600 text-center">{doctor.biography}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600">No doctors available</p>
+        )}
       </div>
     </div>
   );
