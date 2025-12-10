@@ -40,7 +40,8 @@ const HospitalProfile = () => {
           `/api/clinics/id?id=${id}`,
           "GET"
         );
-        setHospital(response.data);
+        // API returns the clinic object directly, not wrapped in .data
+        setHospital(response);
       } catch (err) {
         setError((err as Error)?.message || "Failed to load clinic details");
       } finally {

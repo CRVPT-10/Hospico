@@ -1,16 +1,18 @@
 package com.hospitalfinder.backend.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.hospitalfinder.backend.dto.ClinicRequestDTO;
 import com.hospitalfinder.backend.dto.ClinicResponseDTO;
 import com.hospitalfinder.backend.entity.Clinic;
 import com.hospitalfinder.backend.entity.Specialization;
 import com.hospitalfinder.backend.repository.ClinicRepository;
 import com.hospitalfinder.backend.repository.SpecializationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +53,8 @@ public class ClinicService {
         clinic.setCity(request.getCity());
         clinic.setLatitude(request.getLatitude());
         clinic.setLongitude(request.getLongitude());
+        clinic.setPhone(request.getPhone());
+        clinic.setImageUrl(request.getImageUrl());
 
         // Fetch specializations by IDs
         List<Specialization> specializations = specializationRepository.findAllById(request.getSpecializationIds());
