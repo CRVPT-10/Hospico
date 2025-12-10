@@ -267,12 +267,6 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
     // Append all selected specs as repeated params
     nextSelection.forEach((spec) => params.append("spec", encodeURIComponent(spec)));
     
-    // If we have user coordinates, include them in the navigation
-    if (userCoordinates) {
-      params.append("lat", userCoordinates.lat.toString());
-      params.append("lng", userCoordinates.lng.toString());
-    }
-    
     navigate(`/find-hospitals?${params.toString()}`);
   };
 

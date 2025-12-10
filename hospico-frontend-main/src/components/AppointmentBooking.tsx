@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { apiRequest } from "../api";
+
+interface UserProfile {
+  name?: string;
+  email?: string;
+  phone?: string;
+  age?: number;
+  gender?: string;
+}
 
 interface Doctor {
   id: string;
@@ -40,6 +48,44 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
   const [bookingLoading, setBookingLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [selfBooking, setSelfBooking] = useState<boolean>(true);
+  const [cachedProfile, setCachedProfile] = useState<UserProfile | null>(null);
+
+  // Apply cached profile (or fallback user) to patient fields
+  const applyProfileToFields = useCallback(() => {
+    const source: UserProfile | null = cachedProfile || (user
+      ? {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          age: user.age,
+          gender: user.gender,
+        }
+      : null);
+
+    if (!source) return;
+
+    setPatientName(source.name || source.email?.split("@")[0] || "");
+    setPatientEmail(source.email || "");
+    setPatientPhone(source.phone || "");
+    setPatientAge(source.age ? source.age.toString() : "");
+    setPatientGender(source.gender || "");
+  }, [cachedProfile, user]);
+
+  // Fetch profile to auto-populate patient details
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      try {
+        const profile = await apiRequest<UserProfile>("/api/users/me", "GET");
+        setCachedProfile(profile);
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Load doctors for the selected hospital
   useEffect(() => {
@@ -57,10 +103,6 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
           setSelectedDoctor(doctorId);
         }
         
-        // Pre-fill patient email with user info
-        if (user) {
-          setPatientEmail(user.email || "");
-        }
       } catch (err) {
         setError("Failed to load doctors for this hospital");
         console.error(err);
@@ -71,6 +113,12 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
 
     loadDoctors();
   }, [hospitalId, doctorId, user]);
+
+  // Auto-populate when self booking is enabled or when profile changes
+  useEffect(() => {
+    if (!selfBooking) return;
+    applyProfileToFields();
+  }, [selfBooking, cachedProfile, user, applyProfileToFields]);
 
   // Generate time slots when date or doctor changes
   useEffect(() => {
@@ -142,7 +190,7 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
         reason: problem  // Adding the problem/reason field
       };
 
-      const response = await apiRequest<any>(
+      const response = await apiRequest<unknown>(
         "/api/appointments",
         "POST",
         appointmentData
@@ -155,8 +203,9 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
           onClose();
         }, 2000);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to book appointment");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to book appointment";
+      setError(message);
       console.error(err);
     } finally {
       setBookingLoading(false);
@@ -273,20 +322,21 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
                   <input
                     type="checkbox"
                     id="selfCheckbox"
+                    checked={selfBooking}
                     onChange={(e) => {
-                      if (e.target.checked && user) {
-                        // Auto-fill from user data
-                        setPatientName(user.name || user.email?.split('@')[0] || "");
-                        setPatientEmail(user.email || "");
-                        setPatientPhone(user.phone || "");
-                        setPatientAge(user.age ? user.age.toString() : "");
-                        setPatientGender(user.gender || "");
-                      } else {
-                        // Clear all fields
+                      const checked = e.target.checked;
+                      setSelfBooking(checked);
+
+                      if (!checked) {
+                        // Clear all fields when user opts out
                         setPatientName("");
                         setPatientPhone("");
                         setPatientAge("");
                         setPatientGender("");
+                        setPatientEmail("");
+                      } else {
+                        // Re-apply cached profile when opting back in
+                        applyProfileToFields();
                       }
                     }}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"

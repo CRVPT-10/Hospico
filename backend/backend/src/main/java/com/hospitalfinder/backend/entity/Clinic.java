@@ -1,11 +1,22 @@
 package com.hospitalfinder.backend.entity;
 
-import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-
-import java.util.*;
-import lombok.*;
-import org.springframework.data.geo.Point;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
 
 @Table(
         name = "clinic",
@@ -28,14 +39,26 @@ public class Clinic {
     private Double latitude;
     @Getter @Setter
     private Double longitude;
-    @ManyToMany @Getter @Setter
-    private Collection<Specialization> specializations;
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "clinic_specializations",
+        joinColumns = @JoinColumn(name = "clinic_id"),
+        inverseJoinColumns = @JoinColumn(name = "specializations_id")
+    )
+    @Getter @Setter
+    private Collection<Specialization> specializations = new ArrayList<>();
     @Getter @Setter
     private String phone;
     @Getter @Setter @OneToMany(mappedBy = "clinic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Doctor> doctor;
-    @Column(columnDefinition = "geography(Point,4326)") @Getter @Setter
-    private Point location;
+    private List<Doctor> doctors = new ArrayList<>();
+    @Getter @Setter
+    private String website;
+    @Getter @Setter
+    private String timings;
+    @Getter @Setter
+    private Double rating;
+    @Getter @Setter
+    private Integer reviews;
     @Getter @Setter
     private String imageUrl;
 }

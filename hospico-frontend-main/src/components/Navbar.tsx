@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Building2, Phone, User, Menu, X, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -12,6 +12,7 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { isAuthenticated } = useSelector((s: RootState) => s.auth);
 
@@ -31,6 +32,22 @@ export default function Navbar() {
     { name: "My Appointments", to: "/appointments" },
     { name: "Medical Reports", to: "/reports" },
   ];
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const handleSignOut = async () => {
     await dispatch(logout());
@@ -100,7 +117,7 @@ export default function Navbar() {
 
             {/* Account Dropdown (click-based) */}
             {isAuthenticated ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
@@ -116,6 +133,7 @@ export default function Navbar() {
                       <Link
                         key={link.to}
                         to={link.to}
+                        onClick={() => setIsUserMenuOpen(false)}
                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
                       >
                         {link.name}
@@ -126,6 +144,7 @@ export default function Navbar() {
                       className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50"
                       onClick={(e) => {
                         e.preventDefault();
+                        setIsUserMenuOpen(false);
                         handleSignOut();
                       }}
                     >

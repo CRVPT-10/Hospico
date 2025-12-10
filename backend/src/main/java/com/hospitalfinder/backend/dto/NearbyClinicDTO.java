@@ -21,8 +21,10 @@ public class NearbyClinicDTO {
     private List<String> specializations;
     private String phone;
     private String imageUrl;
-    private Double distance; // in kilometers
-    private Integer estimatedTime; // in minutes
+    private Double distance; // in kilometers (legacy)
+    private Double distanceKm; // in kilometers (preferred for clients)
+    private Integer estimatedTime; // in minutes (legacy)
+    private Integer estimatedWaitMinutes; // in minutes (preferred for clients)
 
     public NearbyClinicDTO(Clinic clinic, Double distance, Integer estimatedTime) {
         this.clinicId = clinic.getId();
@@ -38,6 +40,8 @@ public class NearbyClinicDTO {
         this.phone = clinic.getPhone();
         this.imageUrl = clinic.getImageUrl();
         this.distance = distance;
+        this.distanceKm = distance;
         this.estimatedTime = estimatedTime;
+        this.estimatedWaitMinutes = estimatedTime;
     }
 }

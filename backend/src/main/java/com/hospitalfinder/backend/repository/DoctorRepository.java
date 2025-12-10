@@ -9,4 +9,7 @@ import com.hospitalfinder.backend.entity.Doctor;
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     // Find doctors by clinic and specialization
     List<Doctor> findByClinicIdAndSpecializationIgnoreCase(Long clinicId, String specialization);
+
+    // Find all doctors for a clinic
+    List<Doctor> findByClinicId(Long clinicId);
 }

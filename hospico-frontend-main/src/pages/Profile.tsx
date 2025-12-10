@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { User, Mail, Phone, Edit, Save, X } from "lucide-react";
+import { Edit, Mail, Phone, Save, User, X } from "lucide-react";
 import type { RootState } from "../store/store";
 import { apiRequest } from "../api";
 
@@ -10,12 +10,16 @@ type UserProfile = {
   email: string;
   phone: string;
   role: string;
+  age?: number;
+  gender?: string;
 };
 
 type UpdateProfilePayload = {
   name?: string;
   phone?: string;
   password?: string;
+  age?: number;
+  gender?: string;
 };
 
 export default function Profile() {
@@ -25,54 +29,71 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const previousVisits = useMemo(
+    () => [
+      { id: 1, clinic: "City General Hospital", date: "Aug 12, 2024", doctor: "Dr. Sharma", summary: "Follow-up for blood work" },
+      { id: 2, clinic: "Apollo Specialty Clinic", date: "Jun 03, 2024", doctor: "Dr. Patel", summary: "Annual physical and routine check" },
+      { id: 3, clinic: "CareMinus Clinic", date: "Mar 18, 2024", doctor: "Dr. Nair", summary: "Consultation for migraine" }
+    ],
+    []
+  );
+
+  const healthRecords = useMemo(
+    () => [
+      { id: 1, title: "Blood Test Report", date: "Aug 10, 2024", type: "PDF" },
+      { id: 2, title: "X-Ray - Chest", date: "May 22, 2024", type: "Image" },
+      { id: 3, title: "Prescription", date: "Jan 15, 2024", type: "PDF" }
+    ],
+    []
+  );
+
   const [editData, setEditData] = useState({
     name: "",
     phone: "",
+    age: "",
+    gender: "",
     newPassword: "",
     confirmPassword: ""
   });
 
   useEffect(() => {
-    console.log("Auth state:", { user, isAuthenticated });
-    // Always fetch the current user profile from the server
-    // This ensures we have the latest and complete user data
     fetchCurrentUserProfile();
   }, [user, isAuthenticated]);
+
   const fetchCurrentUserProfile = async () => {
     try {
       setLoading(true);
-      // First try to get current user info from users/me endpoint
-      const authUserData = await apiRequest<any>(
-        "/api/users/me",
-        "GET"
-      );
-      
-      console.log("Auth user data:", authUserData);
-      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const authUserData = await apiRequest<any>("/api/users/me", "GET");
+
       if (authUserData && authUserData.id) {
-        // Create a UserProfile object from the auth data
         const userProfile: UserProfile = {
           id: authUserData.id,
           name: authUserData.name || "",
           email: authUserData.email || "",
           phone: authUserData.phone || "",
-          role: authUserData.role || ""
+          role: authUserData.role || "",
+          age: authUserData.age ?? undefined,
+          gender: authUserData.gender ?? undefined
         };
-        
+
         setProfile(userProfile);
         setEditData({
           name: userProfile.name || "",
           phone: userProfile.phone || "",
+          age: userProfile.age ? String(userProfile.age) : "",
+          gender: userProfile.gender || "",
           newPassword: "",
           confirmPassword: ""
         });
       } else {
         setError("Unable to fetch user profile");
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       let errorMessage = "Failed to fetch profile data. Please try logging in again.";
       if (err.response) {
-        // Server responded with error status
         if (err.response.status === 401) {
           errorMessage = "Session expired: Please log in again";
         } else if (err.response.status === 403) {
@@ -94,20 +115,23 @@ export default function Profile() {
     try {
       setSaving(true);
       setError(null);
-      
+
       const updateData: UpdateProfilePayload = {};
       if (editData.name !== profile?.name) updateData.name = editData.name;
       if (editData.phone !== profile?.phone) updateData.phone = editData.phone;
+      if (editData.age !== (profile?.age ? String(profile.age) : "") && editData.age !== "") {
+        updateData.age = Number(editData.age);
+      }
+      if (editData.gender !== (profile?.gender || "")) {
+        updateData.gender = editData.gender || undefined;
+      }
       if (editData.newPassword) updateData.password = editData.newPassword;
 
-      const updatedProfile = await apiRequest<UserProfile>(
-        `/api/users/me`,
-        "PATCH",
-        updateData
-      );
+      const updatedProfile = await apiRequest<UserProfile>("/api/users/me", "PATCH", updateData);
 
       setProfile(updatedProfile);
       setIsEditing(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       let errorMessage = "Failed to update profile";
       if (err.response) {
@@ -168,29 +192,65 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-start mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 py-10">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="rounded-2xl bg-white shadow-sm border border-gray-200 p-6 sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500">
+                <User size={24} />
+              </div>
+              <div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    className="text-2xl font-semibold text-gray-900 rounded-md px-2 py-1 border border-gray-200 focus:border-blue-500 focus:outline-none"
+                  />
+                ) : (
+                  <h1 className="text-2xl font-semibold text-gray-900">{profile.name}</h1>
+                )}
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700 mt-1">
+                  <span className="inline-flex items-center gap-2">
+                    <Mail size={16} />
+                    {profile.email}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Phone size={16} />
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editData.phone}
+                        onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none bg-transparent pb-0.5"
+                      />
+                    ) : (
+                      profile.phone || "No phone number"
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-blue-700 border border-blue-200 shadow-sm hover:bg-blue-50"
               >
                 <Edit size={16} />
-                Edit
+                Edit Profile
               </button>
             ) : (
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white shadow hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                       Saving...
                     </>
                   ) : (
@@ -206,12 +266,14 @@ export default function Profile() {
                     setEditData({
                       name: profile.name || "",
                       phone: profile.phone || "",
+                      age: profile.age ? String(profile.age) : "",
+                      gender: profile.gender || "",
                       newPassword: "",
                       confirmPassword: ""
                     });
                     setError(null);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                 >
                   <X size={16} />
                   Cancel
@@ -221,92 +283,151 @@ export default function Profile() {
           </div>
 
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Avatar and Basic Info */}
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
-                  <User className="text-gray-500" size={24} />
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-full rounded-xl border border-gray-100 bg-gray-50 p-4 sm:p-5 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-gray-700 tracking-wide uppercase">Contact & Identity</h2>
+                <span className="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700 capitalize">{profile.role.toLowerCase()}</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Full Name</p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.name}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-medium">{profile.name}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="text-gray-900 font-medium break-all">{profile.email}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Phone</p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.phone}
+                      onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-medium">{profile.phone || "No phone number"}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Age</p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min={0}
+                      value={editData.age}
+                      onChange={(e) => setEditData({ ...editData, age: e.target.value })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-medium">{profile.age ?? "Not set"}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Gender</p>
+                  {isEditing ? (
+                    <select
+                      value={editData.gender}
+                      onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  ) : (
+                    <p className="text-gray-900 font-medium">{profile.gender || "Not set"}</p>
+                  )}
                 </div>
               </div>
-              <div className="flex-1">
-                {isEditing ? (
+            </div>
+
+            <div className="h-full rounded-xl border border-gray-100 bg-white shadow-sm p-4 sm:p-5 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-gray-700 tracking-wide uppercase">Previous Visits</h2>
+                <span className="text-xs text-gray-500">Recent 3</span>
+              </div>
+              <div className="space-y-3">
+                {previousVisits.map((visit) => (
+                  <div key={visit.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-gray-900 font-medium">{visit.clinic}</p>
+                        <p className="text-sm text-gray-600">{visit.doctor}</p>
+                      </div>
+                      <span className="text-xs text-gray-500">{visit.date}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{visit.summary}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-4 sm:p-5">
+              <h2 className="text-sm font-semibold text-gray-700 tracking-wide uppercase mb-4">Change Password</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">New Password</p>
                   <input
-                    type="text"
-                    value={editData.name}
-                    onChange={(e) => setEditData({...editData, name: e.target.value})}
-                    className="text-xl font-semibold text-gray-900 border-b border-gray-300 focus:border-blue-500 focus:outline-none pb-1 w-full"
+                    type="password"
+                    id="newPassword"
+                    value={editData.newPassword}
+                    onChange={(e) => setEditData({ ...editData, newPassword: e.target.value })}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter new password"
                   />
-                ) : (
-                  <h2 className="text-xl font-semibold text-gray-900">{profile.name}</h2>
-                )}
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Mail size={16} />
-                    <span>{profile.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone size={16} />
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editData.phone}
-                        onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none pb-1"
-                      />
-                    ) : (
-                      <span>{profile.phone || "No phone number"}</span>
-                    )}
-                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Confirm Password</p>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={editData.confirmPassword}
+                    onChange={(e) => setEditData({ ...editData, confirmPassword: e.target.value })}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    placeholder="Confirm new password"
+                  />
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Role */}
-            <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Role</h3>
-              <p className="mt-1 text-gray-900 capitalize">{profile.role.toLowerCase()}</p>
+          <div className="mt-6 rounded-xl border border-gray-100 bg-white shadow-sm p-4 sm:p-5">
+            <div className="flex itemscenter justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-700 tracking-wide uppercase">Health Records</h2>
+              <button className="text-sm font-medium text-blue-600 hover:text-blue-700">Upload</button>
             </div>
-
-            {/* Change Password (Edit Mode Only) */}
-            {isEditing && (
-              <div className="pt-4 border-t border-gray-200">
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Change Password</h3>
-                <div className="space-y-4">
+            <div className="space-y-3">
+              {healthRecords.map((record) => (
+                <div key={record.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3 flex items-center justify-between">
                   <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      value={editData.newPassword}
-                      onChange={(e) => setEditData({...editData, newPassword: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter new password"
-                    />
+                    <p className="text-gray-900 font-medium">{record.title}</p>
+                    <p className="text-xs text-gray-500">{record.date}</p>
                   </div>
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                      Confirm Password
-                    </label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      value={editData.confirmPassword}
-                      onChange={(e) => setEditData({...editData, confirmPassword: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Confirm new password"
-                    />
-                  </div>
+                  <span className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">{record.type}</span>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
       </div>

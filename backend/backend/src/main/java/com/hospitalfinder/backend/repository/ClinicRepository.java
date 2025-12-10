@@ -1,6 +1,7 @@
 package com.hospitalfinder.backend.repository;
 
 import com.hospitalfinder.backend.entity.Clinic;
+import com.hospitalfinder.backend.repository.projection.ClinicDistanceProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,16 +23,27 @@ public interface ClinicRepository extends JpaRepository<Clinic, Long> {
     boolean existsByNameIgnoreCaseAndAddressIgnoreCaseAndCityIgnoreCase(String name, String address, String city);
 
     @Query(value = """
-        SELECT *, 
-        ( 6371 * acos(
-            cos(radians(:lat)) * cos(radians(latitude)) * 
-            cos(radians(longitude) - radians(:lng)) + 
-            sin(radians(:lat)) * sin(radians(latitude))
-        )) AS distance 
-        FROM clinic 
+        SELECT 
+            c.id as id,
+            c.name as name,
+            c.address as address,
+            c.city as city,
+            c.latitude as latitude,
+            c.longitude as longitude,
+            c.phone as phone,
+            c.timings as timings,
+            c.rating as rating,
+            c.reviews as reviews,
+            c.image_url as imageUrl,
+            ( 6371 * acos(
+                cos(radians(:lat)) * cos(radians(c.latitude)) * 
+                cos(radians(c.longitude) - radians(:lng)) + 
+                sin(radians(:lat)) * sin(radians(c.latitude))
+            )) AS distance
+        FROM clinic c
         ORDER BY distance ASC
         """, nativeQuery = true)
-    List<Clinic> findNearestClinics(@Param("latitude") Double latitude, @Param("longitude") Double longitude);
+    List<ClinicDistanceProjection> findNearestClinics(@Param("lat") Double latitude, @Param("lng") Double longitude);
 
 }
 

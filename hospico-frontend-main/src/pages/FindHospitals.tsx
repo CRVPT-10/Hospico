@@ -5,7 +5,6 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import { apiRequest } from "../api";
 import defaultHospitalImage from "../assets/images/default-hospital.jpeg";
 import NearbyHospitals from "../components/NearbyHospitals";
-import AppointmentBooking from "../components/AppointmentBooking";
 
 interface Hospital {
   id: string;
@@ -30,10 +29,6 @@ const FindHospitals = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-  
-  // State for appointment booking modal
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(null);
 
   // Data states
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -280,16 +275,6 @@ const FindHospitals = () => {
                       >
                         View Details
                       </button>
-                      <button 
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium text-sm transition-colors flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedHospitalId(hospital.id);
-                          setShowBookingModal(true);
-                        }}
-                      >
-                        Book Appointment
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -298,16 +283,6 @@ const FindHospitals = () => {
           </div>
         </div>
         
-        {/* Appointment Booking Modal */}
-        {showBookingModal && selectedHospitalId && (
-          <AppointmentBooking 
-            hospitalId={selectedHospitalId}
-            onClose={() => {
-              setShowBookingModal(false);
-              setSelectedHospitalId(null);
-            }}
-          />
-        )}
       </div>
     </ProtectedRoute>
   );

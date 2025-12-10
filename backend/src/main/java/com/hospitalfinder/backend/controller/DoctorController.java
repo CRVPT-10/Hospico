@@ -52,7 +52,7 @@ public class DoctorController {
         if (specialization != null && !specialization.isEmpty()) {
             doctors = doctorRepository.findByClinicIdAndSpecializationIgnoreCase(clinicId, specialization);
         } else {
-            doctors = doctorRepository.findByClinicIdAndSpecializationIgnoreCase(clinicId, specialization);
+            doctors = doctorRepository.findByClinicId(clinicId);
         }
         return ResponseEntity.ok(doctors);
     }

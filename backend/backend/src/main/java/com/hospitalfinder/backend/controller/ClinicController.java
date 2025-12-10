@@ -1,15 +1,24 @@
 package com.hospitalfinder.backend.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.hospitalfinder.backend.dto.ClinicRequestDTO;
 import com.hospitalfinder.backend.dto.ClinicResponseDTO;
-import com.hospitalfinder.backend.entity.Clinic;
+import com.hospitalfinder.backend.dto.NearbyClinicDTO;
 import com.hospitalfinder.backend.repository.ClinicRepository;
+import com.hospitalfinder.backend.repository.projection.ClinicDistanceProjection;
 import com.hospitalfinder.backend.service.ClinicService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/clinics")
@@ -32,8 +41,26 @@ public class ClinicController {
             @RequestParam double lat,
             @RequestParam double lng
     ) {
-        List<Clinic> clinics = clinicRepository.findNearestClinics(lat, lng);
-        return ResponseEntity.ok(clinics);
+        List<ClinicDistanceProjection> clinics = clinicRepository.findNearestClinics(lat, lng);
+
+        List<NearbyClinicDTO> response = clinics.stream()
+            .map(c -> new NearbyClinicDTO(
+                c.getId(),
+                c.getName(),
+                c.getAddress(),
+                c.getCity(),
+                c.getLatitude(),
+                c.getLongitude(),
+                c.getDistance(),
+                c.getPhone(),
+                c.getTimings(),
+                c.getRating(),
+                c.getReviews(),
+                c.getImageUrl()
+            ))
+            .toList();
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/id")
