@@ -1,13 +1,15 @@
 package com.hospitalfinder.backend.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hospitalfinder.backend.entity.Clinic;
 import com.hospitalfinder.backend.entity.Doctor;
 import com.hospitalfinder.backend.entity.Specialization;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 public class ClinicResponseDTO {
     @Getter @Setter
@@ -27,6 +29,14 @@ public class ClinicResponseDTO {
     @Getter @Setter
     private String phone;
     @Getter @Setter
+    private String website;
+    @Getter @Setter
+    private String timings;
+    @Getter @Setter
+    private Double rating;
+    @Getter @Setter
+    private Integer reviews;
+    @Getter @Setter
     private String imageUrl;
     @Getter @Setter
     private List<Doctor> doctors = new ArrayList<>();
@@ -44,6 +54,10 @@ public class ClinicResponseDTO {
                 .map(Specialization::getSpecialization)
                 .collect(Collectors.toList());
         this.phone = clinic.getPhone();
+        this.website = clinic.getWebsite();
+        this.timings = clinic.getTimings();
+        this.rating = clinic.getRating();
+        this.reviews = clinic.getReviews();
         this.imageUrl = clinic.getImageUrl();
         this.doctors = clinic.getDoctors();
     }

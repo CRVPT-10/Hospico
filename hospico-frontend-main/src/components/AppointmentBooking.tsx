@@ -17,10 +17,13 @@ interface TimeSlot {
 
 interface AppointmentBookingProps {
   hospitalId: string;
+  doctorId?: string;
+  doctorName?: string;
+  specialization?: string;
   onClose: () => void;
 }
 
-const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) => {
+const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, onClose }: AppointmentBookingProps) => {
   const { user } = useSelector((state: RootState) => state.auth);
   
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -51,6 +54,11 @@ const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) =>
         );
         setDoctors(data);
         
+        // Pre-fill doctor if provided from props
+        if (doctorId) {
+          setSelectedDoctor(doctorId);
+        }
+        
         // Pre-fill patient email with user info
         if (user) {
           setPatientEmail(user.email || "");
@@ -64,7 +72,7 @@ const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) =>
     };
 
     loadDoctors();
-  }, [hospitalId, user]);
+  }, [hospitalId, doctorId, user]);
 
   // Generate time slots when date or doctor changes
   useEffect(() => {
@@ -73,26 +81,37 @@ const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) =>
       return;
     }
 
-    // Generate time slots from 9 AM to 5 PM with 30-minute intervals
+    // Check if selected date is Sunday
+    const selectedDay = new Date(selectedDate).getDay();
+    const isSunday = selectedDay === 0;
+
+    // Generate time slots based on doctor's timings
     const slots: TimeSlot[] = [];
-    const startHour = 9;
-    const endHour = 17;
     
-    for (let hour = startHour; hour < endHour; hour++) {
+    // Morning session: 9:00 AM - 1:00 PM
+    for (let hour = 9; hour <= 13; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === 13 && minute > 0) break; // Stop at 1:00 PM
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         slots.push({
           time: timeString,
-          isBooked: false // We'll check against actual bookings later
+          isBooked: false
         });
       }
     }
     
-    // Last slot at 17:00 (5:00 PM)
-    slots.push({
-      time: "17:00",
-      isBooked: false
-    });
+    // Afternoon session: 2:00 PM - 6:00 PM (weekdays) or 2:00 PM - 4:00 PM (Sunday)
+    const afternoonEndHour = isSunday ? 16 : 18;
+    for (let hour = 14; hour <= afternoonEndHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        if (hour === afternoonEndHour && minute > 0) break;
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push({
+          time: timeString,
+          isBooked: false
+        });
+      }
+    }
     
     setAvailableSlots(slots);
     setSelectedSlot("");
@@ -183,20 +202,15 @@ const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) =>
               {/* Doctor Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Doctor *
+                  Selected Doctor *
                 </label>
-                <select
-                  value={selectedDoctor}
-                  onChange={(e) => setSelectedDoctor(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Choose a doctor</option>
-                  {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.name} - {doctor.specialization}
-                    </option>
-                  ))}
-                </select>
+                {doctorName && specialization && (
+                  <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <p className="text-sm font-medium text-blue-900">
+                      {doctorName} - {specialization}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Problem/Reason */}
@@ -257,6 +271,33 @@ const AppointmentBooking = ({ hospitalId, onClose }: AppointmentBookingProps) =>
 
               {/* Patient Details */}
               <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <input
+                    type="checkbox"
+                    id="selfCheckbox"
+                    onChange={(e) => {
+                      if (e.target.checked && user) {
+                        // Auto-fill from user data
+                        setPatientName(user.name || user.email?.split('@')[0] || "");
+                        setPatientEmail(user.email || "");
+                        setPatientPhone(user.phone || "");
+                        setPatientAge(user.age ? user.age.toString() : "");
+                        setPatientGender(user.gender || "");
+                      } else {
+                        // Clear all fields
+                        setPatientName("");
+                        setPatientPhone("");
+                        setPatientAge("");
+                        setPatientGender("");
+                      }
+                    }}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="selfCheckbox" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Booking for myself
+                  </label>
+                </div>
+                
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Patient Details</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
