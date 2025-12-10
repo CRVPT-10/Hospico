@@ -34,7 +34,13 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com"));
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://192.168.*:*", // allow LAN/mobile devices hitting dev machine
+            "https://hospico.onrender.com",
+            "https://hospital-finder-backend-ls4y.onrender.com"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Set-Cookie"));

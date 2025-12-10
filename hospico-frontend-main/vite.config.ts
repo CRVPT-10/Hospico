@@ -12,4 +12,15 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  // Proxy /api calls to the backend during local development to avoid CORS issues
+  server: {
+    host: true, // allow access from mobile devices on the same network
+    proxy: {
+      "/api": {
+        target: process.env.VITE_DEV_API ?? "http://localhost:8080",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });
