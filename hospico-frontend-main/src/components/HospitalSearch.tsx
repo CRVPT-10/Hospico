@@ -12,7 +12,6 @@ const HospitalSearch = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(true);
-  const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   // Get user's location on component mount
   useEffect(() => {
@@ -20,7 +19,6 @@ const HospitalSearch = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          setUserCoordinates({ lat: latitude, lng: longitude });
           
           try {
             // Use a reverse geocoding service to get the city name

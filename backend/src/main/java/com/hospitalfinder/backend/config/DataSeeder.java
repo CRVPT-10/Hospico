@@ -42,50 +42,67 @@ public class DataSeeder {
     public CommandLineRunner seedClinics(ClinicRepository clinicRepository, SpecializationRepository specializationRepository) {
         return args -> {
             // Check if specific clinics already exist by name to avoid duplicates
-            if (!clinicRepository.existsByName("City General Hospital") && 
-                !clinicRepository.existsByName("Apollo Specialty Clinic")) {
+            if (!clinicRepository.existsByName("Kamineni Hospital")) {
                 // Get all specializations first
                 List<Specialization> specs = specializationRepository.findAll();
                 
-                // Create sample clinics
+                // Create Vijayawada hospitals
                 Clinic clinic1 = new Clinic();
-                clinic1.setName("City General Hospital");
-                clinic1.setAddress("123 Main Street");
-                clinic1.setCity("Bangalore");
-                clinic1.setLatitude(12.9716);
-                clinic1.setLongitude(77.5946);
-                clinic1.setPhone("+91-80-12345678");
-                clinic1.setImageUrl("/src/assets/images/default-hospital.jpeg");
+                clinic1.setName("Kamineni Hospital");
+                clinic1.setAddress("Opp Sri Durga Temple, Eluru Road");
+                clinic1.setCity("Vijayawada");
+                clinic1.setLatitude(16.5204);
+                clinic1.setLongitude(80.6355);
+                clinic1.setPhone("+91-866-2345678");
+                clinic1.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/kamineni-hospital.jpg");
                 
                 if (!specs.isEmpty()) {
-                    // Create new specialization instances to avoid detached entity issues
                     clinic1.setSpecializations(List.of(
-                        specs.get(0),
-                        specs.size() > 1 ? specs.get(1) : specs.get(0),
-                        specs.size() > 2 ? specs.get(2) : specs.get(0)
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
                     ));
                 }
                 
                 clinicRepository.save(clinic1);
                 
                 Clinic clinic2 = new Clinic();
-                clinic2.setName("Apollo Specialty Clinic");
-                clinic2.setAddress("456 Park Avenue");
-                clinic2.setCity("Bangalore");
-                clinic2.setLatitude(12.9235);
-                clinic2.setLongitude(77.6123);
-                clinic2.setPhone("+91-80-23456789");
-                clinic2.setImageUrl("/src/assets/images/default-hospital.jpeg");
+                clinic2.setName("Shourya Hospital");
+                clinic2.setAddress("A S Rao Nagar");
+                clinic2.setCity("Vijayawada");
+                clinic2.setLatitude(16.5210);
+                clinic2.setLongitude(80.6340);
+                clinic2.setPhone("+91-866-2525000");
+                clinic2.setImageUrl("https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
-                    // Create new specialization instances to avoid detached entity issues
                     clinic2.setSpecializations(List.of(
-                        specs.get(0),
-                        specs.size() > 1 ? specs.get(1) : specs.get(0)
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Pediatrics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "ENT".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
                     ));
                 }
                 
                 clinicRepository.save(clinic2);
+                
+                Clinic clinic3 = new Clinic();
+                clinic3.setName("Vanaja Diabetic & Multi-Speciality");
+                clinic3.setAddress("A S Rao Nagar");
+                clinic3.setCity("Vijayawada");
+                clinic3.setLatitude(16.5162);
+                clinic3.setLongitude(80.6428);
+                clinic3.setPhone("+91-866-2425588");
+                clinic3.setImageUrl("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop");
+                
+                if (!specs.isEmpty()) {
+                    clinic3.setSpecializations(List.of(
+                        specs.stream().filter(s -> "Neurosurgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "OBG".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Pediatrics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic3);
             }
         };
     }
