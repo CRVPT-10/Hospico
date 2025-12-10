@@ -150,9 +150,9 @@ const HospitalProfile = () => {
               {hospital.doctors.map((doctor) => (
                 <div
                   key={doctor.id}
-                  className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow"
                 >
-                  <div className="flex gap-6 items-center">
+                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-center">
                     {/* Left Section - Button */}
                     <div className="flex items-center">
                       <button 
@@ -160,14 +160,14 @@ const HospitalProfile = () => {
                           setSelectedDoctorId(doctor.id);
                           setShowBookingModal(true);
                         }}
-                        className="px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 font-medium text-sm transition-colors"
+                        className="w-full sm:w-auto px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 font-medium text-sm transition-colors"
                       >
                         Book An Appointment
                       </button>
                     </div>
 
                     {/* Middle Section - Services & Timings Tabs */}
-                    <div className="flex-1 border-l border-gray-200 pl-6">
+                    <div className="flex-1 lg:border-l border-gray-200 lg:pl-6">
                       <div className="flex gap-6 mb-4 border-b border-gray-200">
                         <button 
                           onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'services' })}
@@ -234,18 +234,18 @@ const HospitalProfile = () => {
                     </div>
 
                     {/* Right Section - Doctor Info & Image */}
-                    <div className="flex gap-4 items-start">
-                      <div className="flex-1 text-right">
+                    <div className="flex gap-4 items-start lg:border-l border-gray-200 lg:pl-6">
+                      <div className="flex-1 lg:text-right">
                         <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
                         <p className="text-xs text-gray-600 mb-2">{doctor.qualification || 'Medical Doctor'}</p>
                         <p className="text-xs text-gray-700 font-medium mb-3">
                           {doctor.specialization || 'General Practitioner'}
                         </p>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <p className="flex items-center justify-end gap-2">
+                          <p className="flex items-center lg:justify-end gap-2">
                             <span>📍 City Location</span>
                           </p>
-                          <p className="flex items-center justify-end gap-2">
+                          <p className="flex items-center lg:justify-end gap-2">
                             <span>Yrs 15</span>
                           </p>
                         </div>
@@ -254,7 +254,7 @@ const HospitalProfile = () => {
                         <img
                           src={getDoctorImageUrl(doctor.imageUrl)}
                           alt={doctor.name}
-                          className="w-24 h-24 object-cover rounded-lg"
+                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
                         />
                       </div>
                     </div>
