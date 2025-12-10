@@ -28,7 +28,7 @@ const FindHospitals = () => {
   // Parse URL params on mount
   const [query, setQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [selectedSpecialization, setSelectedSpecialization] = useState("");
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   
   // State for appointment booking modal
@@ -82,7 +82,12 @@ const FindHospitals = () => {
     }
     
     setQuery(urlParams.get("q") || "");
-    setSelectedSpecialization(decodeURIComponent(urlParams.get("spec") || ""));
+    const specsParam = urlParams.getAll("spec");
+    if (specsParam.length > 0) {
+      setSelectedSpecializations(specsParam.map((s) => decodeURIComponent(s)));
+    } else {
+      setSelectedSpecializations([]);
+    }
     
     // Check if we have coordinates in the URL for nearby hospitals
     const lat = urlParams.get("lat");
@@ -112,9 +117,9 @@ const FindHospitals = () => {
           params.append("city", selectedLocation);
         }
         
-        // Add specialization filter if specified
-        if (selectedSpecialization) {
-          params.append("specialization", selectedSpecialization);
+        // Add specialization filters (multi-select)
+        if (selectedSpecializations.length > 0) {
+          selectedSpecializations.forEach((spec) => params.append("spec", spec));
         }
         
         // Add search query if specified
@@ -163,7 +168,7 @@ const FindHospitals = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedLocation, selectedSpecialization, userCoordinates, query]);
+  }, [selectedLocation, selectedSpecializations, userCoordinates, query]);
 
   useEffect(() => {
     console.log("Fetched hospitals:", hospitals);
@@ -213,8 +218,10 @@ const FindHospitals = () => {
               {query && (
                 <span className="text-gray-600 font-normal"> {" "}for "{query}"</span>
               )}
-              {selectedSpecialization && (
-                <span className="text-gray-600 font-normal"> {" "}specializing in "{selectedSpecialization}"</span>
+              {selectedSpecializations.length > 0 && (
+                <span className="text-gray-600 font-normal">
+                  {" "}specializing in {selectedSpecializations.join(", ")}
+                </span>
               )}
             </h2>
 

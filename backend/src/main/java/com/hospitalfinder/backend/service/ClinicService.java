@@ -22,17 +22,30 @@ public class ClinicService {
     private final SpecializationRepository specializationRepository;
 
 
-    public List<ClinicResponseDTO> getFilteredClinics(String city, String specialization, String search) {
+    public List<ClinicResponseDTO> getFilteredClinics(String city, List<String> specializations, String search) {
         List<Clinic> clinics;
 
-        if (city != null && specialization != null) {
-            clinics = clinicRepository.findByCityAndSpecialization(city, specialization);
-        } else if (city != null) {
+        // Start with city-filtered list if provided, otherwise all clinics
+        if (city != null) {
             clinics = clinicRepository.findByCityIgnoreCase(city);
-        } else if (specialization != null) {
-            clinics = clinicRepository.findBySpecialization(specialization); // NEW case
         } else {
             clinics = clinicRepository.findAll();
+        }
+
+        // Normalize specialization filters to lower-case for matching
+        List<String> normalizedSpecs = specializations == null ? List.of() : specializations.stream()
+                .filter(spec -> spec != null && !spec.isBlank())
+                .map(spec -> spec.toLowerCase())
+                .collect(Collectors.toList());
+
+        // Filter by specialization matches (multi-select). Keep only clinics with >=1 match when filters provided.
+        if (!normalizedSpecs.isEmpty()) {
+            clinics = clinics.stream()
+                    .filter(clinic -> getMatchCount(clinic, normalizedSpecs) > 0)
+                    .sorted((a, b) -> Integer.compare(
+                            getMatchCount(b, normalizedSpecs),
+                            getMatchCount(a, normalizedSpecs)))
+                    .collect(Collectors.toList());
         }
 
         // Apply search filter if provided
@@ -40,14 +53,25 @@ public class ClinicService {
             String searchLower = search.toLowerCase();
             clinics = clinics.stream()
                     .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
-                                      (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
-                                      (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)))
+                            (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
+                            (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)))
                     .collect(Collectors.toList());
         }
 
         return clinics.stream()
                 .map(ClinicResponseDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    private int getMatchCount(Clinic clinic, List<String> normalizedSpecs) {
+        if (normalizedSpecs == null || normalizedSpecs.isEmpty()) return 0;
+
+        return (int) clinic.getSpecializations().stream()
+                .map(Specialization::getSpecialization)
+                .filter(spec -> spec != null && !spec.isBlank())
+                .map(String::toLowerCase)
+                .filter(normalizedSpecs::contains)
+                .count();
     }
 
     public ClinicResponseDTO createClinic(ClinicRequestDTO request) {
@@ -64,10 +88,28 @@ public class ClinicService {
         clinic.setLatitude(request.getLatitude());
         clinic.setLongitude(request.getLongitude());
         clinic.setPhone(request.getPhone());
+        clinic.setWebsite(request.getWebsite());
+        clinic.setTimings(request.getTimings());
+        clinic.setRating(request.getRating());
+        clinic.setReviews(request.getReviews());
         clinic.setImageUrl(request.getImageUrl());
 
-        // Fetch specializations by IDs
-        List<Specialization> specializations = specializationRepository.findAllById(request.getSpecializationIds());
+        // Fetch specializations by IDs or names
+        List<Specialization> specializations;
+        if (request.getSpecializationIds() != null && !request.getSpecializationIds().isEmpty()) {
+            specializations = specializationRepository.findAllById(request.getSpecializationIds());
+        } else if (request.getSpecializations() != null && !request.getSpecializations().isEmpty()) {
+            specializations = request.getSpecializations().stream()
+                    .map(name -> specializationRepository.findBySpecializationIgnoreCase(name)
+                            .orElseGet(() -> {
+                                Specialization newSpec = new Specialization();
+                                newSpec.setSpecialization(name);
+                                return specializationRepository.save(newSpec);
+                            }))
+                    .collect(java.util.stream.Collectors.toList());
+        } else {
+            specializations = java.util.Collections.emptyList();
+        }
         clinic.setSpecializations(specializations);
 
         clinicRepository.save(clinic);

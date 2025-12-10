@@ -18,8 +18,12 @@ public class DataSeeder {
     public CommandLineRunner seedSpecializations(SpecializationRepository specializationRepository) {
         return args -> {
             List<String> defaultSpecs = List.of(
-                    "Dermatologist", "Dentist", "Cardiologist", "ENT Specialist",
-                    "General Physician", "Pediatrician", "Gynecologist", "Neurologist"
+                    "Anesthesiology", "Cardiology", "Cardiothoracic Surgery", "ENT",
+                    "Emergency Medicine", "General Medicine", "General Surgery", "Nephrology",
+                    "Neurosurgery", "Nuclear Medicine", "OBG", "Orthopedics",
+                    "Pathology", "Pediatrics", "Plastic Surgery", "Pulmonology",
+                    "Radiology", "Surgical Gastroenterology", "Surgical Oncology", "Urology",
+                    "Physiotherapy Unit", "Dialysis Unit"
             );
 
             for (String spec : defaultSpecs) {

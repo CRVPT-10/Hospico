@@ -48,6 +48,14 @@ public class Clinic {
     private Collection<Specialization> specializations = new ArrayList<>();
     @Getter @Setter
     private String phone;
+    @Getter @Setter
+    private String website;
+    @Getter @Setter
+    private String timings;
+    @Getter @Setter
+    private Double rating;
+    @Getter @Setter
+    private Integer reviews;
     @Getter @Setter @OneToMany(mappedBy = "clinic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Doctor> doctors = new ArrayList<>();
     @Getter @Setter

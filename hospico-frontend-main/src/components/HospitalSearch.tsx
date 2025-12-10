@@ -220,7 +220,7 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
   selectedLocation: string; 
 }) {
   const [specialties, setSpecialties] = useState<Specialization[]>([]);
-  const [selectedSpecialization, setSelectedSpecialization] = useState<string>("");
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -251,16 +251,21 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
   }, []);
 
   const handleSpecializationClick = (specialization: string) => {
-    // Toggle specialization - if already selected, deselect it
-    const newSpecialization = selectedSpecialization === specialization ? "" : specialization;
-    setSelectedSpecialization(newSpecialization);
+    // Toggle specialization in array
+    const exists = selectedSpecializations.includes(specialization);
+    const nextSelection = exists
+      ? selectedSpecializations.filter((s) => s !== specialization)
+      : [...selectedSpecializations, specialization];
+    setSelectedSpecializations(nextSelection);
     
     // Build params for navigation using current search text and selected location
     const params = new URLSearchParams({
       q: encodeURIComponent(searchText),
       loc: encodeURIComponent(selectedLocation),
-      ...(newSpecialization && { spec: encodeURIComponent(newSpecialization) }),
     });
+
+    // Append all selected specs as repeated params
+    nextSelection.forEach((spec) => params.append("spec", encodeURIComponent(spec)));
     
     // If we have user coordinates, include them in the navigation
     if (userCoordinates) {
@@ -268,7 +273,6 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
       params.append("lng", userCoordinates.lng.toString());
     }
     
-    // Navigate to find-hospitals with specialization filter
     navigate(`/find-hospitals?${params.toString()}`);
   };
 
@@ -308,7 +312,7 @@ function SpecialtyFilters({ userCoordinates, searchText, selectedLocation }: {
           <button
             key={s.id}
             className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              selectedSpecialization === s.specialization
+              selectedSpecializations.includes(s.specialization)
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700"
             }`}

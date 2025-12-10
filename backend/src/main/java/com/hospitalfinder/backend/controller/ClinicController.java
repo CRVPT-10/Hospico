@@ -32,10 +32,10 @@ public class ClinicController {
     @GetMapping
     public List<ClinicResponseDTO> getClinics(
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) List<String> spec,
             @RequestParam(required = false) String search
     ) {
-        return clinicService.getFilteredClinics(city, specialization, search);
+        return clinicService.getFilteredClinics(city, spec, search);
     }
 
     @GetMapping("/nearby")
@@ -95,7 +95,7 @@ public class ClinicController {
             @RequestParam double lat,
             @RequestParam double lng,
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) List<String> spec,
             @RequestParam(required = false) String search
     ) {
         List<Clinic> clinics;
@@ -111,13 +111,11 @@ public class ClinicController {
                 .collect(Collectors.toList());
         }
         
-        // Apply specialization filter if specified
-        if (specialization != null && !specialization.isEmpty()) {
-            clinics = clinics.stream()
-                .filter(clinic -> clinic.getSpecializations().stream()
-                       .anyMatch(spec -> spec.getSpecialization().equalsIgnoreCase(specialization)))
+        // Normalize specialization filters (multi-select) for matching
+        List<String> normalizedSpecs = spec == null ? List.of() : spec.stream()
+                .filter(s -> s != null && !s.isBlank())
+                .map(String::toLowerCase)
                 .collect(Collectors.toList());
-        }
         
         // Apply search filter if specified
         if (search != null && !search.isEmpty()) {
@@ -128,7 +126,10 @@ public class ClinicController {
                 .collect(Collectors.toList());
         }
         
-        List<NearbyClinicDTO> sortedClinics = clinics.stream()
+        // Build list with distance + match count, filter out non-matching when specs provided
+        record ClinicDistance(Clinic clinic, double distance, int estimatedTime, int matchCount) {}
+
+        List<ClinicDistance> enriched = clinics.stream()
             .map(clinic -> {
                 double distance = calculateDistance(lat, lng, clinic.getLatitude(), clinic.getLongitude());
                 // Estimate time with variable speed based on distance:
@@ -144,8 +145,23 @@ public class ClinicController {
                     speed = 40.0;
                 }
                 int estimatedTime = (int) Math.round(distance / speed * 60);
-                return new NearbyClinicDTO(clinic, distance, estimatedTime);
+                int matchCount = getMatchCount(clinic, normalizedSpecs);
+                return new ClinicDistance(clinic, distance, estimatedTime, matchCount);
             })
+            .filter(cd -> normalizedSpecs.isEmpty() || cd.matchCount > 0)
+            .collect(Collectors.toList());
+
+        // Sort: when specs provided -> matchCount desc then distance asc; otherwise distance asc
+        enriched.sort((a, b) -> {
+            if (!normalizedSpecs.isEmpty()) {
+                int cmp = Integer.compare(b.matchCount, a.matchCount);
+                if (cmp != 0) return cmp;
+            }
+            return Double.compare(a.distance, b.distance);
+        });
+
+        List<NearbyClinicDTO> sortedClinics = enriched.stream()
+            .map(cd -> new NearbyClinicDTO(cd.clinic, cd.distance, cd.estimatedTime))
             .collect(Collectors.toList());
 
         return ResponseEntity.ok(sortedClinics);
@@ -193,5 +209,16 @@ public class ClinicController {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         
         return EARTH_RADIUS * c;
+    }
+    
+    private int getMatchCount(Clinic clinic, List<String> normalizedSpecs) {
+        if (normalizedSpecs == null || normalizedSpecs.isEmpty()) return 0;
+
+        return (int) clinic.getSpecializations().stream()
+                .map(s -> s.getSpecialization())
+                .filter(spec -> spec != null && !spec.isBlank())
+                .map(String::toLowerCase)
+                .filter(normalizedSpecs::contains)
+                .count();
     }
 }
