@@ -103,6 +103,158 @@ public class DataSeeder {
                 }
                 
                 clinicRepository.save(clinic3);
+                
+                Clinic clinic4 = new Clinic();
+                clinic4.setName("Dr. Pinnamaneni Siddhartha Institute of Medical Sciences & Research Foundation");
+                clinic4.setAddress("Gannavaram");
+                clinic4.setCity("Vijayawada");
+                clinic4.setLatitude(16.4892);
+                clinic4.setLongitude(80.8432);
+                clinic4.setPhone("+91-866-2432500");
+                clinic4.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/pinnamaneni-institute.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic4.setSpecializations(List.of(
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Neurosurgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic4);
+                
+                Clinic clinic5 = new Clinic();
+                clinic5.setName("Nagarjuna Hospital");
+                clinic5.setAddress("Vijayawada");
+                clinic5.setCity("Vijayawada");
+                clinic5.setLatitude(16.5196);
+                clinic5.setLongitude(80.6276);
+                clinic5.setPhone("+91-866-2222222");
+                clinic5.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/nagarjuna-hospital.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic5.setSpecializations(List.of(
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic5);
+                
+                Clinic clinic6 = new Clinic();
+                clinic6.setName("Aayush NRI LEPL Healthcare");
+                clinic6.setAddress("Vijayawada");
+                clinic6.setCity("Vijayawada");
+                clinic6.setLatitude(16.5215);
+                clinic6.setLongitude(80.6315);
+                clinic6.setPhone("+91-866-2333333");
+                clinic6.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/aayush-nri-healthcare.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic6.setSpecializations(List.of(
+                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic6);
+                
+                Clinic clinic7 = new Clinic();
+                clinic7.setName("Latha Super Speciality Hospital");
+                clinic7.setAddress("Vijayawada");
+                clinic7.setCity("Vijayawada");
+                clinic7.setLatitude(16.5250);
+                clinic7.setLongitude(80.6290);
+                clinic7.setPhone("+91-866-2444444");
+                clinic7.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/latha-super-speciality-hospital.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic7.setSpecializations(List.of(
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic7);
+                
+                Clinic clinic8 = new Clinic();
+                clinic8.setName("Help Hospitals");
+                clinic8.setAddress("Vijayawada");
+                clinic8.setCity("Vijayawada");
+                clinic8.setLatitude(16.5180);
+                clinic8.setLongitude(80.6380);
+                clinic8.setPhone("+91-866-2555555");
+                clinic8.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/help-hospitals.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic8.setSpecializations(List.of(
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Emergency Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic8);
+                
+                Clinic clinic9 = new Clinic();
+                clinic9.setName("Peoples Clinic");
+                clinic9.setAddress("Vijayawada");
+                clinic9.setCity("Vijayawada");
+                clinic9.setLatitude(16.5225);
+                clinic9.setLongitude(80.6255);
+                clinic9.setPhone("+91-866-2666666");
+                clinic9.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/peoples-clinic.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic9.setSpecializations(List.of(
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic9);
+                
+                Clinic clinic10 = new Clinic();
+                clinic10.setName("Liberty Hospitals");
+                clinic10.setAddress("Vijayawada");
+                clinic10.setCity("Vijayawada");
+                clinic10.setLatitude(16.5305);
+                clinic10.setLongitude(80.6320);
+                clinic10.setPhone("+91-866-2777777");
+                clinic10.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/liberty-hospitals.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic10.setSpecializations(List.of(
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic10);
+                
+                Clinic clinic11 = new Clinic();
+                clinic11.setName("M.J. Naidu Super Speciality Hospital");
+                clinic11.setAddress("Vijayawada");
+                clinic11.setCity("Vijayawada");
+                clinic11.setLatitude(16.5160);
+                clinic11.setLongitude(80.6400);
+                clinic11.setPhone("+91-866-2888888");
+                clinic11.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/mj-naidu-super-speciality-hospital.jpg");
+                
+                if (!specs.isEmpty()) {
+                    clinic11.setSpecializations(List.of(
+                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Cardiology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "General Surgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                    ));
+                }
+                
+                clinicRepository.save(clinic11);
             }
         };
     }
