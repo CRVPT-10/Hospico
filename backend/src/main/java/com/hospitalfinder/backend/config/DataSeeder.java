@@ -111,7 +111,7 @@ public class DataSeeder {
                 clinic4.setLatitude(16.4892);
                 clinic4.setLongitude(80.8432);
                 clinic4.setPhone("+91-866-2432500");
-                clinic4.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/pinnamaneni-institute.jpg");
+                clinic4.setImageUrl("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic4.setSpecializations(List.of(
@@ -130,7 +130,7 @@ public class DataSeeder {
                 clinic5.setLatitude(16.5196);
                 clinic5.setLongitude(80.6276);
                 clinic5.setPhone("+91-866-2222222");
-                clinic5.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/nagarjuna-hospital.jpg");
+                clinic5.setImageUrl("https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic5.setSpecializations(List.of(
@@ -149,7 +149,7 @@ public class DataSeeder {
                 clinic6.setLatitude(16.5215);
                 clinic6.setLongitude(80.6315);
                 clinic6.setPhone("+91-866-2333333");
-                clinic6.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/aayush-nri-healthcare.jpg");
+                clinic6.setImageUrl("https://images.unsplash.com/photo-1631217b429b773f37d728147fdf755efc1e35b55?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic6.setSpecializations(List.of(
@@ -168,7 +168,7 @@ public class DataSeeder {
                 clinic7.setLatitude(16.5250);
                 clinic7.setLongitude(80.6290);
                 clinic7.setPhone("+91-866-2444444");
-                clinic7.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/latha-super-speciality-hospital.jpg");
+                clinic7.setImageUrl("https://images.unsplash.com/photo-1516574187841-68fa06d5f623?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic7.setSpecializations(List.of(
@@ -187,7 +187,7 @@ public class DataSeeder {
                 clinic8.setLatitude(16.5180);
                 clinic8.setLongitude(80.6380);
                 clinic8.setPhone("+91-866-2555555");
-                clinic8.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/help-hospitals.jpg");
+                clinic8.setImageUrl("https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic8.setSpecializations(List.of(
@@ -206,7 +206,7 @@ public class DataSeeder {
                 clinic9.setLatitude(16.5225);
                 clinic9.setLongitude(80.6255);
                 clinic9.setPhone("+91-866-2666666");
-                clinic9.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/peoples-clinic.jpg");
+                clinic9.setImageUrl("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic9.setSpecializations(List.of(
@@ -225,7 +225,7 @@ public class DataSeeder {
                 clinic10.setLatitude(16.5305);
                 clinic10.setLongitude(80.6320);
                 clinic10.setPhone("+91-866-2777777");
-                clinic10.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/liberty-hospitals.jpg");
+                clinic10.setImageUrl("https://images.unsplash.com/photo-1631217b429b773f37d728147fdf755efc1e35b55?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic10.setSpecializations(List.of(
@@ -244,7 +244,7 @@ public class DataSeeder {
                 clinic11.setLatitude(16.5160);
                 clinic11.setLongitude(80.6400);
                 clinic11.setPhone("+91-866-2888888");
-                clinic11.setImageUrl("https://raw.githubusercontent.com/CRVPT-10/Hospico/main/hospico-frontend-main/src/assets/images/mj-naidu-super-speciality-hospital.jpg");
+                clinic11.setImageUrl("https://images.unsplash.com/photo-1516574187841-68fa06d5f623?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic11.setSpecializations(List.of(
