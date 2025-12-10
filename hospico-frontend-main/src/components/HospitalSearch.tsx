@@ -71,7 +71,6 @@ const HospitalSearch = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          setUserCoordinates({ lat: latitude, lng: longitude });
           
           try {
             // Use a reverse geocoding service to get the city name
