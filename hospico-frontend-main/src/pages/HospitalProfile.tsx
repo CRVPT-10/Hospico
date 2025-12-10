@@ -36,7 +36,7 @@ const HospitalProfile = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiRequest<any>(
+        const response = await apiRequest<Hospital>(
           `/api/clinics/id?id=${id}`,
           "GET"
         );
