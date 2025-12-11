@@ -1,4 +1,4 @@
-# Hospital Finder Application
+# Hospico - Hospital Finder Application
 
 A full-stack hospital booking application with React frontend and Spring Boot backend.
 
