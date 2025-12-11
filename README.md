@@ -8,8 +8,12 @@ This application is configured for deployment to Render using the `render.yaml` 
 
 ### Services Included:
 1. **Frontend** - React application (hospital-finder-frontend)
+   https://hospico.onrender.com/
+
 2. **Backend** - Spring Boot API (hospital-finder-backend)
-3. **Database** - PostgreSQL (hospital-db)
+   https://hospital-finder-backend-ls4y.onrender.com/
+    
+4. **Database** - PostgreSQL (hospital-db)
 
 ### Environment Variables Needed:
 - `REACT_APP_API_URL` - URL of the backend service (set automatically by Render)
