@@ -59,9 +59,25 @@ export async function apiRequest<TResponse, TBody = unknown>(
     if (err.response) {
       // Server responded with error status
       switch (err.response.status) {
-        case 400:
-          message = "Bad Request - Please check your input";
+        case 400: {
+          // If server provided a specific message, prefer it for clarity
+          const serverMsg = typeof err.response.data === 'string'
+            ? err.response.data
+            : (err.response.data as { message?: string })?.message;
+
+          if (serverMsg) {
+            const lower = serverMsg.toLowerCase();
+            // Common backend message for duplicate email/check
+            if (lower.includes('email') && (lower.includes('exist') || lower.includes('already') || lower.includes('registered'))) {
+              message = 'Email Already Registered. Please login.';
+            } else {
+              message = serverMsg as string;
+            }
+          } else {
+            message = "Bad Request - Please check your input";
+          }
           break;
+        }
         case 401:
           message = "Unauthorized - Please check your credentials";
           break;
