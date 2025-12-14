@@ -122,46 +122,44 @@ const HospitalProfile = () => {
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Hero Section */}
-      <div className="relative w-full h-64 sm:h-72 bg-slate-800 overflow-hidden">
+      <div className="relative w-full h-auto min-h-[450px] lg:h-72 bg-slate-800 overflow-hidden">
         <img src={getHospitalImageUrl(hospital.imageUrl)} alt={hospital.name} className="w-full h-full object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 to-slate-900/80" />
-        
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <span className="px-3 py-1 rounded-full bg-emerald-600/20 text-emerald-300 text-xs font-semibold border border-emerald-500/40">Open 24/7</span>
         </div>
-        
-        {/* Hospital Info - Centered Vertically */}
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">{hospital.name}</h1>
-              <p className="text-base text-slate-300 mb-3">{hospital.specializations.join(", ")}</p>
-              <div className="flex flex-wrap gap-2 mb-2">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
-                  📍 {hospital.address}
-                </span>
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
-                  Multi-Specialty Hospital
-                </span>
-              </div>
-              {hospital.phone && (
-                <div className="flex items-center gap-2 mt-2">
+        {/* Hospital Info - Stacked on Mobile, Side by Side on Desktop */}
+        <div className="absolute inset-0 flex items-start lg:items-center py-16 lg:py-0">
+          <div className="max-w-7xl mx-auto px-4 w-full">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="flex-1 w-full lg:w-auto">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">{hospital.name}</h1>
+                <p className="text-sm sm:text-base text-slate-300 mb-3 line-clamp-2">{hospital.specializations.join(", ")}</p>
+                <div className="flex flex-wrap gap-2 mb-2">
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
-                    📞 {hospital.phone}
+                    📍 {hospital.address}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
+                    Multi-Specialty Hospital
                   </span>
                 </div>
-              )}
-            </div>
-            
-            {/* Map Button - Right Side */}
-            {hospital.latitude && hospital.longitude && (
-              <button
-                onClick={() => {
-                  const url = `https://www.google.com/maps?q=${hospital.latitude},${hospital.longitude}`;
-                  window.open(url, '_blank');
-                }}
-                className="w-64 h-36 bg-slate-800/90 backdrop-blur-sm border-2 border-blue-500 rounded-xl overflow-hidden hover:border-blue-400 transition-all shadow-xl relative group flex-shrink-0"
-              >
+                {hospital.phone && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
+                      📞 {hospital.phone}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {/* Map Button - Bottom on Mobile, Right Side on Desktop */}
+              {hospital.latitude && hospital.longitude && (
+                <button
+                  onClick={() => {
+                    const url = `https://www.google.com/maps?q=${hospital.latitude},${hospital.longitude}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="w-full lg:w-64 h-32 lg:h-36 bg-slate-800/90 backdrop-blur-sm border-2 border-blue-500 rounded-xl overflow-hidden hover:border-blue-400 transition-all shadow-xl relative group flex-shrink-0"
+                >
                 {/* Map-like background with grid */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700">
                   {/* Grid pattern to simulate map */}
@@ -173,7 +171,6 @@ const HospitalProfile = () => {
                   <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-blue-400/40 transform -rotate-12"></div>
                   <div className="absolute top-1/3 left-0 right-0 h-1 bg-blue-300/30 transform rotate-6"></div>
                 </div>
-                
                 {/* Pin marker */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full">
                   <div className="relative">
@@ -181,26 +178,23 @@ const HospitalProfile = () => {
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[10px] border-transparent border-t-red-500"></div>
                   </div>
                 </div>
-                
                 {/* Bottom gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent pointer-events-none"></div>
-                
                 {/* Text */}
                 <div className="absolute bottom-3 left-0 right-0 text-center">
                   <div className="text-sm text-white font-semibold drop-shadow-md group-hover:text-blue-300 transition-colors">View on Map</div>
                 </div>
-              </button>
-            )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
       {/* Doctors Section */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-white">Our Doctors</h2>
         </div>
-
         {/* Doctors List */}
         {hospital.doctors && hospital.doctors.length > 0 ? (
           <div className="space-y-6">
@@ -222,7 +216,6 @@ const HospitalProfile = () => {
                       </div>
                     </div>
                   </div>
-
                   {/* Middle Section - Services & Timings Tabs */}
                   <div className="flex-1 lg:border-l border-slate-600 lg:pl-6">
                     <div className="flex gap-6 mb-4">
@@ -289,7 +282,6 @@ const HospitalProfile = () => {
                       )}
                     </div>
                   </div>
-
                   {/* Right Section - Rating & Book Button */}
                   <div className="flex flex-col gap-3 items-end flex-shrink-0 lg:border-l border-slate-600 lg:pl-6">
                     <div className="flex items-center gap-1">
@@ -317,7 +309,6 @@ const HospitalProfile = () => {
           </div>
         )}
       </div>
-
       {/* Appointment Booking Modal */}
       {showBookingModal && selectedDoctorId && (
         <AppointmentBooking 
@@ -333,6 +324,6 @@ const HospitalProfile = () => {
       )}
     </div>
   );
-};
+}
 
 export default HospitalProfile;
