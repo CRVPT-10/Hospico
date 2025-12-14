@@ -1,6 +1,8 @@
 package com.hospitalfinder.backend.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -113,6 +115,27 @@ public class AppointmentController {
         return ResponseEntity.ok(responseList);
     }
 
+    @GetMapping("/doctor/{doctorId}/date/{date}")
+    public ResponseEntity<?> getAppointmentsByDoctorAndDate(@PathVariable Long doctorId, @PathVariable String date) {
+        try {
+            System.out.println("Received request for doctorId: " + doctorId + ", date: " + date);
+            LocalDate appointmentDate = LocalDate.parse(date);
+            System.out.println("Parsed LocalDate: " + appointmentDate);
+            List<Appointment> appointments = appointmentRepository.findByDoctorAndDate(doctorId, appointmentDate);
+            System.out.println("Found " + appointments.size() + " appointments");
+            // Filter only BOOKED appointments
+            var bookedAppointments = appointments.stream()
+                    .filter(apt -> "BOOKED".equalsIgnoreCase(apt.getStatus()))
+                    .map(AppointmentResponseDTO::new)
+                    .toList();
+            System.out.println("Returning " + bookedAppointments.size() + " booked appointments");
+            return ResponseEntity.ok(bookedAppointments);
+        } catch (Exception e) {
+            System.err.println("ERROR in getAppointmentsByDoctorAndDate: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Invalid date format. Use YYYY-MM-DD. Error: " + e.getMessage());
+        }
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAppointment(@PathVariable Long id, @RequestBody AppointmentRequestDTO dto) {

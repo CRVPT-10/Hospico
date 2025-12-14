@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import defaultHospitalImage from "../assets/images/default-hospital.jpeg";
 import defaultDoctorImage from "../assets/images/default-doctor.jpeg";
@@ -34,6 +34,29 @@ const HospitalProfile = () => {
   const [activeTab, setActiveTab] = useState<{ [key: string]: string }>({});
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+  const tabRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Click outside handler to reset to services tab
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is outside any doctor's tab section
+      const clickedInsideAnyTab = Object.values(tabRefs.current).some(ref => 
+        ref && ref.contains(target)
+      );
+      
+      if (!clickedInsideAnyTab) {
+        // Reset all tabs to services
+        setActiveTab({});
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchClinic = async () => {

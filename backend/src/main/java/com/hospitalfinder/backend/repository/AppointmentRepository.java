@@ -1,13 +1,15 @@
 package com.hospitalfinder.backend.repository;
 
-import com.hospitalfinder.backend.entity.Appointment;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
+import com.hospitalfinder.backend.entity.Appointment;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     Collection<Appointment> findByUserId(Long userId);
@@ -23,7 +25,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("""
     SELECT a FROM Appointment a
     WHERE a.doctor.id = :doctorId
-    AND FUNCTION('DATE', a.appointmentTime) = :date
+    AND CAST(a.appointmentTime AS LocalDate) = :date
     """)
     List<Appointment> findByDoctorAndDate(@Param("doctorId") Long doctorId, @Param("date") LocalDate date);
 }

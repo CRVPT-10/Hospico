@@ -23,6 +23,14 @@ interface TimeSlot {
   isBooked: boolean;
 }
 
+interface AppointmentResponse {
+  id: number;
+  appointmentTime: string;
+  patientName: string;
+  patientAge: number;
+  status: string;
+}
+
 interface AppointmentBookingProps {
   hospitalId: string;
   doctorId?: string;
@@ -127,45 +135,143 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
       return;
     }
 
-    // Check if selected date is Sunday
-    const selectedDay = new Date(selectedDate).getDay();
-    const isSunday = selectedDay === 0;
+    const generateSlots = async () => {
+      // Check if selected date is today
+      const today = new Date();
+      const selectedDateObj = new Date(selectedDate);
+      const isToday = selectedDateObj.toDateString() === today.toDateString();
+      
+      // Get current time
+      const currentHour = today.getHours();
+      const currentMinute = today.getMinutes();
 
-    // Generate time slots based on doctor's timings
-    const slots: TimeSlot[] = [];
-    
-    // Morning session: 9:00 AM - 1:00 PM
-    for (let hour = 9; hour <= 13; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 13 && minute > 0) break; // Stop at 1:00 PM
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({
-          time: timeString,
-          isBooked: false
+      // Check if selected date is Sunday
+      const selectedDay = new Date(selectedDate).getDay();
+      const isSunday = selectedDay === 0;
+
+      // Fetch booked appointments for this doctor on this date
+      let bookedTimes: string[] = [];
+      try {
+        console.log(`🔍 Fetching booked appointments for doctor ${selectedDoctor} on date ${selectedDate}`);
+        const url = `http://localhost:8080/api/appointments/doctor/${selectedDoctor}/date/${selectedDate}`;
+        console.log(`📍 API URL: ${url}`);
+        
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem('jwt_token')}`,
+            "Content-Type": "application/json",
+          },
         });
+        
+        console.log(`📊 Response status: ${response.status}`);
+        
+        if (response.ok) {
+          const appointments: AppointmentResponse[] = await response.json();
+          console.log("📦 Raw appointments data:", appointments);
+          
+          if (Array.isArray(appointments)) {
+            console.log(`✅ Found ${appointments.length} appointment(s)`);
+            appointments.forEach((apt, idx) => {
+              console.log(`  [${idx}] Status: ${apt.status}, Time: ${apt.appointmentTime}`);
+            });
+            
+            bookedTimes = appointments
+              .filter(apt => apt.status === "BOOKED")
+              .map((apt) => {
+                const time = apt.appointmentTime?.substring(11, 16);
+                console.log(`  ✅ Extracted booked time: ${time}`);
+                return time;
+              })
+              .filter((time): time is string => time !== undefined && time.length === 5);
+            
+            console.log("✅ Final booked times array:", bookedTimes);
+          }
+        } else {
+          console.error(`❌ API returned status ${response.status}`);
+          const errorText = await response.text();
+          console.error("❌ Error response body:", errorText);
+          console.error("❌ This means the backend rejected the request. Check backend logs.");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch booked appointments:", err);
       }
-    }
-    
-    // Afternoon session: 2:00 PM - 6:00 PM (weekdays) or 2:00 PM - 4:00 PM (Sunday)
-    const afternoonEndHour = isSunday ? 16 : 18;
-    for (let hour = 14; hour <= afternoonEndHour; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === afternoonEndHour && minute > 0) break;
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({
-          time: timeString,
-          isBooked: false
-        });
+
+      // Generate time slots based on doctor's timings
+      const slots: TimeSlot[] = [];
+      
+      // Morning session: 9:00 AM - 1:00 PM
+      for (let hour = 9; hour <= 13; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === 13 && minute > 0) break; // Stop at 1:00 PM
+          
+          // Skip past times if today is selected
+          if (isToday && (hour < currentHour || (hour === currentHour && minute <= currentMinute))) {
+            continue;
+          }
+          
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          const isBooked = bookedTimes.includes(timeString);
+          
+          slots.push({
+            time: timeString,
+            isBooked
+          });
+          
+          if (isBooked) {
+            console.log("Marked as BOOKED:", timeString);
+          }
+        }
       }
-    }
-    
-    setAvailableSlots(slots);
-    setSelectedSlot("");
+      
+      // Afternoon session: 2:00 PM - 6:00 PM (weekdays) or 2:00 PM - 4:00 PM (Sunday)
+      const afternoonEndHour = isSunday ? 16 : 18;
+      for (let hour = 14; hour <= afternoonEndHour; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          if (hour === afternoonEndHour && minute > 0) break;
+          
+          // Skip past times if today is selected
+          if (isToday && (hour < currentHour || (hour === currentHour && minute <= currentMinute))) {
+            continue;
+          }
+          
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          const isBooked = bookedTimes.includes(timeString);
+          
+          slots.push({
+            time: timeString,
+            isBooked
+          });
+          
+          if (isBooked) {
+            console.log("Marked as BOOKED:", timeString);
+          }
+        }
+      }
+      
+      console.log("All generated slots:", slots);
+      setAvailableSlots(slots);
+      setSelectedSlot("");
+    };
+
+    generateSlots();
   }, [selectedDoctor, selectedDate]);
 
   const handleBookAppointment = async () => {
     if (!selectedDoctor || !selectedDate || !selectedSlot || !patientName || !patientAge || !patientGender || !problem) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    // Check if selected slot is actually available (not booked)
+    const selectedSlotObj = availableSlots.find(slot => slot.time === selectedSlot);
+    console.log("Selected slot object:", selectedSlotObj);
+    console.log("Is booked:", selectedSlotObj?.isBooked);
+    
+    if (selectedSlotObj?.isBooked) {
+      setError("❌ This slot is already booked and cannot be selected. Please choose a different time.");
+      setSelectedSlot("");
+      console.warn("Attempted to book already booked slot:", selectedSlot);
       return;
     }
 
@@ -295,23 +401,34 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
                     Select Time Slot *
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {availableSlots.map((slot) => (
-                      <button
-                        key={slot.time}
-                        type="button"
-                        onClick={() => setSelectedSlot(slot.time)}
-                        className={`px-3 py-2 text-sm rounded-md ${
-                          selectedSlot === slot.time
-                            ? "bg-blue-600 text-white"
-                            : slot.isBooked
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
-                        disabled={slot.isBooked}
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
+                    {availableSlots.length > 0 ? (
+                      availableSlots.map((slot) => 
+                        slot.isBooked ? (
+                          <div
+                            key={slot.time}
+                            className="w-full px-3 py-2 text-sm font-medium rounded-md border-2 border-gray-300 bg-gray-300 text-gray-600 cursor-not-allowed pointer-events-none"
+                            title="This slot is already booked"
+                          >
+                            {slot.time}
+                          </div>
+                        ) : (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            onClick={() => setSelectedSlot(slot.time)}
+                            className={`w-full px-3 py-2 text-sm font-medium rounded-md border-2 transition-all ${
+                              selectedSlot === slot.time
+                                ? "border-green-600 bg-green-50 text-green-900 shadow-lg"
+                                : "border-blue-400 bg-blue-50 text-blue-900 hover:bg-blue-100 cursor-pointer"
+                            }`}
+                          >
+                            {slot.time}
+                          </button>
+                        )
+                      )
+                    ) : (
+                      <p className="text-gray-500 text-sm col-span-full">No available slots for this date</p>
+                    )}
                   </div>
                 </div>
               )}
