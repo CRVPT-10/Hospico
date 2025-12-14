@@ -113,10 +113,10 @@ export default function Profile() {
       if (user?.id) {
         const appointments = await apiRequest<Appointment[]>(`/api/appointments/user/${user.id}`, "GET");
         
-        // Sort by date (most recent first) and take only 3
+        // Sort by date (most recent first) and take only 2
         const sortedAppointments = appointments
           .sort((a, b) => new Date(b.appointmentTime).getTime() - new Date(a.appointmentTime).getTime())
-          .slice(0, 3);
+          .slice(0, 2);
         
         setPreviousVisits(sortedAppointments);
       }
@@ -383,7 +383,7 @@ export default function Profile() {
             <div className="h-full rounded-xl border border-slate-600 bg-slate-800 shadow-lg p-4 sm:p-5 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-slate-200 tracking-wide uppercase">Previous Visits</h2>
-                <span className="text-xs text-slate-400">Recent 3</span>
+                <span className="text-xs text-slate-400">Recent 2</span>
               </div>
               <div className="space-y-3">
                 {previousVisits.length > 0 ? (
