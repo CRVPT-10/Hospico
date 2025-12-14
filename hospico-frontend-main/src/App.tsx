@@ -1,6 +1,7 @@
 import "./App.css";
+import { useEffect } from "react";
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Navbar from "./components/Navbar";
@@ -20,6 +21,38 @@ import MyAppointments from "./pages/MyAppointments";
 function App() {
   useAuthInitializer();
 
+  function TitleUpdater() {
+    const location = useLocation();
+
+    useEffect(() => {
+      const path = location.pathname;
+      const titleMap: { [key: string]: string } = {
+        '/': 'Dashboard - HospiCo',
+        '/dashboard': 'Dashboard - HospiCo',
+        '/find-hospitals': 'Find Hospitals - HospiCo',
+        '/hospitals': 'Find Hospitals - HospiCo',
+        '/emergency': 'Emergency - HospiCo',
+        '/login': 'Login - HospiCo',
+        '/signup': 'Sign Up - HospiCo',
+        '/partner-login': 'Partner Login - HospiCo',
+        '/profile': 'My Profile - HospiCo',
+        '/my-appointments': 'My Appointments - HospiCo',
+        '/resources': 'Resources - HospiCo',
+      };
+
+      // dynamic routes handling
+      let title = titleMap[path];
+      if (!title) {
+        if (path.startsWith('/find-hospital')) title = 'Hospital Profile - HospiCo';
+        else title = 'HospiCo';
+      }
+
+      document.title = title;
+    }, [location]);
+
+    return null;
+  }
+
   const {
     initialized,
     // isAuthenticated
@@ -31,6 +64,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <TitleUpdater />
       <div className="h-screen overflow-y-auto">
         <Navbar />
         <Routes>
