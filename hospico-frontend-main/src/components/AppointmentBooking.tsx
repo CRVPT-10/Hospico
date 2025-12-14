@@ -25,6 +25,7 @@ interface TimeSlot {
 
 interface AppointmentResponse {
   id: number;
+  userId: number;
   appointmentTime: string;
   patientName: string;
   patientAge: number;
@@ -184,7 +185,7 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
                 return time;
               })
               .filter((time): time is string => time !== undefined && time.length === 5);
-            
+
             console.log("✅ Final booked times array:", bookedTimes);
           }
         } else {
@@ -224,8 +225,8 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
         }
       }
       
-      // Afternoon session: 2:00 PM - 6:00 PM (weekdays) or 2:00 PM - 4:00 PM (Sunday)
-      const afternoonEndHour = isSunday ? 16 : 18;
+      // Afternoon session: 2:00 PM - 8:00 PM (weekdays) or 2:00 PM - 6:00 PM (Sunday)
+      const afternoonEndHour = isSunday ? 18 : 20;
       for (let hour = 14; hour <= afternoonEndHour; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
           if (hour === afternoonEndHour && minute > 0) break;

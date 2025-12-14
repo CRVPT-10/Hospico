@@ -12,6 +12,7 @@ public class AppointmentResponseDTO {
     private String clinicName;
     private String doctorName;
     private String doctorSpecialization;
+    private Long userId;
     private String userName;
     private String appointmentTime;
     private String status;
@@ -28,6 +29,7 @@ public class AppointmentResponseDTO {
         this.clinicName = appointment.getClinic().getName();
         this.doctorName = appointment.getDoctor().getName();
         this.doctorSpecialization = appointment.getDoctor().getSpecialization();
+        this.userId = appointment.getUser().getId();
         this.userName = appointment.getUser().getName();
         this.appointmentTime = appointment.getAppointmentTime().toString();
         this.status = appointment.getStatus();

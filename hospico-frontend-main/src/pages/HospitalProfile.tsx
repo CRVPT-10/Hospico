@@ -180,6 +180,7 @@ const HospitalProfile = () => {
                     <div className="flex items-center">
                       <button 
                         onClick={() => {
+                          setActiveTab({});
                           setSelectedDoctorId(doctor.id);
                           setShowBookingModal(true);
                         }}
@@ -225,7 +226,7 @@ const HospitalProfile = () => {
                                 <div className="flex items-center gap-2 flex-1">
                                   <span className="text-sm font-semibold text-gray-800">09:00 AM - 01:00 PM</span>
                                   <span className="text-gray-500">&</span>
-                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 06:00 PM</span>
+                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 08:00 PM</span>
                                 </div>
                               </div>
                             </div>
@@ -238,7 +239,7 @@ const HospitalProfile = () => {
                                 <div className="flex items-center gap-2 flex-1">
                                   <span className="text-sm font-semibold text-gray-800">09:00 AM - 01:00 PM</span>
                                   <span className="text-gray-500">&</span>
-                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 04:00 PM</span>
+                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 06:00 PM</span>
                                 </div>
                               </div>
                             </div>
