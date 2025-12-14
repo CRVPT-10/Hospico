@@ -1,20 +1,27 @@
 package com.hospitalfinder.backend.controller;
 
+import java.time.LocalDateTime;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.hospitalfinder.backend.dto.AppointmentRequestDTO;
 import com.hospitalfinder.backend.dto.AppointmentResponseDTO;
 import com.hospitalfinder.backend.entity.Appointment;
-import com.hospitalfinder.backend.entity.User;
 import com.hospitalfinder.backend.entity.Clinic;
+import com.hospitalfinder.backend.entity.User;
 import com.hospitalfinder.backend.repository.AppointmentRepository;
 import com.hospitalfinder.backend.repository.ClinicRepository;
 import com.hospitalfinder.backend.repository.DoctorRepository;
 import com.hospitalfinder.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -74,6 +81,7 @@ public class AppointmentController {
         appointment.setPatientGender(dto.getPatientGender());
         appointment.setPatientEmail(dto.getPatientEmail());
         appointment.setPatientPhone(dto.getPatientPhone());
+        appointment.setReason(dto.getReason());
 
         appointment = appointmentRepository.save(appointment);
 

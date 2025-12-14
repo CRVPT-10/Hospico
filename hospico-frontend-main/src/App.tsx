@@ -15,6 +15,7 @@ import PartnerLogin from "./pages/PartnerLogin";
 import Emergency from "./pages/Emergency";
 import HospitalProfile from "./pages/HospitalProfile";
 import Profile from "./pages/Profile.tsx";
+import MyAppointments from "./pages/MyAppointments";
 
 function App() {
   useAuthInitializer();
@@ -60,6 +61,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-appointments"
+            element={
+              <ProtectedRoute>
+                <MyAppointments />
               </ProtectedRoute>
             }
           />

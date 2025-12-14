@@ -29,7 +29,7 @@ export default function Navbar() {
 
   const userLinks = [
     { name: "My Profile", to: "/profile" },
-    { name: "My Appointments", to: "/appointments" },
+    { name: "My Appointments", to: "/my-appointments" },
     { name: "Medical Reports", to: "/reports" },
   ];
 
