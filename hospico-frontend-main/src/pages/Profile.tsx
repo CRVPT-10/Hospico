@@ -22,6 +22,15 @@ type UpdateProfilePayload = {
   gender?: string;
 };
 
+type Appointment = {
+  id: number;
+  appointmentTime: string;
+  status: string;
+  clinicName: string;
+  doctorName: string;
+  reason?: string;
+};
+
 export default function Profile() {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -29,15 +38,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const previousVisits = useMemo(
-    () => [
-      { id: 1, clinic: "City General Hospital", date: "Aug 12, 2024", doctor: "Dr. Sharma", summary: "Follow-up for blood work" },
-      { id: 2, clinic: "Apollo Specialty Clinic", date: "Jun 03, 2024", doctor: "Dr. Patel", summary: "Annual physical and routine check" },
-      { id: 3, clinic: "CareMinus Clinic", date: "Mar 18, 2024", doctor: "Dr. Nair", summary: "Consultation for migraine" }
-    ],
-    []
-  );
+  const [previousVisits, setPreviousVisits] = useState<Appointment[]>([]);
 
   const healthRecords = useMemo(
     () => [
@@ -67,6 +68,7 @@ export default function Profile() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const authUserData = await apiRequest<any>("/api/users/me", "GET");
 
+    fetchRecentAppointments();
       if (authUserData && authUserData.id) {
         const userProfile: UserProfile = {
           id: authUserData.id,
@@ -105,7 +107,24 @@ export default function Profile() {
       setLoading(false);
     }
   };
+fetchRecentAppointments = async () => {
+    try {
+      if (user?.id) {
+        const appointments = await apiRequest<Appointment[]>(`/api/appointments/user/${user.id}`, "GET");
+        
+        // Sort by date (most recent first) and take only 3
+        const sortedAppointments = appointments
+          .sort((a, b) => new Date(b.appointmentTime).getTime() - new Date(a.appointmentTime).getTime())
+          .slice(0, 3);
+        
+        setPreviousVisits(sortedAppointments);
+      }
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err);
+    }
+  };
 
+  const 
   const handleSave = async () => {
     if (editData.newPassword !== editData.confirmPassword) {
       setError("Passwords do not match");
@@ -366,18 +385,39 @@ export default function Profile() {
                 <span className="text-xs text-gray-500">Recent 3</span>
               </div>
               <div className="space-y-3">
-                {previousVisits.map((visit) => (
-                  <div key={visit.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-gray-900 font-medium">{visit.clinic}</p>
-                        <p className="text-sm text-gray-600">{visit.doctor}</p>
+                {previousVisits.length > 0 ? (
+                  previousVisits.map((visit) => (
+                    <div key={visit.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-gray-900 font-medium">{visit.clinicName}</p>
+                          <p className="text-sm text-gray-600">{visit.doctorName}</p>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(visit.appointmentTime).toLocaleDateString("en-US", { 
+                            month: "short", 
+                            day: "numeric", 
+                            year: "numeric" 
+                          })}
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500">{visit.date}</span>
+                      {visit.reason && (
+                        <p className="text-sm text-gray-600 mt-1">{visit.reason}</p>
+                      )}
+                      <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        visit.status === "BOOKED" ? "bg-green-100 text-green-700" : 
+                        visit.status === "CANCELLED" ? "bg-red-100 text-red-700" : 
+                        "bg-blue-100 text-blue-700"
+                      }`}>
+                        {visit.status}
+                      </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{visit.summary}</p>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <p className="text-sm">No appointments yet</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
