@@ -45,14 +45,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/find-hospitals"
-            element={
-              <ProtectedRoute>
-                <FindHospitals />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/find-hospitals" element={<FindHospitals />} />
           <Route path="/hospitals" element={<FindHospitals />} />
           <Route path="/emergency" element={<Emergency />} />
           <Route path="/find-hospital/:id" element={<HospitalProfile />} />

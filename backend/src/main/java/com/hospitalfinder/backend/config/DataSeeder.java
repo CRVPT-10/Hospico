@@ -42,7 +42,7 @@ public class DataSeeder {
     public CommandLineRunner seedClinics(ClinicRepository clinicRepository, SpecializationRepository specializationRepository) {
         return args -> {
             // Check if specific clinics already exist by name to avoid duplicates
-            if (!clinicRepository.existsByName("Kamineni Hospital")) {
+            if (!clinicRepository.existsByName("Apollo Hospitals DRDO")) {
                 // Get all specializations first
                 List<Specialization> specs = specializationRepository.findAll();
                 
@@ -105,19 +105,19 @@ public class DataSeeder {
                 clinicRepository.save(clinic3);
                 
                 Clinic clinic4 = new Clinic();
-                clinic4.setName("Dr. Pinnamaneni Siddhartha Institute of Medical Sciences & Research Foundation");
-                clinic4.setAddress("Gannavaram");
+                clinic4.setName("Apollo Hospitals DRDO");
+                clinic4.setAddress("Kanchan Bagh");
                 clinic4.setCity("Vijayawada");
-                clinic4.setLatitude(16.4892);
-                clinic4.setLongitude(80.8432);
+                clinic4.setLatitude(16.487234278787994);
+                clinic4.setLongitude(80.68412675651398);
                 clinic4.setPhone("+91-866-2432500");
                 clinic4.setImageUrl("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop");
                 
                 if (!specs.isEmpty()) {
                     clinic4.setSpecializations(List.of(
-                        specs.stream().filter(s -> "General Medicine".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
-                        specs.stream().filter(s -> "Neurosurgery".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
-                        specs.stream().filter(s -> "Orthopedics".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
+                        specs.stream().filter(s -> "Dermatology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(0)),
+                        specs.stream().filter(s -> "Gynecology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(1)),
+                        specs.stream().filter(s -> "Neurology".equalsIgnoreCase(s.getSpecialization())).findFirst().orElse(specs.get(2))
                     ));
                 }
                 

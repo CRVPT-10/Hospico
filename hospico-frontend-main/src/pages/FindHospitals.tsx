@@ -147,7 +147,27 @@ const FindHospitals = () => {
             address: hospital.address,
           }));
           
-          setHospitals(transformedData);
+          // Fallback: if filtered by city yields no results, try without city
+          if (transformedData.length === 0 && selectedLocation) {
+            const fallbackParams = new URLSearchParams();
+            if (selectedSpecializations.length > 0) {
+              selectedSpecializations.forEach((spec) => fallbackParams.append("spec", spec));
+            }
+            if (query) fallbackParams.append("search", query);
+            const queryString = fallbackParams.toString();
+            const fallbackUrl = `/api/clinics${queryString ? `?${queryString}` : ""}`;
+            const fallbackData = await apiRequest<Hospital[]>(fallbackUrl, "GET");
+            const fallbackTransformed = (fallbackData || []).map((hospital) => ({
+              ...hospital,
+              id: hospital.clinicId ? hospital.clinicId.toString() : "unknown",
+              specialties: hospital.specializations || hospital.specializations,
+              imageUrl: hospital.imageurl || hospital.imageUrl,
+              address: hospital.address,
+            }));
+            setHospitals(fallbackTransformed);
+          } else {
+            setHospitals(transformedData);
+          }
         }
       } catch (err) {
         if (!cancelled) {

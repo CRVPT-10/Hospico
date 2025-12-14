@@ -24,6 +24,8 @@ interface Hospital {
   specializations: string[];
   imageUrl?: string;
   doctors?: Doctor[];
+  latitude?: number;
+  longitude?: number;
 }
 
 const HospitalProfile = () => {
@@ -118,180 +120,202 @@ const HospitalProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section with Hospital Image */}
-      <div className="w-full h-96 bg-gray-200 overflow-hidden">
-        <img
-          src={getHospitalImageUrl(hospital.imageUrl)}
-          alt={hospital.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Hospital Info Section */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Hospital Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">{hospital.name}</h1>
-              <p className="text-gray-600 text-lg">{hospital.specializations.join(", ")}</p>
-            </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <span className="text-green-600 text-sm font-semibold">✓ Emergency Services Available</span>
-            </div>
-          </div>
-
-          {/* Location and Contact */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
-              <p className="text-gray-600 flex items-start">
-                📍 {hospital.address}, {hospital.city}
-              </p>
-            </div>
-            {hospital.phone && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Contact</h3>
-                <p className="text-gray-600 flex items-start">
-                  📞 {hospital.phone}
-                </p>
+    <div className="min-h-screen bg-slate-900">
+      {/* Hero Section */}
+      <div className="relative w-full h-64 sm:h-72 bg-slate-800 overflow-hidden">
+        <img src={getHospitalImageUrl(hospital.imageUrl)} alt={hospital.name} className="w-full h-full object-cover opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 to-slate-900/80" />
+        
+        <div className="absolute top-4 right-4">
+          <span className="px-3 py-1 rounded-full bg-emerald-600/20 text-emerald-300 text-xs font-semibold border border-emerald-500/40">Open 24/7</span>
+        </div>
+        
+        {/* Hospital Info - Centered Vertically */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">{hospital.name}</h1>
+              <p className="text-base text-slate-300 mb-3">{hospital.specializations.join(", ")}</p>
+              <div className="flex flex-wrap gap-2 mb-2">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
+                  📍 {hospital.address}
+                </span>
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
+                  Multi-Specialty Hospital
+                </span>
               </div>
-            )}
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Specialties</h3>
-              <p className="text-gray-600">Multiple Specialties</p>
+              {hospital.phone && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/60 text-slate-200 text-xs border border-slate-700">
+                    📞 {hospital.phone}
+                  </span>
+                </div>
+              )}
             </div>
+            
+            {/* Map Button - Right Side */}
+            {hospital.latitude && hospital.longitude && (
+              <button
+                onClick={() => {
+                  const url = `https://www.google.com/maps?q=${hospital.latitude},${hospital.longitude}`;
+                  window.open(url, '_blank');
+                }}
+                className="w-64 h-36 bg-slate-800/90 backdrop-blur-sm border-2 border-blue-500 rounded-xl overflow-hidden hover:border-blue-400 transition-all shadow-xl relative group flex-shrink-0"
+              >
+                {/* Map-like background with grid */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-700">
+                  {/* Grid pattern to simulate map */}
+                  <div className="absolute inset-0 opacity-20" style={{
+                    backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
+                    backgroundSize: '25px 25px'
+                  }}></div>
+                  {/* Road-like lines */}
+                  <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-blue-400/40 transform -rotate-12"></div>
+                  <div className="absolute top-1/3 left-0 right-0 h-1 bg-blue-300/30 transform rotate-6"></div>
+                </div>
+                
+                {/* Pin marker */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full">
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-red-500 rounded-full border-4 border-white shadow-xl"></div>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[10px] border-transparent border-t-red-500"></div>
+                  </div>
+                </div>
+                
+                {/* Bottom gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent pointer-events-none"></div>
+                
+                {/* Text */}
+                <div className="absolute bottom-3 left-0 right-0 text-center">
+                  <div className="text-sm text-white font-semibold drop-shadow-md group-hover:text-blue-300 transition-colors">View on Map</div>
+                </div>
+              </button>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Doctors Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Our Doctors</h2>
-          {hospital.doctors && hospital.doctors.length > 0 ? (
-            <div className="space-y-6">
-              {hospital.doctors.map((doctor) => (
-                <div
-                  key={doctor.id}
-                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow"
-                >
-                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-center">
-                    {/* Left Section - Button */}
-                    <div className="flex items-center">
-                      <button 
-                        onClick={() => {
-                          setActiveTab({});
-                          setSelectedDoctorId(doctor.id);
-                          setShowBookingModal(true);
-                        }}
-                        className="w-full sm:w-auto px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-full hover:bg-blue-50 font-medium text-sm transition-colors"
-                      >
-                        Book An Appointment
-                      </button>
+      {/* Doctors Section */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white">Our Doctors</h2>
+        </div>
+
+        {/* Doctors List */}
+        {hospital.doctors && hospital.doctors.length > 0 ? (
+          <div className="space-y-6">
+            {hospital.doctors.map((doctor) => (
+              <div key={doctor.id} className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start">
+                  {/* Left Section - Doctor Image & Info */}
+                  <div className="flex gap-4 items-start">
+                    <div className="flex-shrink-0">
+                      <img src={getDoctorImageUrl(doctor.imageUrl)} alt={doctor.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg" />
                     </div>
-
-                    {/* Middle Section - Services & Timings Tabs */}
-                    <div className="flex-1 lg:border-l border-gray-200 lg:pl-6">
-                      <div className="flex gap-6 mb-4 border-b border-gray-200">
-                        <button 
-                          onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'services' })}
-                          className={`pb-2 text-sm font-medium transition-colors ${
-                            activeTab[doctor.id] !== 'timings' 
-                              ? 'text-blue-600 border-b-2 border-blue-600' 
-                              : 'text-gray-600 hover:text-gray-900'
-                          }`}
-                        >
-                          Services Offered
-                        </button>
-                        <button 
-                          onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'timings' })}
-                          className={`pb-2 text-sm font-medium transition-colors ${
-                            activeTab[doctor.id] === 'timings' 
-                              ? 'text-blue-600 border-b-2 border-blue-600' 
-                              : 'text-gray-600 hover:text-gray-900'
-                          }`}
-                        >
-                          Timings
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {activeTab[doctor.id] === 'timings' ? (
-                          <div className="space-y-3 mt-2">
-                            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-600 rounded-lg p-4">
-                              <p className="text-xs font-semibold text-blue-900 uppercase mb-2">Weekdays & Saturday</p>
-                              <div className="flex flex-wrap gap-2">
-                                <span className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-full">
-                                  MON - SAT
-                                </span>
-                                <div className="flex items-center gap-2 flex-1">
-                                  <span className="text-sm font-semibold text-gray-800">09:00 AM - 01:00 PM</span>
-                                  <span className="text-gray-500">&</span>
-                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 08:00 PM</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-600 rounded-lg p-4">
-                              <p className="text-xs font-semibold text-orange-900 uppercase mb-2">Sunday</p>
-                              <div className="flex flex-wrap gap-2">
-                                <span className="bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-full">
-                                  SUN
-                                </span>
-                                <div className="flex items-center gap-2 flex-1">
-                                  <span className="text-sm font-semibold text-gray-800">09:00 AM - 01:00 PM</span>
-                                  <span className="text-gray-500">&</span>
-                                  <span className="text-sm font-semibold text-gray-800">02:00 PM - 06:00 PM</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-base font-bold text-gray-900">
-                              {doctor.specialization || 'Multiple Specializations'}
-                            </p>
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {doctor.biography || 'Day time OPD'}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right Section - Doctor Info & Image */}
-                    <div className="flex gap-4 items-start lg:border-l border-gray-200 lg:pl-6">
-                      <div className="flex-1 lg:text-right">
-                        <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{doctor.qualification || 'Medical Doctor'}</p>
-                        <p className="text-xs text-gray-700 font-medium mb-3">
-                          {doctor.specialization || 'General Practitioner'}
-                        </p>
-                        <div className="space-y-1 text-xs text-gray-600">
-                          <p className="flex items-center lg:justify-end gap-2">
-                            <span>📍 City Location</span>
-                          </p>
-                          <p className="flex items-center lg:justify-end gap-2">
-                            <span>Yrs 15</span>
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <img
-                          src={getDoctorImageUrl(doctor.imageUrl)}
-                          alt={doctor.name}
-                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
-                        />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-white">{doctor.name}</h3>
+                      <p className="text-xs text-slate-400 mb-1">{doctor.specialization || "General Practitioner"}</p>
+                      <p className="text-xs text-slate-500 mb-3">15 years exp • {doctor.qualification || "MD"}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-emerald-300">🟢 Available</span>
+                        <span className="text-xs text-slate-400">Next: Today, 4:00 PM</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Middle Section - Services & Timings Tabs */}
+                  <div className="flex-1 lg:border-l border-slate-600 lg:pl-6">
+                    <div className="flex gap-6 mb-4">
+                      <button 
+                        onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'services' })}
+                        className={`pb-2 text-sm font-medium transition-colors ${
+                          activeTab[doctor.id] !== 'timings' 
+                            ? 'text-blue-400 border-b-2 border-blue-400' 
+                            : 'text-slate-400 hover:text-slate-300'
+                        }`}
+                      >
+                        Services Offered
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'timings' })}
+                        className={`pb-2 text-sm font-medium transition-colors ${
+                          activeTab[doctor.id] === 'timings' 
+                            ? 'text-blue-400 border-b-2 border-blue-400' 
+                            : 'text-slate-400 hover:text-slate-300'
+                        }`}
+                      >
+                        Timings
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {activeTab[doctor.id] === 'timings' ? (
+                        <div className="space-y-3 mt-2">
+                          <div className="bg-blue-500/20 border-l-4 border-blue-400 rounded-lg p-4">
+                            <p className="text-xs font-semibold text-blue-300 uppercase mb-2">Weekdays & Saturday</p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-full">
+                                MON–SAT
+                              </span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-sm font-semibold text-slate-200">09:00 AM – 01:00 PM</span>
+                                <span className="text-slate-400">&</span>
+                                <span className="text-sm font-semibold text-slate-200">02:00 PM – 08:00 PM</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-orange-500/20 border-l-4 border-orange-400 rounded-lg p-4">
+                            <p className="text-xs font-semibold text-orange-300 uppercase mb-2">Sunday</p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-full">
+                                SUN
+                              </span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-sm font-semibold text-slate-200">09:00 AM – 01:00 PM</span>
+                                <span className="text-slate-400">&</span>
+                                <span className="text-sm font-semibold text-slate-200">02:00 PM – 06:00 PM</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-base font-bold text-slate-100">
+                            {doctor.specialization || 'General Practitioner'}
+                          </p>
+                          <p className="text-sm text-slate-300 leading-relaxed">
+                            {doctor.biography || 'Day time OPD'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Section - Rating & Book Button */}
+                  <div className="flex flex-col gap-3 items-end flex-shrink-0 lg:border-l border-slate-600 lg:pl-6">
+                    <div className="flex items-center gap-1">
+                      <span className="text-amber-400">⭐</span>
+                      <span className="text-sm font-bold text-white">4.8</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setActiveTab({});
+                        setSelectedDoctorId(doctor.id);
+                        setShowBookingModal(true);
+                      }}
+                      className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm"
+                    >
+                      Book
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600">No doctors available</p>
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 text-center">
+            <p className="text-slate-300">No doctors available</p>
+          </div>
+        )}
       </div>
 
       {/* Appointment Booking Modal */}

@@ -13,51 +13,41 @@ const HospitalSearch = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(true);
 
-  // Get user's location on component mount
+  // Detect user's location on mount
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          
           try {
-            // Use a reverse geocoding service to get the city name
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
-            
-            if (data.city) {
-              setSelectedLocation(data.city);
-            } else if (data.locality) {
-              setSelectedLocation(data.locality);
-            } else if (data.principalSubdivision) {
-              setSelectedLocation(data.principalSubdivision);
-            } else {
-              setSelectedLocation("Vijayawada"); // Fallback to default
-            }
-          } catch (error) {
-            console.error("Error getting location name:", error);
-            setSelectedLocation("Vijayawada"); // Fallback to default
+            if (data.city) setSelectedLocation(data.city);
+            else if (data.locality) setSelectedLocation(data.locality);
+            else if (data.principalSubdivision) setSelectedLocation(data.principalSubdivision);
+            else setSelectedLocation("Vijayawada");
+          } catch (e) {
+            console.error("Error getting location name:", e);
+            setSelectedLocation("Vijayawada");
           } finally {
             setIsGettingLocation(false);
           }
         },
         (error) => {
           console.error("Error getting location:", error);
-          setSelectedLocation("Vijayawada"); // Fallback to default
+          setSelectedLocation("Vijayawada");
           setIsGettingLocation(false);
         }
       );
     } else {
-      setSelectedLocation("Vijayawada"); // Fallback to default
+      setSelectedLocation("Vijayawada");
       setIsGettingLocation(false);
     }
   }, []);
 
   const handleSearch = () => {
-    // Navigate to protected page with query params
-    // When searching, we don't show nearby hospitals
     const params = new URLSearchParams({
       q: encodeURIComponent(searchText),
       loc: encodeURIComponent(selectedLocation),
@@ -71,30 +61,19 @@ const HospitalSearch = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          
           try {
-            // Use a reverse geocoding service to get the city name
-            // For simplicity, we'll use a free service, but in production you might want to use a paid service
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
             );
             const data = await response.json();
-            
-            if (data.city) {
-              setSelectedLocation(data.city);
-            } else if (data.locality) {
-              setSelectedLocation(data.locality);
-            } else {
-              // Fallback to coordinates if city name is not available
-              setSelectedLocation(`${data.principalSubdivision} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
-            }
-          } catch (error) {
-            console.error("Error getting location name:", error);
-            // Fallback to coordinates
+            if (data.city) setSelectedLocation(data.city);
+            else if (data.locality) setSelectedLocation(data.locality);
+            else setSelectedLocation(`${data.principalSubdivision} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          } catch (e) {
+            console.error("Error getting location name:", e);
             setSelectedLocation(`(${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
           } finally {
             setIsGettingLocation(false);
-            // Navigate to find-hospitals with coordinates for nearby hospitals and location name
             const params = new URLSearchParams({
               lat: latitude.toString(),
               lng: longitude.toString(),
@@ -116,13 +95,13 @@ const HospitalSearch = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 sm:p-6">
+    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1 sm:flex-[0.80]">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-300">
               <svg
-                className="h-5 w-5 text-gray-400"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -136,16 +115,16 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <input
-              className="block w-full pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search hospitals, specialties…"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
           <div className="relative flex-1 sm:flex-[0.20]">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-300">
               <svg
-                className="h-5 w-5 text-gray-400"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -165,7 +144,7 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <select
-              className="block w-full pl-10 pr-20 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none"
+              className="block w-full pl-10 pr-20 py-2 sm:py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
             >
@@ -176,18 +155,18 @@ const HospitalSearch = () => {
               <option value="Hyderabad">Hyderabad</option>
               <option value="Bangalore">Bangalore</option>
             </select>
-            <div className="absolute inset-y-0 right-14 flex items-center pr-2 pointer-events-none">
-              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <div className="absolute inset-y-0 right-14 flex items-center pr-2 pointer-events-none text-slate-400">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
             <button
-              className="absolute inset-y-0 right-0 m-1 px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md flex items-center justify-center bg-white hover:bg-blue-50"
+              className="absolute inset-y-0 right-0 m-1 px-3 py-1 text-xs font-semibold text-blue-100 bg-blue-600 hover:bg-blue-500 rounded-lg flex items-center justify-center shadow-lg border border-blue-500/30"
               onClick={getCurrentLocation}
               disabled={isGettingLocation}
             >
               {isGettingLocation ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,14 +182,14 @@ const HospitalSearch = () => {
             </button>
           </div>
           <button
-            className="w-full sm:w-auto px-4 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+            className="w-full sm:w-auto px-5 py-2 sm:py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-semibold shadow-xl border border-blue-400/50"
             onClick={handleSearch}
           >
             Search
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-1 text-sm text-gray-600 mt-3">
+      <div className="flex items-center gap-1 text-sm text-slate-200 mt-3">
         <span className="whitespace-nowrap">Filter by specialty:</span>
       </div>
       <SpecialtyFilters 
@@ -287,7 +266,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
   return (
     <div className="mt-2 flex items-center gap-1">
       <button
-        className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
+        className="flex-shrink-0 p-1 rounded-full hover:bg-slate-800 text-slate-200"
         onClick={scrollLeft}
       >
         <svg
@@ -306,15 +285,15 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
       </button>
       <div
         id="specialties-container"
-        className="flex flex-1 gap-1 overflow-x-auto scrollbar-none"
+        className="flex flex-1 gap-2 overflow-x-auto scrollbar-none"
       >
         {specialties.map((s) => (
           <button
             key={s.id}
-            className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${
               selectedSpecializations.includes(s.specialization)
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-700"
+                ? "bg-blue-500 text-white border-blue-400 shadow-lg"
+                : "bg-slate-800/80 text-slate-100 border-slate-700 hover:border-blue-500 hover:text-white"
             }`}
             onClick={() => handleSpecializationClick(s.specialization)}
           >
@@ -323,7 +302,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
         ))}
       </div>
       <button
-        className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
+        className="flex-shrink-0 p-1 rounded-full hover:bg-slate-800 text-slate-200"
         onClick={scrollRight}
       >
         <svg
