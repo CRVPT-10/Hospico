@@ -213,7 +213,7 @@ const FindHospitals = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-[calc(100vh-64px)] bg-gray-50">
+      <div className="min-h-[calc(100vh-64px)] bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
           <HospitalSearch />
           
@@ -221,53 +221,53 @@ const FindHospitals = () => {
           <div className="mt-8">
             {userCoordinates && (
               <div className="mb-8">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">
                   Nearby Hospitals
                 </h2>
                 <NearbyHospitals latitude={userCoordinates.lat} longitude={userCoordinates.lng} />
               </div>
             )}
             
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">
               {userCoordinates ? "Other " : ""}Hospitals{selectedLocation ? ` in ${selectedLocation}` : ""}
               {query && (
-                <span className="text-gray-600 font-normal"> {" "}for "{query}"</span>
+                <span className="text-slate-400 font-normal"> {" "}for "{query}"</span>
               )}
               {selectedSpecializations.length > 0 && (
-                <span className="text-gray-600 font-normal">
+                <span className="text-slate-400 font-normal">
                   {" "}specializing in {selectedSpecializations.join(", ")}
                 </span>
               )}
             </h2>
 
             {loading ? (
-              <div className="bg-white rounded-lg p-6 text-center">
-                <p className="text-gray-600">Loading hospitals…</p>
+              <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-600">
+                <p className="text-slate-300">Loading hospitals…</p>
               </div>
             ) : error ? (
-              <div className="bg-white rounded-lg p-6 text-center">
-                <p className="text-red-600">{error}</p>
+              <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-600">
+                <p className="text-red-400">{error}</p>
               </div>
             ) : filteredHospitals.length === 0 ? (
-              <div className="bg-white rounded-lg p-6 text-center">
-                <p className="text-gray-600">No hospitals found.</p>
+              <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-600">
+                <p className="text-slate-300">No hospitals found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredHospitals.map((hospital) => (
                   <div
                     key={hospital.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col"
+                    className="bg-slate-800 border border-slate-600 rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow flex flex-col"
                   >
                     <img
                       src={getImageUrl(hospital.imageUrl)}
                       alt={hospital.name}
                       className="w-full h-48 object-cover rounded-md mb-4"
                     />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-semibold text-slate-100 mb-2">
                       {hospital.name}
                     </h3>
-                    <div className="text-sm text-gray-600 mb-3">
+                    <div className="text-sm text-slate-300 mb-3">
                       {hospital.address && <p>📍 {hospital.address}</p>}
                       {hospital.distance !== undefined && (
                         <p>
@@ -282,7 +282,7 @@ const FindHospitals = () => {
                       {(hospital.specialties || []).map((specialty) => (
                         <span
                           key={specialty}
-                          className="rounded-full bg-blue-100 text-blue-700 px-2 py-1 text-xs font-medium"
+                          className="rounded-full bg-blue-600/30 text-blue-300 px-2 py-1 text-xs font-medium"
                         >
                           {specialty}
                         </span>
