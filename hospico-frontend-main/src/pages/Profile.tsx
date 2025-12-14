@@ -60,6 +60,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchCurrentUserProfile();
+    fetchRecentAppointments();
   }, [user, isAuthenticated]);
 
   const fetchCurrentUserProfile = async () => {
@@ -68,7 +69,6 @@ export default function Profile() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const authUserData = await apiRequest<any>("/api/users/me", "GET");
 
-    fetchRecentAppointments();
       if (authUserData && authUserData.id) {
         const userProfile: UserProfile = {
           id: authUserData.id,
@@ -107,7 +107,8 @@ export default function Profile() {
       setLoading(false);
     }
   };
-fetchRecentAppointments = async () => {
+
+  const fetchRecentAppointments = async () => {
     try {
       if (user?.id) {
         const appointments = await apiRequest<Appointment[]>(`/api/appointments/user/${user.id}`, "GET");
@@ -124,7 +125,7 @@ fetchRecentAppointments = async () => {
     }
   };
 
-  const 
+  
   const handleSave = async () => {
     if (editData.newPassword !== editData.confirmPassword) {
       setError("Passwords do not match");
