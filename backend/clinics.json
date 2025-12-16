@@ -1,0 +1,1319 @@
+﻿{
+    "value":  [
+                  {
+                      "clinicId":  1,
+                      "name":  "Latha Super Specialitiy Hospital",
+                      "address":  "29-14-58, Prakasam Road, Suryaraopet",
+                      "city":  "Vijayawada",
+                      "latitude":  16.509647444086493,
+                      "longitude":  80.63592887574914,
+                      "specializations":  [
+                                              "Neurosurgery",
+                                              "OBG",
+                                              "Pediatrics",
+                                              "Nephrology",
+                                              "Urology",
+                                              "Cardiology",
+                                              "CT Surgery",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Orthopedics",
+                                              "Pulmonology",
+                                              "Anesthesiology",
+                                              "Radiology",
+                                              "Physiotherapy Unit"
+                                          ],
+                      "phone":  "9848409889",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.8,
+                      "reviews":  4287,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  1,
+                                          "name":  "Anesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  2,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  3,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  4,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  5,
+                                          "name":  "Nephrology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nephrology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nephrology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  6,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  7,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  8,
+                                          "name":  "Dr. Rohan Sethi",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  9,
+                                          "name":  "Dr. Ananya Rao",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pediatrics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pediatrics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  10,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  11,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  12,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  13,
+                                          "name":  "Physiotherapy Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  14,
+                                          "name":  "CT Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "CT Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ct surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  2,
+                      "name":  "M. J. Naidu Super Speciality Hospital",
+                      "address":  "Near Pushpa Hotel, Suryaraopet",
+                      "city":  "Vijayawada",
+                      "latitude":  16.511327842442128,
+                      "longitude":  80.6380999639433,
+                      "specializations":  [
+                                              "Anesthesiology",
+                                              "Orthopedics",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Neurosurgery",
+                                              "Physiotherapy"
+                                          ],
+                      "phone":  "0866 243 5555",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.4,
+                      "reviews":  2105,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  15,
+                                          "name":  "Anesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  16,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  17,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  18,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  19,
+                                          "name":  "Dr. Rohan Sethi",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  20,
+                                          "name":  "Physiotherapy Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  3,
+                      "name":  "Aayush NRI LEPL Healthcare Pvt., Ltd.",
+                      "address":  "48-13-3 \u00263A, Opp. Siddartha Medical College, Ring Road, Sri Ramachandra Nagar",
+                      "city":  "Vijayawada",
+                      "latitude":  16.516162450290775,
+                      "longitude":  80.67450807846733,
+                      "specializations":  [
+                                              "Anesthesiology",
+                                              "Cardiology",
+                                              "Cardiothoracic Surgery",
+                                              "ENT",
+                                              "Emergency Medicine",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Nephrology",
+                                              "Neurosurgery",
+                                              "OBG",
+                                              "Orthopedics",
+                                              "Pathology",
+                                              "Plastic Surgery",
+                                              "Pulmonology",
+                                              "Radiology",
+                                              "Surgical Gastroenterology",
+                                              "Surgical Oncology",
+                                              "Urology",
+                                              "Physiotherapy Unit",
+                                              "Dialysis Unit"
+                                          ],
+                      "phone":  "Not Available",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.3,
+                      "reviews":  3693,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  21,
+                                          "name":  "Anesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  22,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  23,
+                                          "name":  "Dr. Arjun Mehta",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiothoracic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiothoracic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  24,
+                                          "name":  "Dr. Kavya Iyer",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "ENT",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ent specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  25,
+                                          "name":  "Dr. Karan Desai",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Emergency Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced emergency medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  26,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  27,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  28,
+                                          "name":  "Nephrology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nephrology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nephrology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  29,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  30,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  31,
+                                          "name":  "Dr. Rohan Sethi",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  32,
+                                          "name":  "Pathology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pathology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pathology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  33,
+                                          "name":  "Plastic Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Plastic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced plastic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  34,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  35,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  36,
+                                          "name":  "Surgical Gastroenterology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Gastroenterology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical gastroenterology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  37,
+                                          "name":  "Surgical Oncology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Oncology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical oncology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  38,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  39,
+                                          "name":  "Physiotherapy Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  40,
+                                          "name":  "Dialysis Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Dialysis Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced dialysis unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  4,
+                      "name":  "Nagarjuna Hospitals Limited",
+                      "address":  "Kanuru",
+                      "city":  "Vijayawada",
+                      "latitude":  16.48720574039239,
+                      "longitude":  80.68409616586813,
+                      "specializations":  [
+                                              "Anesthesiology",
+                                              "Cardiology",
+                                              "CT Surgery",
+                                              "ENT",
+                                              "Emergency Medicine",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Nephrology",
+                                              "Neurosurgery",
+                                              "Nuclear Medicine",
+                                              "OBG",
+                                              "Orthopedics",
+                                              "Pediatrics",
+                                              "Pathology",
+                                              "Plastic Surgery",
+                                              "Pulmonology",
+                                              "Radiology",
+                                              "Surgical Gastroenterology",
+                                              "Surgical Oncology",
+                                              "Urology",
+                                              "Physiotherapy Unit",
+                                              "Dialysis Unit"
+                                          ],
+                      "phone":  "Not Available",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.4,
+                      "reviews":  1783,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  64,
+                                          "name":  "Surgical Gastroenterology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Gastroenterology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical gastroenterology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  65,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  66,
+                                          "name":  "Pathology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pathology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pathology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  67,
+                                          "name":  "Dr. Ananya Rao",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pediatrics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pediatrics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  68,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  69,
+                                          "name":  "CT Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "CT Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ct surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  70,
+                                          "name":  "Dr. Karan Desai",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Emergency Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced emergency medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  71,
+                                          "name":  "Nuclear Medicine Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nuclear Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nuclear medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  72,
+                                          "name":  "Plastic Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Plastic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced plastic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  73,
+                                          "name":  "Dialysis Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Dialysis Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced dialysis unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  74,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  75,
+                                          "name":  "Nephrology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nephrology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nephrology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  76,
+                                          "name":  "Dr. Rohan Sethi",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  77,
+                                          "name":  "Anesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  78,
+                                          "name":  "Dr. Kavya Iyer",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "ENT",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ent specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  79,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  80,
+                                          "name":  "Surgical Oncology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Oncology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical oncology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  81,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  82,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  83,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  84,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  85,
+                                          "name":  "Physiotherapy Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  5,
+                      "name":  "Peoples Clinic",
+                      "address":  "Palaparthivari Street, Governorpet",
+                      "city":  "Vijayawada",
+                      "latitude":  16.506239219586416,
+                      "longitude":  80.6481031181904,
+                      "specializations":  [
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Anaesthesia",
+                                              "OBG",
+                                              "Orthopaedics",
+                                              "Paediatrics",
+                                              "Plastic Surgery"
+                                          ],
+                      "phone":  "Not Available",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.0,
+                      "reviews":  20,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  57,
+                                          "name":  "Orthopaedics Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopaedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopaedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  58,
+                                          "name":  "Anaesthesia Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anaesthesia",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anaesthesia specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  59,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  60,
+                                          "name":  "Plastic Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Plastic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced plastic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  61,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  62,
+                                          "name":  "Paediatrics Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Paediatrics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced paediatrics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  63,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  6,
+                      "name":  "Dr. Pinnamaneni Siddhartha Institute of Medical Sciences \u0026 Research Centre",
+                      "address":  "Chinaoutpalli, Gannavaram Mandal, Krishna District",
+                      "city":  "Vijayawada",
+                      "latitude":  16.554435863059652,
+                      "longitude":  80.82707554412512,
+                      "specializations":  [
+                                              "Anaesthesiology",
+                                              "Cardiology",
+                                              "CT Surgery",
+                                              "ENT",
+                                              "Emergency Medicine",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Nephrology",
+                                              "Neurosurgery",
+                                              "OBG",
+                                              "Orthopaedics",
+                                              "Paediatrics",
+                                              "Pathology",
+                                              "Plastic Surgery",
+                                              "Pulmonology",
+                                              "Radiology",
+                                              "Surgical Gastroenterology",
+                                              "Surgical Oncology",
+                                              "Urology",
+                                              "Physiotherapy Unit",
+                                              "Dialysis"
+                                          ],
+                      "phone":  "08676 257311",
+                      "website":  null,
+                      "timings":  "08:00 AM - 04:00 PM",
+                      "rating":  0.0,
+                      "reviews":  0,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  86,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  87,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  88,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  89,
+                                          "name":  "Pathology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pathology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pathology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  90,
+                                          "name":  "Paediatrics Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Paediatrics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced paediatrics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  91,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  92,
+                                          "name":  "Anaesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anaesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anaesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  93,
+                                          "name":  "Dr. Kavya Iyer",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "ENT",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ent specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  94,
+                                          "name":  "Physiotherapy Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  95,
+                                          "name":  "Surgical Gastroenterology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Gastroenterology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical gastroenterology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  96,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  97,
+                                          "name":  "Orthopaedics Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopaedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopaedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  98,
+                                          "name":  "Nephrology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nephrology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nephrology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  99,
+                                          "name":  "Plastic Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Plastic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced plastic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  100,
+                                          "name":  "Surgical Oncology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Oncology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical oncology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  101,
+                                          "name":  "Dialysis Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Dialysis",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced dialysis specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  102,
+                                          "name":  "CT Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "CT Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ct surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  103,
+                                          "name":  "Dr. Karan Desai",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Emergency Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced emergency medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  104,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  105,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  106,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  7,
+                      "name":  "Help Hospitals",
+                      "address":  "D.No.#27-29-23, Behind Victoria Musem, MG Road",
+                      "city":  "Vijayawada",
+                      "latitude":  16.508909109522097,
+                      "longitude":  80.62732582161281,
+                      "specializations":  [
+                                              "Anesthesiology",
+                                              "Cardiology",
+                                              "CT Surgery",
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Nephrology",
+                                              "Neurosurgery",
+                                              "OBG",
+                                              "Orthopedics",
+                                              "Pediatrics",
+                                              "Pulmonology",
+                                              "Radiology",
+                                              "Surgical Gastroenterology",
+                                              "Urology",
+                                              "Physiotherapy Unit",
+                                              "Dialysis Unit"
+                                          ],
+                      "phone":  "0866 5515552",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  5.0,
+                      "reviews":  0,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  41,
+                                          "name":  "Neurosurgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neurosurgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neurosurgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  42,
+                                          "name":  "Anesthesiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Anesthesiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced anesthesiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  43,
+                                          "name":  "Physiotherapy Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Physiotherapy Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced physiotherapy unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  44,
+                                          "name":  "Dialysis Unit Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Dialysis Unit",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced dialysis unit specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  45,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  46,
+                                          "name":  "Dr. Rohan Sethi",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  47,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  48,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  49,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  50,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  51,
+                                          "name":  "Surgical Gastroenterology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Gastroenterology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical gastroenterology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  52,
+                                          "name":  "Dr. Ananya Rao",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pediatrics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pediatrics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  53,
+                                          "name":  "Nephrology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Nephrology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced nephrology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  54,
+                                          "name":  "CT Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "CT Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ct surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  55,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  56,
+                                          "name":  "OBG Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "OBG",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced obg specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  },
+                  {
+                      "clinicId":  8,
+                      "name":  "Liberty Hospitals",
+                      "address":  "74-1-2, King Squere Buildings OPP; Auto Nagar Bus Terminal, Bandar Road",
+                      "city":  "Vijayawada",
+                      "latitude":  16.489950539458864,
+                      "longitude":  80.67154769955941,
+                      "specializations":  [
+                                              "General Medicine",
+                                              "General Surgery",
+                                              "Neuro Surgery",
+                                              "CT Surgery",
+                                              "Orthopaedics",
+                                              "Cardiology",
+                                              "Pulmonology",
+                                              "Radiology",
+                                              "Plastic Surgery",
+                                              "Surgical Oncology",
+                                              "Urology"
+                                          ],
+                      "phone":  "0866 255 4888",
+                      "website":  null,
+                      "timings":  "Open 24 Hours",
+                      "rating":  4.5,
+                      "reviews":  779,
+                      "imageUrl":  "/src/assets/images/default-hospital.jpg",
+                      "doctors":  [
+                                      {
+                                          "id":  107,
+                                          "name":  "Dr. Sarah Johnson",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Cardiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced cardiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  108,
+                                          "name":  "Dr. Saira Khan",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Pulmonology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced pulmonology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  109,
+                                          "name":  "Dr. Meera Kapoor",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  110,
+                                          "name":  "Surgical Oncology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Surgical Oncology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced surgical oncology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  111,
+                                          "name":  "Plastic Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Plastic Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced plastic surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  112,
+                                          "name":  "Radiology Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Radiology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced radiology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  113,
+                                          "name":  "CT Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "CT Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced ct surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  114,
+                                          "name":  "Neuro Surgery Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Neuro Surgery",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced neuro surgery specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  115,
+                                          "name":  "Dr. Vikram Das",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Urology",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced urology specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  116,
+                                          "name":  "Dr. Michael Chen",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "General Medicine",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced general medicine specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      },
+                                      {
+                                          "id":  117,
+                                          "name":  "Orthopaedics Specialist",
+                                          "qualifications":  "MBBS, MD",
+                                          "specialization":  "Orthopaedics",
+                                          "experience":  "15 years",
+                                          "biography":  "Experienced orthopaedics specialist providing comprehensive care.",
+                                          "imageUrl":  null
+                                      }
+                                  ]
+                  }
+              ],
+    "Count":  8
+}
