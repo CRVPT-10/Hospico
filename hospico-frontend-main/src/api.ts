@@ -52,10 +52,10 @@ export async function apiRequest<TResponse, TBody = unknown>(
     return response.data;
   } catch (error) {
     const err = error as AxiosError<{ message?: string } | string>;
-    
+
     // More detailed error handling
     let message = "Request failed";
-    
+
     if (err.response) {
       // Server responded with error status
       switch (err.response.status) {
@@ -102,9 +102,30 @@ export async function apiRequest<TResponse, TBody = unknown>(
       // Something else happened
       message = err.message || "Unknown Error";
     }
-    
+
     throw new Error(message);
   }
 }
+
+export const downloadFile = async (url: string, filename: string) => {
+  try {
+    const response = await apiClient.get(url, { responseType: 'blob' });
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    const downloadUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    console.error('Download failed:', error);
+    throw new Error('Failed to download file');
+  }
+};
 
 export { API_BASE_URL };

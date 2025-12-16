@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
-import defaultHospitalImage from "../assets/images/default-hospital.jpeg";
+import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 
 interface NearbyHospital {
   clinicId: number;

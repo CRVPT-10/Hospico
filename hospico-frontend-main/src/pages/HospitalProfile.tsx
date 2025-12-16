@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import defaultHospitalImage from "../assets/images/default-hospital.jpeg";
+import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 import defaultDoctorImage from "../assets/images/default-doctor.jpeg";
 import { apiRequest } from "../api";
 import AppointmentBooking from "../components/AppointmentBooking";

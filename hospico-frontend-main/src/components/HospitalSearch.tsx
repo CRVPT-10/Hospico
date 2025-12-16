@@ -285,7 +285,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
       </button>
       <div
         id="specialties-container"
-        className="flex flex-1 gap-2 overflow-x-auto scrollbar-none"
+        className="flex flex-1 gap-2 overflow-x-auto pb-2"
       >
         {specialties.map((s) => (
           <button

@@ -18,46 +18,61 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
-@Table(
-        name = "clinic",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "address", "city"})
-)
+@Table(name = "clinic", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "address", "city" }))
 @Entity
 public class Clinic {
     @Id
     @GeneratedValue
-    @Getter @Setter
+    @Getter
+    @Setter
     private Long id;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String name;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String address;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String city;
-    @Getter @Setter
+    @Getter
+    @Setter
     private Double latitude;
-    @Getter @Setter
+    @Getter
+    @Setter
     private Double longitude;
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-        name = "clinic_specializations",
-        joinColumns = @JoinColumn(name = "clinic_id"),
-        inverseJoinColumns = @JoinColumn(name = "specializations_id")  // Changed to specializations_id to match DB schema
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
+    @JoinTable(name = "clinic_specializations", joinColumns = @JoinColumn(name = "clinic_id"), inverseJoinColumns = @JoinColumn(name = "specializations_id") // Changed
+                                                                                                                                                             // to
+                                                                                                                                                             // specializations_id
+                                                                                                                                                             // to
+                                                                                                                                                             // match
+                                                                                                                                                             // DB
+                                                                                                                                                             // schema
     )
-    @Getter @Setter
+    @Getter
+    @Setter
     private Collection<Specialization> specializations = new ArrayList<>();
-    @Getter @Setter
+    @Getter
+    @Setter
     private String phone;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String website;
-    @Getter @Setter
+    @Getter
+    @Setter
     private String timings;
-    @Getter @Setter
+    @Getter
+    @Setter
     private Double rating;
-    @Getter @Setter
+    @Getter
+    @Setter
     private Integer reviews;
-    @Getter @Setter @OneToMany(mappedBy = "clinic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "clinic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Doctor> doctors = new ArrayList<>();
-    @Getter @Setter
+    @Getter
+    @Setter
     private String imageUrl;
 }

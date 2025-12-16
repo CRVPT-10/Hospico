@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Edit, Mail, Phone, Save, User, X } from "lucide-react";
-import type { RootState } from "../store/store";
+import { useAppDispatch, type RootState } from "../store/store";
+import { fetchUserRecords } from "../features/medicalRecords/medicalRecordsSlice";
 import { apiRequest } from "../api";
 
 type UserProfile = {
@@ -33,21 +35,15 @@ type Appointment = {
 
 export default function Profile() {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { files: healthRecords } = useSelector((state: RootState) => state.medicalRecords);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previousVisits, setPreviousVisits] = useState<Appointment[]>([]);
-
-  const healthRecords = useMemo(
-    () => [
-      { id: 1, title: "Blood Test Report", date: "Aug 10, 2024", type: "PDF" },
-      { id: 2, title: "X-Ray - Chest", date: "May 22, 2024", type: "Image" },
-      { id: 3, title: "Prescription", date: "Jan 15, 2024", type: "PDF" }
-    ],
-    []
-  );
 
   const [editData, setEditData] = useState({
     name: "",
@@ -61,7 +57,10 @@ export default function Profile() {
   useEffect(() => {
     fetchCurrentUserProfile();
     fetchRecentAppointments();
-  }, [user, isAuthenticated]);
+    if (user?.id) {
+      dispatch(fetchUserRecords(Number(user.id)));
+    }
+  }, [user, isAuthenticated, dispatch]);
 
   const fetchCurrentUserProfile = async () => {
     try {
@@ -453,20 +452,33 @@ export default function Profile() {
           )}
 
           <div className="mt-6 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 shadow-sm dark:shadow-lg p-4 sm:p-5 transition-colors duration-200">
-            <div className="flex itemscenter justify-between mb-4">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-700 dark:text-slate-200 tracking-wide uppercase">Health Records</h2>
-              <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Upload</button>
+              <button
+                onClick={() => navigate('/reports')}
+                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+              >
+                Upload
+              </button>
             </div>
             <div className="space-y-3">
-              {healthRecords.map((record) => (
-                <div key={record.id} className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-700 p-3 flex items-center justify-between shadow-sm">
-                  <div>
-                    <p className="text-gray-900 dark:text-slate-100 font-medium">{record.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">{record.date}</p>
+              {healthRecords.length > 0 ? (
+                healthRecords.slice(0, 5).map((record) => (
+                  <div key={record.id} className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-700 p-3 flex items-center justify-between shadow-sm">
+                    <div className="flex-1 min-w-0 mr-4">
+                      <p className="text-gray-900 dark:text-slate-100 font-medium truncate" title={record.name}>{record.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{record.date}</p>
+                    </div>
+                    <span className="text-xs px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-600/30 text-blue-800 dark:text-blue-300 font-semibold shrink-0">
+                      {record.category}
+                    </span>
                   </div>
-                  <span className="text-xs px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-600/30 text-blue-800 dark:text-blue-300 font-semibold">{record.type}</span>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500 dark:text-slate-400 text-sm">
+                  No health records found.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

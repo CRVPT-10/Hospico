@@ -17,6 +17,7 @@ import Emergency from "./pages/Emergency";
 import HospitalProfile from "./pages/HospitalProfile";
 import Profile from "./pages/Profile.tsx";
 import MyAppointments from "./pages/MyAppointments";
+import MedicalReports from "./pages/MedicalReports";
 
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -99,6 +100,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MyAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <MedicalReports />
                 </ProtectedRoute>
               }
             />

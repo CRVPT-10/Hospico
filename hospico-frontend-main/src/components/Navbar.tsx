@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, Phone, User, Menu, X, ChevronDown, Moon, Sun } from "lucide-react";
+import { Building2, Phone, User, Menu, X, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { useAppDispatch } from "../store/store";
 import { logout } from "../features/auth/authSlice";
-import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,8 +14,6 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement | null>(null);
-
-  const { theme, toggleTheme } = useTheme();
 
   const { isAuthenticated } = useSelector((s: RootState) => s.auth);
 
@@ -111,17 +109,9 @@ export default function Navbar() {
           {/* Desktop Right Menu */}
           <div className="hidden lg:flex items-center space-x-6 ml-auto">
             {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </button>
+            <div className="flex items-center">
+              <ThemeToggle />
+            </div>
 
             <a
               href="tel:1234567890"
@@ -201,20 +191,7 @@ export default function Navbar() {
             {/* Mobile Theme Toggle */}
             <div className="flex items-center justify-between px-2">
               <span className="text-gray-700 dark:text-slate-200 font-medium">Theme</span>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                {theme === 'light' ? (
-                  <div className="flex items-center gap-2">
-                    <Moon className="h-5 w-5" /> <span>Dark Mode</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-5 w-5" /> <span>Light Mode</span>
-                  </div>
-                )}
-              </button>
+              <ThemeToggle />
             </div>
 
             {[...mainLinks, ...resourceLinks].map((link) => (

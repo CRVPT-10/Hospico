@@ -19,7 +19,7 @@ const Dashboard = () => {
       <div className="bg-gradient-to-r from-indigo-500 to-sky-500 mx-3 px-4 sm:py-8 lg:py-12">
         <div className="sm:px-15 lg:px-20">
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-2 sm:mb-4 text-white">
-            Find the Best Healthcare Near You
+            India's Healthcare Search Engine
           </h1>
           <p className="text-sm sm:text-base text-white mb-6">
             Connect with top rated hospitals and specialties in your area

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import HospitalSearch from "../components/HospitalSearch";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { apiRequest } from "../api";
-import defaultHospitalImage from "../assets/images/default-hospital.jpeg";
+import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 import NearbyHospitals from "../components/NearbyHospitals";
 
 interface Hospital {
