@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, Eye, Trash2, File, Image as ImageIcon, X } from 'lucide-react';
 import { useSelector } from "react-redux";
 import { useAppDispatch, type RootState } from "../store/store";
-import { fetchUserRecords, uploadRecord, deleteRecord, type MedFile, type ReportCategory } from "../features/medicalRecords/medicalRecordsSlice";
+import { fetchUserRecords, uploadRecord, deleteRecord, type ReportCategory } from "../features/medicalRecords/medicalRecordsSlice";
 
 const MedicalReports = () => {
     const [activeTab, setActiveTab] = useState<ReportCategory>('Diagnostics');
