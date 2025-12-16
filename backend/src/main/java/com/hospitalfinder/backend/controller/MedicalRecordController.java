@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/medical-records")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class MedicalRecordController {
 
     @Autowired

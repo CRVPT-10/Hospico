@@ -12,7 +12,6 @@ import com.hospitalfinder.backend.entity.Doctor;
 import com.hospitalfinder.backend.entity.Specialization;
 import com.hospitalfinder.backend.repository.ClinicRepository;
 import com.hospitalfinder.backend.repository.DoctorRepository;
-import com.hospitalfinder.backend.repository.SpecializationRepository;
 
 @Configuration
 public class DataSeeder {
@@ -58,6 +57,9 @@ public class DataSeeder {
                     System.out.println("Renamed " + name + " to " + newName);
                 }
             }
+
+            // Ensure all clinics, including new ones, have doctors
+            seedMissingDoctors(clinicRepository, doctorRepository);
         };
     }
 

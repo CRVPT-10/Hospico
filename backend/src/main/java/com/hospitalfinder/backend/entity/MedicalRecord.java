@@ -30,7 +30,8 @@ public class MedicalRecord {
     private String category; // Diagnostics, Scanning, Prescriptions, Bills
 
     @Lob
-    @Column(columnDefinition = "BLOB")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
+    @Column(columnDefinition = "bytea")
     private byte[] data;
 
     @Column(name = "upload_date")

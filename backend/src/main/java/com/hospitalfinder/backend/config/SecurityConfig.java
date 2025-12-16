@@ -38,8 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/users/me").permitAll()
                         .requestMatchers("/api/clinics/**", "/api/specializations/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .anyRequest().authenticated());
 
         return http.build();
     }
