@@ -18,6 +18,8 @@ import HospitalProfile from "./pages/HospitalProfile";
 import Profile from "./pages/Profile.tsx";
 import MyAppointments from "./pages/MyAppointments";
 
+import { ThemeProvider } from "./context/ThemeContext";
+
 function App() {
   useAuthInitializer();
 
@@ -63,46 +65,48 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <TitleUpdater />
-      <div className="h-screen overflow-y-auto">
-        <Navbar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/partner-login" element={<PartnerLogin />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/find-hospitals" element={<FindHospitals />} />
-          <Route path="/hospitals" element={<FindHospitals />} />
-          <Route path="/emergency" element={<Emergency />} />
-          <Route path="/find-hospital/:id" element={<HospitalProfile />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-appointments"
-            element={
-              <ProtectedRoute>
-                <MyAppointments />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Dashboard />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <TitleUpdater />
+        <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
+          <Navbar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/partner-login" element={<PartnerLogin />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/find-hospitals" element={<FindHospitals />} />
+            <Route path="/hospitals" element={<FindHospitals />} />
+            <Route path="/emergency" element={<Emergency />} />
+            <Route path="/find-hospital/:id" element={<HospitalProfile />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-appointments"
+              element={
+                <ProtectedRoute>
+                  <MyAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Dashboard />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

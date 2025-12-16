@@ -88,40 +88,40 @@ export default function Emergency() {
       {/* Quick Actions */}
       <section className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-red-50 p-3 rounded-full w-fit mb-4">
-              <Ambulance className="h-6 w-6 text-red-600" />
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
+              <Ambulance className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Ambulance Service</h3>
-            <p className="text-gray-600 mb-4">24/7 emergency medical transportation</p>
-            <a href="tel:911" className="text-red-600 font-semibold flex items-center gap-2">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">Ambulance Service</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">24/7 emergency medical transportation</p>
+            <a href="tel:911" className="text-red-600 dark:text-red-400 font-semibold flex items-center gap-2 hover:text-red-700 dark:hover:text-red-300 transition-colors">
               <Phone className="h-5 w-5" />
               Call Now
             </a>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-red-50 p-3 rounded-full w-fit mb-4">
-              <FirstAid className="h-6 w-6 text-red-600" />
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
+              <FirstAid className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Emergency Rooms</h3>
-            <p className="text-gray-600 mb-4">Find nearest emergency facilities</p>
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">Emergency Rooms</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Find nearest emergency facilities</p>
             <button
               onClick={fetchNearbyFacilities}
-              className="text-red-600 font-semibold flex items-center gap-2"
+              className="text-red-600 dark:text-red-400 font-semibold flex items-center gap-2 hover:text-red-700 dark:hover:text-red-300 transition-colors"
             >
               <MapPin className="h-5 w-5" />
               Locate ER
             </button>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="bg-red-50 p-3 rounded-full w-fit mb-4">
-              <Clock className="h-6 w-6 text-red-600" />
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
+              <Clock className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Wait Times</h3>
-            <p className="text-gray-600 mb-4">Real-time ER wait time information</p>
-            <button className="text-red-600 font-semibold flex items-center gap-2">
+            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">Wait Times</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">Real-time ER wait time information</p>
+            <button className="text-red-600 dark:text-red-400 font-semibold flex items-center gap-2 hover:text-red-700 dark:hover:text-red-300 transition-colors">
               Check Times
             </button>
           </div>
@@ -130,8 +130,8 @@ export default function Emergency() {
 
       {/* Emergency Guidelines */}
       <section className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">When to Seek Emergency Care</h2>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">When to Seek Emergency Care</h2>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
           <ul className="space-y-4">
             {[
               "Chest pain or difficulty breathing",
@@ -143,8 +143,8 @@ export default function Emergency() {
               "Severe allergic reactions",
               "Major burns or injuries"
             ].map((symptom) => (
-              <li key={symptom} className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <li key={symptom} className="flex items-center gap-3 text-gray-700 dark:text-gray-200">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
                 <span>{symptom}</span>
               </li>
             ))}
@@ -153,31 +153,31 @@ export default function Emergency() {
       </section>
 
       {/* Nearby Facilities */}
-      <section className="max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Nearby Emergency Facilities</h2>
+      <section className="max-w-6xl mx-auto pb-10">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Nearby Emergency Facilities</h2>
         <div className="grid md:grid-cols-2 gap-6">
           {loadingNearby && (
-            <div className="md:col-span-2 text-gray-600">Locating nearby emergency rooms...</div>
+            <div className="md:col-span-2 text-gray-600 dark:text-gray-400">Locating nearby emergency rooms...</div>
           )}
 
           {errorNearby && !loadingNearby && (
-            <div className="md:col-span-2 text-red-700 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="md:col-span-2 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 transition-colors duration-200">
               {errorNearby}
             </div>
           )}
 
           {!loadingNearby && !errorNearby && facilities.length === 0 && (
-            <div className="md:col-span-2 text-gray-600 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="md:col-span-2 text-gray-600 dark:text-gray-400 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
               No nearby emergency facilities found.
             </div>
           )}
 
           {!loadingNearby && !errorNearby && facilities.map((facility) => (
-            <div key={facility.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-lg mb-2">{facility.name}</h3>
-              <div className="space-y-2 text-gray-600">
+            <div key={facility.id} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">{facility.name}</h3>
+              <div className="space-y-2 text-gray-600 dark:text-gray-300">
                 <p className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
+                  <MapPin className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   {facility.address}
                   {(() => {
                     const d = facility.distanceKm ?? facility.distance;
@@ -186,7 +186,7 @@ export default function Emergency() {
                 </p>
                 {(facility.estimatedWaitMinutes ?? facility.etaMinutes ?? facility.estimatedTime) != null && (
                   <p className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
+                    <Clock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     Current wait: {facility.estimatedWaitMinutes ?? facility.etaMinutes ?? facility.estimatedTime} minutes
                   </p>
                 )}
@@ -195,7 +195,7 @@ export default function Emergency() {
                 href={getDirectionsLink(facility)}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex justify-center w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="mt-4 inline-flex justify-center w-full py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg transition-colors"
               >
                 Get Directions
               </a>

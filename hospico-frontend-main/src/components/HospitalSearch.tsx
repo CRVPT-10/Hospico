@@ -95,11 +95,11 @@ const HospitalSearch = () => {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
+    <div className="bg-white/90 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg transition-colors duration-200">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1 sm:flex-[0.80]">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-300">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-slate-300">
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -115,14 +115,14 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <input
-              className="block w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/70 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors duration-200"
               placeholder="Search hospitals, specialties…"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
           <div className="relative flex-1 sm:flex-[0.20]">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-300">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-slate-300">
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -144,7 +144,7 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <select
-              className="block w-full pl-10 pr-20 py-2 sm:py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              className="block w-full pl-10 pr-20 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/70 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm transition-colors duration-200"
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
             >
@@ -155,7 +155,7 @@ const HospitalSearch = () => {
               <option value="Hyderabad">Hyderabad</option>
               <option value="Bangalore">Bangalore</option>
             </select>
-            <div className="absolute inset-y-0 right-14 flex items-center pr-2 pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 right-14 flex items-center pr-2 pointer-events-none text-gray-400 dark:text-slate-400">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
@@ -182,17 +182,17 @@ const HospitalSearch = () => {
             </button>
           </div>
           <button
-            className="w-full sm:w-auto px-5 py-2 sm:py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-semibold shadow-xl border border-blue-400/50"
+            className="w-full sm:w-auto px-5 py-2 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-xl border border-blue-500/50 transition-colors"
             onClick={handleSearch}
           >
             Search
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-1 text-sm text-slate-200 mt-3">
+      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-slate-200 mt-3">
         <span className="whitespace-nowrap">Filter by specialty:</span>
       </div>
-      <SpecialtyFilters 
+      <SpecialtyFilters
         searchText={searchText}
         selectedLocation={selectedLocation}
       />
@@ -200,9 +200,9 @@ const HospitalSearch = () => {
   );
 };
 
-function SpecialtyFilters({ searchText, selectedLocation }: { 
-  searchText: string; 
-  selectedLocation: string; 
+function SpecialtyFilters({ searchText, selectedLocation }: {
+  searchText: string;
+  selectedLocation: string;
 }) {
   const [specialties, setSpecialties] = useState<Specialization[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
@@ -242,7 +242,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
       ? selectedSpecializations.filter((s) => s !== specialization)
       : [...selectedSpecializations, specialization];
     setSelectedSpecializations(nextSelection);
-    
+
     // Build params for navigation using current search text and selected location
     const params = new URLSearchParams({
       q: encodeURIComponent(searchText),
@@ -251,7 +251,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
 
     // Append all selected specs as repeated params
     nextSelection.forEach((spec) => params.append("spec", encodeURIComponent(spec)));
-    
+
     navigate(`/find-hospitals?${params.toString()}`);
   };
 
@@ -266,7 +266,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
   return (
     <div className="mt-2 flex items-center gap-1">
       <button
-        className="flex-shrink-0 p-1 rounded-full hover:bg-slate-800 text-slate-200"
+        className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 dark:text-slate-200"
         onClick={scrollLeft}
       >
         <svg
@@ -290,11 +290,10 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
         {specialties.map((s) => (
           <button
             key={s.id}
-            className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${
-              selectedSpecializations.includes(s.specialization)
-                ? "bg-blue-500 text-white border-blue-400 shadow-lg"
-                : "bg-slate-800/80 text-slate-100 border-slate-700 hover:border-blue-500 hover:text-white"
-            }`}
+            className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${selectedSpecializations.includes(s.specialization)
+              ? "bg-blue-500 text-white border-blue-400 shadow-lg"
+              : "bg-white text-gray-700 border-gray-200 hover:border-blue-500 hover:text-blue-600 dark:bg-slate-800/80 dark:text-slate-100 dark:border-slate-700 dark:hover:border-blue-500 dark:hover:text-white"
+              }`}
             onClick={() => handleSpecializationClick(s.specialization)}
           >
             {s.specialization}
@@ -302,7 +301,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
         ))}
       </div>
       <button
-        className="flex-shrink-0 p-1 rounded-full hover:bg-slate-800 text-slate-200"
+        className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 dark:text-slate-200"
         onClick={scrollRight}
       >
         <svg

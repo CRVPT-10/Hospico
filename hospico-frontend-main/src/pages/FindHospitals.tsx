@@ -38,7 +38,7 @@ const FindHospitals = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const locParam = urlParams.get("loc");
-    
+
     // If location is in URL params, use it; otherwise it will be detected from geolocation
     if (locParam) {
       setSelectedLocation(decodeURIComponent(locParam));
@@ -75,7 +75,7 @@ const FindHospitals = () => {
         setSelectedLocation("Vijayawada");
       }
     }
-    
+
     setQuery(urlParams.get("q") || "");
     const specsParam = urlParams.getAll("spec");
     if (specsParam.length > 0) {
@@ -83,7 +83,7 @@ const FindHospitals = () => {
     } else {
       setSelectedSpecializations([]);
     }
-    
+
     // Check if we have coordinates in the URL for nearby hospitals
     const lat = urlParams.get("lat");
     const lng = urlParams.get("lng");
@@ -103,38 +103,38 @@ const FindHospitals = () => {
       setError(null);
       try {
         let data;
-        
+
         // Build query parameters
         const params = new URLSearchParams();
-        
+
         // Always add city filter
         if (selectedLocation) {
           params.append("city", selectedLocation);
         }
-        
+
         // Add specialization filters (multi-select)
         if (selectedSpecializations.length > 0) {
           selectedSpecializations.forEach((spec) => params.append("spec", spec));
         }
-        
+
         // Add search query if specified
         if (query) {
           params.append("search", query);
         }
-        
+
         // If user coordinates are available, use the sorted-by-distance endpoint
         if (userCoordinates) {
           params.append("lat", userCoordinates.lat.toString());
           params.append("lng", userCoordinates.lng.toString());
-          
+
           const queryString = params.toString();
           const url = `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`;
-          
+
           data = await apiRequest<Hospital[]>(url, "GET");
         } else {
           const queryString = params.toString();
           const url = `/api/clinics${queryString ? `?${queryString}` : ""}`;
-          
+
           data = await apiRequest<Hospital[]>(url, "GET");
         }
 
@@ -146,7 +146,7 @@ const FindHospitals = () => {
             imageUrl: hospital.imageurl || hospital.imageUrl,
             address: hospital.address,
           }));
-          
+
           // Fallback: if filtered by city yields no results, try without city
           if (transformedData.length === 0 && selectedLocation) {
             const fallbackParams = new URLSearchParams();
@@ -195,17 +195,17 @@ const FindHospitals = () => {
   // Function to get the correct image URL
   const getImageUrl = (imageUrl: string | undefined) => {
     if (!imageUrl) return defaultHospitalImage;
-    
+
     // If it's already an absolute URL, return it as is
     if (imageUrl.startsWith('http')) {
       return imageUrl;
     }
-    
+
     // If it's a relative path that points to our assets, use the default image
     if (imageUrl.includes('/src/assets/images/')) {
       return defaultHospitalImage;
     }
-    
+
     // For other relative paths, try to construct a proper URL
     // In a real app, you might want to serve these from a CDN or static folder
     return defaultHospitalImage;
@@ -213,28 +213,28 @@ const FindHospitals = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-[calc(100vh-64px)] bg-slate-900">
+      <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
           <HospitalSearch />
-          
+
           {/* Results */}
           <div className="mt-8">
             {userCoordinates && (
               <div className="mb-8">
-                <h2 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">
                   Nearby Hospitals
                 </h2>
                 <NearbyHospitals latitude={userCoordinates.lat} longitude={userCoordinates.lng} />
               </div>
             )}
-            
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">
+
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">
               {userCoordinates ? "Other " : ""}Hospitals{selectedLocation ? ` in ${selectedLocation}` : ""}
               {query && (
-                <span className="text-slate-400 font-normal"> {" "}for "{query}"</span>
+                <span className="text-gray-500 dark:text-slate-400 font-normal"> {" "}for "{query}"</span>
               )}
               {selectedSpecializations.length > 0 && (
-                <span className="text-slate-400 font-normal">
+                <span className="text-gray-500 dark:text-slate-400 font-normal">
                   {" "}specializing in {selectedSpecializations.join(", ")}
                 </span>
               )}
@@ -243,49 +243,49 @@ const FindHospitals = () => {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="bg-slate-800 border border-slate-700 rounded-lg p-4 sm:p-6 shadow-md animate-pulse">
-                    <div className="w-full h-44 bg-slate-700 rounded-md mb-4" />
-                    <div className="h-4 bg-slate-700 rounded w-3/4 mb-3" />
-                    <div className="h-3 bg-slate-700 rounded w-1/2 mb-3" />
+                  <div key={i} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 shadow-md animate-pulse">
+                    <div className="w-full h-44 bg-gray-200 dark:bg-slate-700 rounded-md mb-4" />
+                    <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-3" />
+                    <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-3" />
                     <div className="flex gap-2 mb-4">
-                      <div className="h-6 bg-slate-700 rounded-full w-16" />
-                      <div className="h-6 bg-slate-700 rounded-full w-20" />
+                      <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded-full w-16" />
+                      <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded-full w-20" />
                     </div>
                     <div className="mt-auto">
-                      <div className="h-10 bg-slate-700 rounded-md w-full" />
+                      <div className="h-10 bg-gray-200 dark:bg-slate-700 rounded-md w-full" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : error ? (
-              <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-600">
-                <p className="text-red-400">{error}</p>
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-6 text-center border border-gray-200 dark:border-slate-600">
+                <p className="text-red-500 dark:text-red-400">{error}</p>
               </div>
             ) : filteredHospitals.length === 0 ? (
-              <div className="bg-slate-800 rounded-lg p-6 text-center border border-slate-600">
-                <p className="text-slate-300">No hospitals found.</p>
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-6 text-center border border-gray-200 dark:border-slate-600">
+                <p className="text-gray-500 dark:text-slate-300">No hospitals found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredHospitals.map((hospital) => (
                   <div
                     key={hospital.id}
-                    className="bg-slate-800 border border-slate-600 rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow flex flex-col"
+                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg p-4 sm:p-6 shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg transition-all flex flex-col"
                   >
                     <img
                       src={getImageUrl(hospital.imageUrl)}
                       alt={hospital.name}
                       className="w-full h-48 object-cover rounded-md mb-4"
                     />
-                    <h3 className="text-lg font-semibold text-slate-100 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">
                       {hospital.name}
                     </h3>
-                    <div className="text-sm text-slate-300 mb-3">
+                    <div className="text-sm text-gray-600 dark:text-slate-300 mb-3">
                       {hospital.address && <p>📍 {hospital.address}</p>}
                       {hospital.distance !== undefined && (
                         <p>
-                          {hospital.distance < 1 
-                            ? `${Math.round(hospital.distance * 1000)}m` 
+                          {hospital.distance < 1
+                            ? `${Math.round(hospital.distance * 1000)}m`
                             : `${hospital.distance.toFixed(1)}km`}
                         </p>
                       )}
@@ -295,14 +295,14 @@ const FindHospitals = () => {
                       {(hospital.specialties || []).map((specialty) => (
                         <span
                           key={specialty}
-                          className="rounded-full bg-blue-600/30 text-blue-300 px-2 py-1 text-xs font-medium"
+                          className="rounded-full bg-blue-100 dark:bg-blue-600/30 text-blue-800 dark:text-blue-300 px-2 py-1 text-xs font-medium"
                         >
                           {specialty}
                         </span>
                       ))}
                     </div>
                     <div className="flex space-x-2 mt-auto">
-                      <button 
+                      <button
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium text-sm transition-colors flex-1"
                         onClick={() => navigate(`/find-hospital/${hospital.id}`)}
                       >
@@ -315,7 +315,7 @@ const FindHospitals = () => {
             )}
           </div>
         </div>
-        
+
       </div>
     </ProtectedRoute>
   );

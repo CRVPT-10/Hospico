@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, Phone, User, Menu, X, ChevronDown } from "lucide-react";
+import { Building2, Phone, User, Menu, X, ChevronDown, Moon, Sun } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { useAppDispatch } from "../store/store";
 import { logout } from "../features/auth/authSlice";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +14,8 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const { theme, toggleTheme } = useTheme();
 
   const { isAuthenticated } = useSelector((s: RootState) => s.auth);
 
@@ -55,7 +58,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-white dark:bg-slate-900 shadow-md sticky top-0 z-50 border-b dark:border-slate-800 transition-colors duration-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-20">
           {/* Logo */}
@@ -74,7 +77,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-gray-700 hover:text-blue-600 transition-colors"
+                className="text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 {link.name}
               </Link>
@@ -86,16 +89,16 @@ export default function Navbar() {
               onMouseEnter={() => setIsResourcesOpen(true)}
               onMouseLeave={() => setIsResourcesOpen(false)}
             >
-              <button className="flex items-center text-gray-700 hover:text-blue-600 transition-colors">
+              <button className="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Resources <ChevronDown className="h-4 w-4 ml-1" />
               </button>
               {isResourcesOpen && (
-                <div className="absolute top-full left-0 w-48 bg-white rounded-lg shadow-lg py-2">
+                <div className="absolute top-full left-0 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg py-2 border dark:border-slate-700">
                   {resourceLinks.map((link) => (
                     <Link
                       key={link.to}
                       to={link.to}
-                      className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                      className="block px-4 py-2 text-gray-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700"
                     >
                       {link.name}
                     </Link>
@@ -107,9 +110,22 @@ export default function Navbar() {
 
           {/* Desktop Right Menu */}
           <div className="hidden lg:flex items-center space-x-6 ml-auto">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
+            </button>
+
             <a
               href="tel:1234567890"
-              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
+              className="flex items-center space-x-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
             >
               <Phone className="h-5 w-5" />
               <span>1-234-567-890</span>
@@ -120,7 +136,7 @@ export default function Navbar() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-blue-600"
+                  className="flex items-center space-x-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   <User className="h-5 w-5" />
                   <span>Account</span>
@@ -128,20 +144,20 @@ export default function Navbar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg py-2 border dark:border-slate-700">
                     {userLinks.map((link) => (
                       <Link
                         key={link.to}
                         to={link.to}
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
+                        className="block px-4 py-2 text-gray-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700"
                       >
                         {link.name}
                       </Link>
                     ))}
-                    <hr className="my-2" />
+                    <hr className="my-2 border-gray-200 dark:border-slate-700" />
                     <button
-                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50"
+                      className="block w-full text-left px-4 py-2 text-gray-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700"
                       onClick={(e) => {
                         e.preventDefault();
                         setIsUserMenuOpen(false);
@@ -157,7 +173,7 @@ export default function Navbar() {
               <></>
             )}
 
-            <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200">
+            <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg">
               <Link
                 to="/find-hospitals"
               >
@@ -169,7 +185,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden ml-auto p-2 text-gray-600 hover:text-blue-600 transition-colors"
+            className="lg:hidden ml-auto p-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {isMenuOpen ? (
               <X className="h-6 w-6" />
@@ -181,12 +197,31 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-100 space-y-4">
+          <div className="lg:hidden py-4 border-t border-gray-100 dark:border-slate-800 space-y-4">
+            {/* Mobile Theme Toggle */}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-gray-700 dark:text-slate-200 font-medium">Theme</span>
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                {theme === 'light' ? (
+                  <div className="flex items-center gap-2">
+                    <Moon className="h-5 w-5" /> <span>Dark Mode</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-5 w-5" /> <span>Light Mode</span>
+                  </div>
+                )}
+              </button>
+            </div>
+
             {[...mainLinks, ...resourceLinks].map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="block py-2 text-gray-700 hover:text-blue-600"
+                className="block py-2 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400"
               >
                 {link.name}
               </Link>
@@ -196,13 +231,13 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="block py-2 text-gray-700 hover:text-blue-600"
+                className="block py-2 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400"
               >
                 {link.name}
               </Link>
             ))}
 
-            <button className="w-full mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200">
+            <button className="w-full mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md">
               Book Appointment
             </button>
           </div>
