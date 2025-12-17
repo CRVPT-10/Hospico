@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.hospitalfinder.backend.dto.ClinicRequestDTO;
 import com.hospitalfinder.backend.dto.ClinicResponseDTO;
+import com.hospitalfinder.backend.dto.ClinicSummaryDTO;
 import com.hospitalfinder.backend.entity.Clinic;
 import com.hospitalfinder.backend.entity.Specialization;
 import com.hospitalfinder.backend.repository.ClinicRepository;
@@ -21,8 +22,7 @@ public class ClinicService {
     private final ClinicRepository clinicRepository;
     private final SpecializationRepository specializationRepository;
 
-
-    public List<ClinicResponseDTO> getFilteredClinics(String city, List<String> specializations, String search) {
+    public List<ClinicSummaryDTO> getFilteredClinics(String city, List<String> specializations, String search) {
         List<Clinic> clinics;
 
         // Start with city-filtered list if provided, otherwise all clinics
@@ -33,12 +33,14 @@ public class ClinicService {
         }
 
         // Normalize specialization filters to lower-case for matching
-        List<String> normalizedSpecs = specializations == null ? List.of() : specializations.stream()
-                .filter(spec -> spec != null && !spec.isBlank())
-                .map(spec -> spec.toLowerCase())
-                .collect(Collectors.toList());
+        List<String> normalizedSpecs = specializations == null ? List.of()
+                : specializations.stream()
+                        .filter(spec -> spec != null && !spec.isBlank())
+                        .map(spec -> spec.toLowerCase())
+                        .collect(Collectors.toList());
 
-        // Filter by specialization matches (multi-select). Keep only clinics with >=1 match when filters provided.
+        // Filter by specialization matches (multi-select). Keep only clinics with >=1
+        // match when filters provided.
         if (!normalizedSpecs.isEmpty()) {
             clinics = clinics.stream()
                     .filter(clinic -> getMatchCount(clinic, normalizedSpecs) > 0)
@@ -59,12 +61,13 @@ public class ClinicService {
         }
 
         return clinics.stream()
-                .map(ClinicResponseDTO::new)
+                .map(ClinicSummaryDTO::new)
                 .collect(Collectors.toList());
     }
 
     private int getMatchCount(Clinic clinic, List<String> normalizedSpecs) {
-        if (normalizedSpecs == null || normalizedSpecs.isEmpty()) return 0;
+        if (normalizedSpecs == null || normalizedSpecs.isEmpty())
+            return 0;
 
         return (int) clinic.getSpecializations().stream()
                 .map(Specialization::getSpecialization)
@@ -75,7 +78,8 @@ public class ClinicService {
     }
 
     public ClinicResponseDTO createClinic(ClinicRequestDTO request) {
-        boolean alreadyExists = clinicRepository.existsByNameIgnoreCaseAndAddressIgnoreCaseAndCityIgnoreCase(request.getName(), request.getAddress(), request.getCity());
+        boolean alreadyExists = clinicRepository.existsByNameIgnoreCaseAndAddressIgnoreCaseAndCityIgnoreCase(
+                request.getName(), request.getAddress(), request.getCity());
 
         if (alreadyExists) {
             throw new RuntimeException("Clinic already exists at that location.");

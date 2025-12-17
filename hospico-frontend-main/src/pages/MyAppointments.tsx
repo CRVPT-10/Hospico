@@ -143,7 +143,7 @@ export default function MyAppointments() {
   }
 
   const upcomingAppointments = appointments.filter((apt) => isUpcoming(apt.appointmentTime) && apt.status === "BOOKED");
-  const pastAppointments = appointments.filter((apt) => !isUpcoming(apt.appointmentTime) || apt.status !== "BOOKED");
+  const pastAppointments = appointments.filter((apt) => !isUpcoming(apt.appointmentTime) || apt.status !== "BOOKED").reverse();
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900 py-10 transition-colors duration-200">
