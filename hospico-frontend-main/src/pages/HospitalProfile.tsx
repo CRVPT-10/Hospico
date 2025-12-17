@@ -37,6 +37,15 @@ const HospitalProfile = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const tabRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [selectedSpecialization, setSelectedSpecialization] = useState<string>("All");
+
+  // Get unique specializations from doctors
+  const uniqueSpecializations = ["All", ...new Set(hospital?.doctors?.map(d => d.specialization || "General Practitioner") || [])];
+
+  // Filter doctors based on selection
+  const filteredDoctors = hospital?.doctors?.filter(doc =>
+    selectedSpecialization === "All" || (doc.specialization || "General Practitioner") === selectedSpecialization
+  );
 
   // Click outside handler to reset to services tab
   useEffect(() => {
@@ -119,17 +128,19 @@ const HospitalProfile = () => {
     return defaultHospitalImage;
   };
 
+
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
       {/* Hero Section */}
-      <div className="relative w-full h-auto min-h-[450px] lg:h-72 bg-gray-900 overflow-hidden">
-        <img src={getHospitalImageUrl(hospital.imageUrl)} alt={hospital.name} className="w-full h-full object-cover opacity-80" />
+      <div className="relative w-full h-auto min-h-[450px] lg:h-72 bg-gray-900 overflow-hidden flex items-center">
+        <img src={getHospitalImageUrl(hospital.imageUrl)} alt={hospital.name} className="absolute inset-0 w-full h-full object-cover opacity-80" />
         <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 to-gray-900/90" />
         <div className="absolute top-4 right-4 z-10">
           <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/40 backdrop-blur-sm">Open 24/7</span>
         </div>
         {/* Hospital Info - Stacked on Mobile, Side by Side on Desktop */}
-        <div className="absolute inset-0 flex items-start lg:items-center py-16 lg:py-0">
+        <div className="relative z-10 w-full py-16 lg:py-0">
           <div className="max-w-7xl mx-auto px-4 w-full">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div className="flex-1 w-full lg:w-auto">
@@ -153,38 +164,33 @@ const HospitalProfile = () => {
               </div>
               {/* Map Button - Bottom on Mobile, Right Side on Desktop */}
               {hospital.latitude && hospital.longitude && (
-                <button
-                  onClick={() => {
-                    const url = `https://www.google.com/maps?q=${hospital.latitude},${hospital.longitude}`;
-                    window.open(url, '_blank');
-                  }}
-                  className="w-full lg:w-64 h-32 lg:h-36 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-2 border-blue-500 rounded-xl overflow-hidden hover:border-blue-400 transition-all shadow-xl relative group flex-shrink-0"
-                >
-                  {/* Map-like background with grid */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700">
-                    {/* Grid pattern to simulate map */}
-                    <div className="absolute inset-0 opacity-20" style={{
-                      backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(0, 0, 0, .1) 25%, rgba(0, 0, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, .1) 75%, rgba(0, 0, 0, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 0, 0, .1) 25%, rgba(0, 0, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, .1) 75%, rgba(0, 0, 0, .1) 76%, transparent 77%, transparent)',
-                      backgroundSize: '25px 25px'
-                    }}></div>
-                    {/* Road-like lines */}
-                    <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-blue-400/40 transform -rotate-12"></div>
-                    <div className="absolute top-1/3 left-0 right-0 h-1 bg-blue-300/30 transform rotate-6"></div>
+                <div className="relative text-right w-full lg:w-[300px] h-[200px] flex-shrink-0 rounded-xl overflow-hidden shadow-xl border-2 border-blue-500/50">
+                  <div className="overflow-hidden bg-none w-full h-full">
+                    <iframe
+                      className="w-full h-full"
+                      frameBorder="0"
+                      marginHeight={0}
+                      marginWidth={0}
+                      src={`https://maps.google.com/maps?width=300&height=200&hl=en&q=${hospital.latitude},${hospital.longitude}&t=&z=15&ie=UTF8&iwloc=B&output=embed`}
+                      title="Hospital Location"
+                    ></iframe>
+                    <a
+                      href="https://sprunkiretake.net"
+                      style={{
+                        fontSize: "2px",
+                        color: "gray",
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        zIndex: 1,
+                        maxHeight: "1px",
+                        overflow: "hidden"
+                      }}
+                    >
+                      Sprunki
+                    </a>
                   </div>
-                  {/* Pin marker */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-red-500 rounded-full border-4 border-white shadow-xl"></div>
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[10px] border-transparent border-t-red-500"></div>
-                    </div>
-                  </div>
-                  {/* Bottom gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 dark:from-slate-900/90 via-transparent to-transparent pointer-events-none"></div>
-                  {/* Text */}
-                  <div className="absolute bottom-3 left-0 right-0 text-center">
-                    <div className="text-sm text-gray-900 dark:text-white font-semibold drop-shadow-md group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">View on Map</div>
-                  </div>
-                </button>
+                </div>
               )}
             </div>
           </div>
@@ -192,15 +198,32 @@ const HospitalProfile = () => {
       </div>
       {/* Doctors Section */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Our Doctors</h2>
+
+          {/* Specialization Filters */}
+          <div className="flex flex-wrap gap-2">
+            {uniqueSpecializations.map((spec) => (
+              <button
+                key={spec}
+                onClick={() => setSelectedSpecialization(spec)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${selectedSpecialization === spec
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+                    : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-700"
+                  }`}
+              >
+                {spec}
+              </button>
+            ))}
+          </div>
         </div>
+
         {/* Doctors List */}
-        {hospital.doctors && hospital.doctors.length > 0 ? (
+        {filteredDoctors && filteredDoctors.length > 0 ? (
           <div className="space-y-6">
-            {hospital.doctors.map((doctor) => (
+            {filteredDoctors.map((doctor) => (
               <div key={doctor.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-100 dark:border-transparent p-4 sm:p-6 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
                   {/* Left Section - Doctor Image & Info */}
                   <div className="flex gap-4 items-start">
                     <div className="flex-shrink-0">
@@ -281,11 +304,8 @@ const HospitalProfile = () => {
                     </div>
                   </div>
                   {/* Right Section - Rating & Book Button */}
-                  <div className="flex flex-col gap-3 items-end flex-shrink-0 lg:border-l border-gray-200 dark:border-slate-600 lg:pl-6">
-                    <div className="flex items-center gap-1">
-                      <span className="text-amber-400">⭐</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">4.8</span>
-                    </div>
+                  <div className="flex flex-col gap-3 items-end justify-center flex-shrink-0 lg:border-l border-gray-200 dark:border-slate-600 lg:pl-6">
+
                     <button
                       onClick={() => {
                         setActiveTab({});
