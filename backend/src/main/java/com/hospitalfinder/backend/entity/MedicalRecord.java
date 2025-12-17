@@ -32,6 +32,7 @@ public class MedicalRecord {
     @Lob
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.BINARY)
     @Column(columnDefinition = "bytea")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private byte[] data;
 
     @Column(name = "upload_date")
