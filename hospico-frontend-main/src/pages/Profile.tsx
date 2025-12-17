@@ -219,13 +219,13 @@ export default function Profile() {
               <div className="h-14 w-14 rounded-xl bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 flex items-center justify-center text-gray-500 dark:text-slate-300">
                 <User size={24} />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.name}
                     onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    className="text-2xl font-semibold text-gray-900 dark:text-white rounded-md px-2 py-1 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
+                    className="w-full max-w-[200px] sm:max-w-md text-2xl font-semibold text-gray-900 dark:text-white rounded-md px-2 py-1 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                   />
                 ) : (
                   <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{profile.name}</h1>

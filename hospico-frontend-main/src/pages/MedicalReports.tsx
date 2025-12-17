@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Eye, Trash2, File, Image as ImageIcon, X } from 'lucide-react';
+import { Upload, FileText, Eye, Trash2, File, Image as ImageIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSelector } from "react-redux";
 import { useAppDispatch, type RootState } from "../store/store";
 import { fetchUserRecords, uploadRecord, deleteRecord, type ReportCategory } from "../features/medicalRecords/medicalRecordsSlice";
@@ -24,6 +24,13 @@ const MedicalReports = () => {
             dispatch(fetchUserRecords(Number(user.id)));
         }
     }, [dispatch, user?.id]);
+
+    useEffect(() => {
+        const activeTabElement = document.getElementById(`tab-${activeTab}`);
+        if (activeTabElement) {
+            activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }, [activeTab]);
 
     // Helper to create upload objects
     const createUploadObjects = (files: FileList) => {
@@ -126,6 +133,20 @@ const MedicalReports = () => {
         return <File className="h-6 w-6 text-blue-500" />;
     };
 
+    const handlePrevCategory = () => {
+        const currentIndex = categories.indexOf(activeTab);
+        if (currentIndex > 0) {
+            setActiveTab(categories[currentIndex - 1]);
+        }
+    };
+
+    const handleNextCategory = () => {
+        const currentIndex = categories.indexOf(activeTab);
+        if (currentIndex < categories.length - 1) {
+            setActiveTab(categories[currentIndex + 1]);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 p-4 sm:p-6 lg:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
@@ -155,22 +176,43 @@ const MedicalReports = () => {
                     </div>
                 )}
 
-                {/* Tabs */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-1 overflow-x-auto">
-                    <div className="flex space-x-1 min-w-max">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => setActiveTab(category)}
-                                className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === category
-                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-600/20 dark:text-blue-300 shadow-sm'
-                                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-slate-200'
-                                    }`}
-                            >
-                                {category === 'Bills' ? 'Medical Bills' : `${category} Reports`}
-                            </button>
-                        ))}
+                {/* Tabs with Navigation Arrows */}
+                <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-1">
+                    <button
+                        onClick={handlePrevCategory}
+                        disabled={activeTab === categories[0]}
+                        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Previous category"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+
+                    <div className="flex-1 overflow-x-auto scrollbar-hide">
+                        <div className="flex space-x-1 min-w-max">
+                            {categories.map((category) => (
+                                <button
+                                    key={category}
+                                    id={`tab-${category}`}
+                                    onClick={() => setActiveTab(category)}
+                                    className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === category
+                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-600/20 dark:text-blue-300 shadow-sm'
+                                        : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    {category === 'Bills' ? 'Medical Bills' : `${category} Reports`}
+                                </button>
+                            ))}
+                        </div>
                     </div>
+
+                    <button
+                        onClick={handleNextCategory}
+                        disabled={activeTab === categories[categories.length - 1]}
+                        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Next category"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
                 </div>
 
                 {/* Main Content Area */}

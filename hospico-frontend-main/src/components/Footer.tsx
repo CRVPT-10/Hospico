@@ -1,14 +1,10 @@
 import { Link } from "react-router-dom";
 import {
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
-  Youtube,
   Globe2,
   ChevronDown,
   Building2,
 } from "lucide-react";
+import SocialIcons from "./SocialIcons";
 import { useState } from "react";
 
 const footerLinks = {
@@ -69,13 +65,7 @@ const footerLinks = {
   },
 };
 
-const socialLinks = [
-  { icon: Facebook, label: "Facebook", href: "https://facebook.com" },
-  { icon: Twitter, label: "Twitter", href: "https://twitter.com" },
-  { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com" },
-  { icon: Instagram, label: "Instagram", href: "https://instagram.com" },
-  { icon: Youtube, label: "YouTube", href: "https://youtube.com" },
-];
+
 
 const regions = [
   "United States (English)",
@@ -132,20 +122,7 @@ export default function Footer() {
 
         {/* Social Links */}
         <div className="flex flex-col md:flex-row justify-between items-center border-t border-blue-700 pt-8">
-          <div className="flex space-x-6 mb-6 md:mb-0">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-100 hover:text-white transition-colors duration-200"
-                aria-label={social.label}
-              >
-                <social.icon className="h-5 w-5" />
-              </a>
-            ))}
-          </div>
+          <SocialIcons />
 
           {/* Region Selector */}
           <div className="relative">
@@ -184,6 +161,6 @@ export default function Footer() {
           <p>&copy; {new Date().getFullYear()} HospiCo. All rights reserved.</p>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 }
