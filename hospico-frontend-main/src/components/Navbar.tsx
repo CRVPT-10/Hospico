@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, Phone, User, Menu, X, ChevronDown } from "lucide-react";
+import { Phone, User, Menu, X, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { useAppDispatch } from "../store/store";
 import { logout } from "../features/auth/authSlice";
 import ThemeToggle from "./ThemeToggle";
+import logo from "../assets/images/just-logo.png";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,12 +61,16 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-2 rounded-lg">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 text-transparent bg-clip-text">
-              HospiCo
+          <Link to="/" className="flex items-center gap-1.5">
+            <img
+              src={logo}
+              alt="HospiCo Logo"
+              className="w-auto object-contain"
+              style={{ height: '40px', maxHeight: '40px' }}
+            />
+            <span className="text-3xl font-bold tracking-tight flex items-center pb-1">
+              <span className="text-slate-800 dark:text-slate-100">Hospi</span>
+              <span className="text-blue-500">Co</span>
             </span>
           </Link>
 
