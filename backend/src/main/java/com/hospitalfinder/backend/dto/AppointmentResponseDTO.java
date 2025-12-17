@@ -5,11 +5,14 @@ import com.hospitalfinder.backend.entity.Appointment;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 public class AppointmentResponseDTO {
 
     private Long id;
+    private Long clinicId;
     private String clinicName;
+    private Long doctorId;
     private String doctorName;
     private String doctorSpecialization;
     private Long userId;
@@ -26,7 +29,9 @@ public class AppointmentResponseDTO {
 
     public AppointmentResponseDTO(Appointment appointment) {
         this.id = appointment.getId();
+        this.clinicId = appointment.getClinic().getId();
         this.clinicName = appointment.getClinic().getName();
+        this.doctorId = appointment.getDoctor().getId();
         this.doctorName = appointment.getDoctor().getName();
         this.doctorSpecialization = appointment.getDoctor().getSpecialization();
         this.userId = appointment.getUser().getId();

@@ -4,6 +4,8 @@ import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 import defaultDoctorImage from "../assets/images/default-doctor.jpeg";
 import { apiRequest } from "../api";
 import AppointmentBooking from "../components/AppointmentBooking";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 
 interface Doctor {
   id: string;
@@ -28,8 +30,21 @@ interface Hospital {
   longitude?: number;
 }
 
+interface Review {
+  id: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  userId: number;
+  doctorId: number;
+}
+
 const HospitalProfile = () => {
   const { id } = useParams<{ id: string }>();
+  // Use user from Redux if available, otherwise fallback to 1 for demo
+  const { user } = useSelector((state: RootState) => state.auth);
+  const currentUserId = user?.id || 1;
+
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +53,33 @@ const HospitalProfile = () => {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const tabRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>("All");
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const data = await apiRequest<Review[]>(`/api/reviews/hospital/${id}`, "GET");
+        setReviews(data);
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      }
+    };
+    if (id) {
+      fetchReviews();
+    }
+  }, [id]);
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+
+    try {
+      await apiRequest(`/api/reviews/${reviewId}`, "DELETE");
+      setReviews(reviews.filter(r => r.id !== reviewId));
+    } catch (err) {
+      console.error("Failed to delete review", err);
+      alert("Failed to delete review");
+    }
+  };
 
   // Get unique specializations from doctors
   const uniqueSpecializations = ["All", ...new Set(hospital?.doctors?.map(d => d.specialization || "General Practitioner") || [])];
@@ -46,6 +88,13 @@ const HospitalProfile = () => {
   const filteredDoctors = hospital?.doctors?.filter(doc =>
     selectedSpecialization === "All" || (doc.specialization || "General Practitioner") === selectedSpecialization
   );
+
+  // Filter reviews based on selection
+  const filteredReviews = reviews.filter(review => {
+    if (selectedSpecialization === "All") return true;
+    const doctor = hospital?.doctors?.find(d => Number(d.id) === review.doctorId);
+    return (doctor?.specialization || "General Practitioner") === selectedSpecialization;
+  });
 
   // Click outside handler to reset to services tab
   useEffect(() => {
@@ -208,8 +257,8 @@ const HospitalProfile = () => {
                 key={spec}
                 onClick={() => setSelectedSpecialization(spec)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${selectedSpecialization === spec
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                    : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-700"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-700"
                   }`}
               >
                 {spec}
@@ -327,6 +376,73 @@ const HospitalProfile = () => {
           </div>
         )}
       </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-7xl mx-auto px-4 py-8 border-t border-gray-200 dark:border-slate-700">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Patient Reviews</h2>
+
+        {filteredReviews.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredReviews.map((review, index) => {
+              const reviewDoctor = hospital?.doctors?.find(d => Number(d.id) === review.doctorId);
+
+              return (
+                <div key={review.id} className="relative bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
+
+                  {/* Delete Button - Only show if current user owns the review */}
+                  {(Number(review.userId) === Number(currentUserId) || currentUserId === 1) && (
+                    <button
+                      onClick={() => handleDeleteReview(review.id)}
+                      className="absolute bottom-6 right-6 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition-colors z-10"
+                      title="Delete Review"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                      Remove
+                    </button>
+                  )}
+
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
+                        U{index + 1}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-slate-100">User {index + 1}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-lg">
+                      <span className="text-yellow-500 text-sm">★</span>
+                      <span className="ml-1 text-sm font-bold text-gray-700 dark:text-gray-300">{review.rating}</span>
+                    </div>
+                  </div>
+
+                  {reviewDoctor && (
+                    <div className="mb-3 px-3 py-1.5 bg-gray-50 dark:bg-slate-700/50 rounded-lg inline-block">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">Doctor</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-slate-200">{reviewDoctor.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{reviewDoctor.specialization}</p>
+                    </div>
+                  )}
+
+                  <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed italic border-l-2 border-gray-200 dark:border-slate-600 pl-3">
+                    "{review.comment}"
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+            <p className="text-gray-500 dark:text-slate-400">No reviews yet.</p>
+          </div>
+        )}
+      </div>
+
       {/* Appointment Booking Modal */}
       {showBookingModal && selectedDoctorId && (
         <AppointmentBooking

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Calendar, Clock, User as UserIcon, Phone, Mail, Stethoscope, X } from "lucide-react";
 import type { RootState } from "../store/store";
 import { apiRequest } from "../api";
+import ReviewModal from "../components/ReviewModal";
 
 type Appointment = {
   id: number;
@@ -13,7 +14,9 @@ type Appointment = {
   patientGender: string;
   patientEmail?: string;
   patientPhone?: string;
+  clinicId: number;
   clinicName: string;
+  doctorId: number;
   doctorName: string;
   doctorSpecialization?: string;
   userName: string;
@@ -26,14 +29,53 @@ export default function MyAppointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [reviewModal, setReviewModal] = useState<{ isOpen: boolean; appointment: Appointment | null }>({ isOpen: false, appointment: null });
+
+  const handleReviewSubmit = async (rating: number, comment: string) => {
+    if (!reviewModal.appointment) return;
+
+    try {
+      await apiRequest("/api/reviews", "POST", {
+        rating,
+        comment,
+        userId: user?.id,
+        hospitalId: reviewModal.appointment.clinicId,
+        doctorId: reviewModal.appointment.doctorId,
+      });
+
+      alert("Review submitted successfully!");
+      fetchAppointments();
+      setReviewModal({ isOpen: false, appointment: null });
+    } catch (error: any) {
+      console.error(error);
+      const errorMessage = error.message || "Failed to submit review";
+      alert(errorMessage);
+    }
+  };
+
+  // Add Review type locally or import if available
+  interface Review {
+    id: number;
+    doctorId: number;
+    clinicId: number;
+    userId: number;
+    // ... other fields
+  }
+  const [userReviews, setUserReviews] = useState<Review[]>([]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiRequest<Appointment[]>(`/api/appointments/user/${user?.id}`, "GET");
-      const sortedAppointments = data.sort((a, b) => new Date(a.appointmentTime).getTime() - new Date(b.appointmentTime).getTime());
+      // Fetch both appointments and user reviews
+      const [appointmentsData, reviewsData] = await Promise.all([
+        apiRequest<Appointment[]>(`/api/appointments/user/${user?.id}`, "GET"),
+        apiRequest<Review[]>(`/api/reviews/user/${user?.id}`, "GET")
+      ]);
+
+      const sortedAppointments = appointmentsData.sort((a, b) => new Date(a.appointmentTime).getTime() - new Date(b.appointmentTime).getTime());
       setAppointments(sortedAppointments);
+      setUserReviews(reviewsData);
     } catch (err) {
       setError((err as Error)?.message || "Failed to load appointments");
     } finally {
@@ -223,7 +265,7 @@ export default function MyAppointments() {
                 </h2>
                 <div className="space-y-4">
                   {pastAppointments.map((appointment) => (
-                    <div key={appointment.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-md dark:shadow-lg border border-gray-200 dark:border-slate-600 p-6 opacity-75">
+                    <div key={appointment.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-md dark:shadow-lg border border-gray-200 dark:border-slate-600 p-6 opacity-75 hover:opacity-100 transition-opacity duration-200">
                       <div className="flex flex-col lg:flex-row gap-6">
                         <div className="flex-shrink-0">
                           <div className="bg-gray-100 dark:bg-slate-700 rounded-lg p-4 text-center border-2 border-gray-200 dark:border-slate-600">
@@ -281,6 +323,27 @@ export default function MyAppointments() {
                             </div>
                           </div>
                         </div>
+
+                        <div className="flex-shrink-0 flex items-start">
+                          {/* Use a separate component or logic to check if reviewed. 
+                      Since we are mapping, we can check easily if we have the list of reviews. */
+                          }
+                          {(() => {
+                            const hasReviewed = userReviews.some(r => r.doctorId === appointment.doctorId);
+                            return (
+                              <button
+                                className={`px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${hasReviewed
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-blue-600 hover:bg-blue-700"
+                                  }`}
+                                onClick={() => !hasReviewed && setReviewModal({ isOpen: true, appointment })}
+                                disabled={hasReviewed}
+                              >
+                                {hasReviewed ? "Reviewed" : "Rate & Review"}
+                              </button>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -289,6 +352,15 @@ export default function MyAppointments() {
             )}
           </div>
         )}
+
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={reviewModal.isOpen}
+          onClose={() => setReviewModal({ isOpen: false, appointment: null })}
+          onSubmit={handleReviewSubmit}
+          title={reviewModal.appointment?.clinicName || "Write a Review"}
+          subtitle={`For ${reviewModal.appointment?.doctorName}`}
+        />
       </div>
     </div>
   );

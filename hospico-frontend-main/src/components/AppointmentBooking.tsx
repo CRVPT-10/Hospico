@@ -154,45 +154,27 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
       let bookedTimes: string[] = [];
       try {
         console.log(`🔍 Fetching booked appointments for doctor ${selectedDoctor} on date ${selectedDate}`);
-        const url = `http://localhost:8080/api/appointments/doctor/${selectedDoctor}/date/${selectedDate}`;
-        console.log(`📍 API URL: ${url}`);
+        // Use apiRequest helper instead of raw fetch
+        const appointments = await apiRequest<AppointmentResponse[]>(
+          `/api/appointments/doctor/${selectedDoctor}/date/${selectedDate}`,
+          "GET"
+        );
 
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem('jwt_token')}`,
-            "Content-Type": "application/json",
-          },
-        });
+        console.log("📦 Raw appointments data:", appointments);
 
-        console.log(`📊 Response status: ${response.status}`);
+        if (Array.isArray(appointments)) {
+          console.log(`✅ Found ${appointments.length} appointment(s)`);
 
-        if (response.ok) {
-          const appointments: AppointmentResponse[] = await response.json();
-          console.log("📦 Raw appointments data:", appointments);
+          bookedTimes = appointments
+            .filter(apt => apt.status === "BOOKED")
+            .map((apt) => {
+              const time = apt.appointmentTime?.substring(11, 16);
+              console.log(`  ✅ Extracted booked time: ${time}`);
+              return time;
+            })
+            .filter((time): time is string => time !== undefined && time.length === 5);
 
-          if (Array.isArray(appointments)) {
-            console.log(`✅ Found ${appointments.length} appointment(s)`);
-            appointments.forEach((apt, idx) => {
-              console.log(`  [${idx}] Status: ${apt.status}, Time: ${apt.appointmentTime}`);
-            });
-
-            bookedTimes = appointments
-              .filter(apt => apt.status === "BOOKED")
-              .map((apt) => {
-                const time = apt.appointmentTime?.substring(11, 16);
-                console.log(`  ✅ Extracted booked time: ${time}`);
-                return time;
-              })
-              .filter((time): time is string => time !== undefined && time.length === 5);
-
-            console.log("✅ Final booked times array:", bookedTimes);
-          }
-        } else {
-          console.error(`❌ API returned status ${response.status}`);
-          const errorText = await response.text();
-          console.error("❌ Error response body:", errorText);
-          console.error("❌ This means the backend rejected the request. Check backend logs.");
+          console.log("✅ Final booked times array:", bookedTimes);
         }
       } catch (err) {
         console.error("❌ Failed to fetch booked appointments:", err);
@@ -418,8 +400,8 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
                             type="button"
                             onClick={() => setSelectedSlot(slot.time)}
                             className={`w-full px-3 py-2 text-sm font-medium rounded-md border-2 transition-all ${selectedSlot === slot.time
-                                ? "border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/30 text-green-900 dark:text-green-400 shadow-lg"
-                                : "border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-slate-700 text-blue-900 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-slate-600 cursor-pointer"
+                              ? "border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/30 text-green-900 dark:text-green-400 shadow-lg"
+                              : "border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-slate-700 text-blue-900 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-slate-600 cursor-pointer"
                               }`}
                           >
                             {slot.time}
