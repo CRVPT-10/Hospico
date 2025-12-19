@@ -296,7 +296,9 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
               }`}
             onClick={() => handleSpecializationClick(s.specialization)}
           >
-            {s.specialization}
+            {s.specialization === "ENT" || s.specialization === "ENT Specialist"
+              ? "Ear, Nose & Throat"
+              : s.specialization}
           </button>
         ))}
       </div>

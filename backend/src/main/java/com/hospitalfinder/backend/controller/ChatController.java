@@ -14,7 +14,7 @@ import java.util.*;
 @CrossOrigin(origins = "http://localhost:5173") // Vite default port
 public class ChatController {
 
-    @Value("${groq.api.key}")
+    @Value("${groq.api.key:}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();

@@ -36,7 +36,8 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/users/me").permitAll()
-                        .requestMatchers("/api/clinics/**", "/api/specializations/**", "/api/chat").permitAll()
+                        .requestMatchers("/api/clinics/**", "/api/specializations/**", "/api/chat", "/api/health")
+                        .permitAll()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/error", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")

@@ -208,6 +208,18 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-gray-100 dark:border-slate-800 space-y-4">
+            {/* Mobile Language Toggle */}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-gray-700 dark:text-slate-200 font-medium">Language</span>
+              <button
+                onClick={() => setIsLanguageModalOpen(true)}
+                className="p-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                title="Select Language"
+              >
+                <Globe className="h-5 w-5" />
+              </button>
+            </div>
+
             {/* Mobile Theme Toggle */}
             <div className="flex items-center justify-between px-2">
               <span className="text-gray-700 dark:text-slate-200 font-medium">Theme</span>
