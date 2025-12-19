@@ -19,7 +19,7 @@ public class ChatController {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @javax.annotation.PostConstruct
+    @jakarta.annotation.PostConstruct
     public void init() {
         if (apiKey == null || apiKey.isEmpty()) {
             System.err.println("CRITICAL: Groq API Key is NOT loaded!");

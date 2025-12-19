@@ -93,7 +93,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
     };
 
     return (
-        <div className={embedMode ? "fixed inset-0 flex items-center justify-center z-50 pointer-events-none" : "fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 pointer-events-none"}>
+        <div className={embedMode ? "fixed inset-0 flex items-center justify-center z-50 pointer-events-none" : `fixed z-50 flex flex-col items-end gap-4 pointer-events-none ${isOpen ? 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6' : 'bottom-6 right-6'}`}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -101,7 +101,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className={`w-[380px] h-[600px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 flex flex-col overflow-hidden font-sans pointer-events-auto ${embedMode ? 'shadow-none' : ''}`}
+                        className={`w-full h-full sm:w-[380px] sm:h-[600px] bg-white/80 backdrop-blur-xl sm:rounded-2xl shadow-2xl border border-white/20 flex flex-col overflow-hidden font-sans pointer-events-auto ${embedMode ? 'shadow-none' : ''}`}
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center justify-between text-white shadow-md">
@@ -195,8 +195,9 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`p-4 rounded-full shadow-2xl transition-all duration-300 pointer-events-auto ${isOpen ? 'bg-red-500 hover:bg-red-600 rotate-90' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-500/50'
-                        }`}
+                    className={`p-4 rounded-full shadow-2xl transition-all duration-300 pointer-events-auto 
+                        ${isOpen ? 'bg-red-500 hover:bg-red-600 rotate-90 hidden sm:flex' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-500/50 flex'}
+                        `}
                 >
                     {isOpen ? <X size={28} color="white" /> : <MessageCircle size={28} color="white" />}
                 </motion.button>
