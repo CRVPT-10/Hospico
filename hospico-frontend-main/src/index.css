@@ -14,6 +14,42 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
+  top: 0 !important;
+  /* Prevent Google Translate from pushing body down */
+}
+
+/* Completely hide Google Translate Toolbar */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+.skiptranslate iframe {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* Reset body position forced by Google */
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+/* Hide the 'original text' popup */
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+
+/* Remove highlight on translated text */
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Hide the element we injected */
+#google_translate_element {
+  display: none !important;
 }
 
 /* Smooth transitions for mobile interactions */

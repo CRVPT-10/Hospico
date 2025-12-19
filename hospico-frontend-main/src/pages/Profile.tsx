@@ -34,7 +34,7 @@ type Appointment = {
 };
 
 export default function Profile() {
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user: authUser, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { files: healthRecords } = useSelector((state: RootState) => state.medicalRecords);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -57,10 +57,10 @@ export default function Profile() {
   useEffect(() => {
     fetchCurrentUserProfile();
     fetchRecentAppointments();
-    if (user?.id) {
-      dispatch(fetchUserRecords(Number(user.id)));
+    if (authUser?.id) {
+      dispatch(fetchUserRecords(Number(authUser.id)));
     }
-  }, [user, isAuthenticated, dispatch]);
+  }, [authUser, isAuthenticated, dispatch]);
 
   const fetchCurrentUserProfile = async () => {
     try {
@@ -109,8 +109,8 @@ export default function Profile() {
 
   const fetchRecentAppointments = async () => {
     try {
-      if (user?.id) {
-        const appointments = await apiRequest<Appointment[]>(`/api/appointments/user/${user.id}`, "GET");
+      if (authUser?.id) {
+        const appointments = await apiRequest<Appointment[]>(`/api/appointments/user/${authUser.id}`, "GET");
 
         // Sort by date (most recent first) and take only 2
         const sortedAppointments = appointments
@@ -219,11 +219,11 @@ export default function Profile() {
               <div className="h-14 w-14 rounded-xl bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 flex items-center justify-center text-gray-500 dark:text-slate-300">
                 <User size={24} />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 notranslate">
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editData.name}
+                    value={editData.name || ""}
                     onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                     className="w-full max-w-[200px] sm:max-w-md text-2xl font-semibold text-gray-900 dark:text-white rounded-md px-2 py-1 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                   />
@@ -240,7 +240,7 @@ export default function Profile() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editData.phone}
+                        value={editData.phone || ""}
                         onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                         className="border-b border-gray-400 dark:border-slate-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none bg-transparent pb-0.5 text-gray-900 dark:text-white"
                       />
@@ -314,13 +314,13 @@ export default function Profile() {
                 <span className="px-3 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-600/30 text-blue-800 dark:text-blue-300 capitalize">{profile.role.toLowerCase()}</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 notranslate">
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 dark:text-slate-400">Full Name</p>
                   {isEditing ? (
                     <input
                       type="text"
-                      value={editData.name}
+                      value={editData.name || ""}
                       onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                       className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:border-blue-500 focus:outline-none placeholder-gray-400 dark:placeholder-slate-400"
                     />
@@ -351,7 +351,7 @@ export default function Profile() {
                     <input
                       type="number"
                       min={0}
-                      value={editData.age}
+                      value={editData.age || ""}
                       onChange={(e) => setEditData({ ...editData, age: e.target.value })}
                       className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:border-blue-500 focus:outline-none placeholder-gray-400 dark:placeholder-slate-400"
                     />
@@ -363,7 +363,7 @@ export default function Profile() {
                   <p className="text-xs text-gray-500 dark:text-slate-400">Gender</p>
                   {isEditing ? (
                     <select
-                      value={editData.gender}
+                      value={editData.gender || ""}
                       onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
                       className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:border-blue-500 focus:outline-none"
                     >
@@ -430,7 +430,7 @@ export default function Profile() {
                   <input
                     type="password"
                     id="newPassword"
-                    value={editData.newPassword}
+                    value={editData.newPassword || ""}
                     onChange={(e) => setEditData({ ...editData, newPassword: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:border-blue-500 focus:outline-none placeholder-gray-400 dark:placeholder-slate-400"
                     placeholder="Enter new password"
@@ -441,7 +441,7 @@ export default function Profile() {
                   <input
                     type="password"
                     id="confirmPassword"
-                    value={editData.confirmPassword}
+                    value={editData.confirmPassword || ""}
                     onChange={(e) => setEditData({ ...editData, confirmPassword: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white px-3 py-2 focus:border-blue-500 focus:outline-none placeholder-gray-400 dark:placeholder-slate-400"
                     placeholder="Confirm new password"

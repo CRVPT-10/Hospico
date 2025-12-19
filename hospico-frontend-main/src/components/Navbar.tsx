@@ -7,11 +7,14 @@ import { useAppDispatch } from "../store/store";
 import { logout } from "../features/auth/authSlice";
 import ThemeToggle from "./ThemeToggle";
 import logo from "../assets/images/just-logo.png";
+import LanguageModal from "./LanguageModal";
+import { Globe } from "lucide-react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const userMenuRef = useRef<HTMLDivElement | null>(null);
@@ -114,7 +117,14 @@ export default function Navbar() {
           {/* Desktop Right Menu */}
           <div className="hidden lg:flex items-center space-x-6 ml-auto">
             {/* Theme Toggle */}
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsLanguageModalOpen(true)}
+                className="p-2 mr-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                title="Select Language"
+              >
+                <Globe className="h-5 w-5" />
+              </button>
               <ThemeToggle />
             </div>
 
@@ -168,7 +178,7 @@ export default function Navbar() {
               <></>
             )}
 
-            <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg">
+            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg">
               <Link
                 to="/find-hospitals"
               >
@@ -176,6 +186,11 @@ export default function Navbar() {
               </Link>
             </button>
           </div>
+
+          <LanguageModal
+            isOpen={isLanguageModalOpen}
+            onClose={() => setIsLanguageModalOpen(false)}
+          />
 
           {/* Mobile Menu Button */}
           <button
