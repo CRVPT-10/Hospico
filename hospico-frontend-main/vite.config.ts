@@ -17,7 +17,7 @@ export default defineConfig({
     host: true, // allow access from mobile devices on the same network
     proxy: {
       "/api": {
-        target: process.env.VITE_DEV_API ?? "http://localhost:8080",
+        target: process.env.VITE_DEV_API ?? "http://127.0.0.1:8080",
         changeOrigin: true,
         secure: false,
       },

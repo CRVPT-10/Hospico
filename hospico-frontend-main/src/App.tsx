@@ -18,6 +18,7 @@ import HospitalProfile from "./pages/HospitalProfile";
 import Profile from "./pages/Profile.tsx";
 import MyAppointments from "./pages/MyAppointments";
 import MedicalReports from "./pages/MedicalReports";
+import ChatWidget from "./components/ChatWidget";
 
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -113,6 +114,7 @@ function App() {
             />
             <Route path="/" element={<Dashboard />} />
           </Routes>
+          <ChatWidget />
         </div>
       </BrowserRouter>
     </ThemeProvider>

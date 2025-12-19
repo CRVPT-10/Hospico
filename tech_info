@@ -1,0 +1,102 @@
+# Project Technical Documentation: HospiCo
+
+## 1. High-Level Architecture Overview
+HospiCo is a robust full-stack web application designed for hospital booking and management. It uses a decoupled **Client-Server Architecture**:
+
+*   **Frontend (Client)**: A Single Page Application (SPA) built with **React** and **TypeScript**, managed by **Vite**. It handles the user interface, state management, and interaction logic.
+*   **Backend (Server)**: A RESTful API built with **Spring Boot** (Java). It handles business logic, security, and data persistence.
+*   **Database**: **PostgreSQL** (hosted on Render) is used as the relational database management system.
+*   **Communication**: The frontend handles data via HTTP requests (Axios) to the backend REST endpoints.
+*   **Security**: Authentication is managed via **JWT (JSON Web Tokens)**.
+
+---
+
+## 2. Backend Technologies & Architecture
+**Root Path**: `/backend`
+
+### Core Technologies
+*   **Language**: Java 21
+*   **Framework**: Spring Boot 3.4.5
+*   **Build Tool**: Maven
+
+### Key Dependencies & Modules
+| Dependency | Purpose |
+| :--- | :--- |
+| `spring-boot-starter-web` | RESTful API creation |
+| `spring-boot-starter-data-jpa` | ORM (Hibernate) for database interaction |
+| `spring-boot-starter-security` | Authentication & Authorization |
+| `spring-boot-starter-validation` | Input validation |
+| `postgresql` | JDBC Driver for PostgreSQL |
+| `lombok` | Code boilerplate reduction (Getters, Setters, etc.) |
+| `jjwt` (0.11.5) | JSON Web Token generation and validation |
+| `springdoc-openapi` (2.8.0) | API Documentation (Swagger) |
+| `google-api-client` (2.5.0) | Google Service integrations |
+
+### Internal Architecture (Package Structure)
+The backend follows a standard Controller-Service-Repository pattern under `com.hospitalfinder.backend`:
+
+1.  **`controller`**: Handles incoming HTTP requests.
+    *   `LoginController`, `SignupController`: Auth logic.
+    *   `UserController`: Profile management.
+    *   `ClinicController`, `DoctorController`: Search and details for medical entities.
+    *   `AppointmentController`: Booking logic.
+    *   `MedicalRecordController`: Health records.
+2.  **`service`**: Contains business logic and transaction management.
+3.  **`repository`**: Interfaces for CRUD operations (extending `JpaRepository`).
+4.  **`entity`**: JPA Entities mapping to Database tables (`User`, `Clinic`, `Appointment`, `Doctor`, `MedicalRecord`, `Review`, `Specialization`).
+5.  **`dto`**: Data Transfer Objects for API requests/responses.
+6.  **`config`**: Security configuration (JWT filters, cleanup).
+7.  **`exception`**: Global error handling mechanisms.
+
+---
+
+## 3. Frontend Technologies & Architecture
+**Root Path**: `/hospico-frontend-main`
+
+### Core Technologies
+*   **Framework**: React 19.1.1
+*   **Language**: TypeScript
+*   **Bundler**: Vite 7.1.7
+*   **State Management**: Redux Toolkit + Redux Persist
+
+### Key Libraries & Packages
+| Package | Purpose |
+| :--- | :--- |
+| `react-router-dom` (7.x) | Client-side routing |
+| `axios` | HTTP Client for API calls |
+| `@mui/material` & `@emotion` | UI Component Library |
+| `tailwindcss` (4.x) | Utility-first CSS framework |
+| `styled-components` | CSS-in-JS styling |
+| `lucide-react` | Icons |
+
+### Page-to-Feature Mapping
+Logic and UI are distributed across pages in `src/pages`, utilizing shared `components` and `features`.
+
+| Page Route | Component (`src/pages`) | Backend API Dependencies (Inferred) | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/login` | `Login.tsx` | `LoginController` | User authentication. |
+| `/signup` | `Signup.tsx` | `SignupController` | User registration. |
+| `/partner-login` | `PartnerLogin.tsx` | `LoginController` | Auth for Hospital Admins/Doctors. |
+| `/dashboard` | `Dashboard.tsx` | `UserController`, `AppointmentController` | Main user hub (protected). |
+| `/find-hospitals` | `FindHospitals.tsx` | `ClinicController`, `SpecializationController` | Search & Filter hospitals. |
+| `/find-hospital/:id` | `HospitalProfile.tsx` | `ClinicController`, `DoctorController`, `ReviewController` | Detailed view of a hospital. |
+| `/my-appointments` | `MyAppointments.tsx` | `AppointmentController` | View and manage bookings. |
+| `/reports` | `MedicalReports.tsx` | `MedicalRecordController` | Access medical history/reports. |
+| `/profile` | `Profile.tsx` | `UserController` | Edit user details. |
+| `/emergency` | `Emergency.tsx` | `ClinicController` (Filtered) | Quick access to emergency contacts. |
+
+---
+
+## 4. Database Info
+*   **System**: PostgreSQL
+*   **Database Name**: `hospital_booking_k625`
+*   **Host**: Render (Cloud)
+*   **Schema**: Automatically managed via Hibernate (`ddl-auto=update`), mapping directly to the `entity` classes designated in the backend.
+
+## 5. Deployment & Configuration
+*   **Server Port**: `8080` (Backend)
+*   **Client Port**: `5173` (Frontend default)
+*   **CORS**: Backend explicitly authorizes `http://localhost:5173`.
+*   **Environment**:
+    *   Backend config uses `application.properties`.
+    *   Frontend uses standard Vite environment setup (implied).
