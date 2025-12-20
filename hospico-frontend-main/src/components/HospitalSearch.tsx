@@ -95,7 +95,7 @@ const HospitalSearch = () => {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-white/5 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg transition-colors duration-200">
+    <div className="bg-white/90 dark:bg-slate-800/50 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg transition-colors duration-200">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1 sm:flex-[0.80]">
@@ -115,7 +115,7 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <input
-              className="block w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/70 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors duration-200"
+              className="block w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors duration-200"
               placeholder="Search hospitals, specialties…"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -144,7 +144,7 @@ const HospitalSearch = () => {
               </svg>
             </div>
             <select
-              className="block w-full pl-10 pr-20 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/70 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm transition-colors duration-200"
+              className="block w-full pl-10 pr-20 py-2 sm:py-3 rounded-xl bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm transition-colors duration-200"
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
             >

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -13,6 +14,7 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) => {
+    const { theme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -30,7 +32,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
     }, [isOpen]);
 
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'system', content: "Hello! I'm your healthcare assistant. I can help with general symptom information. How can I verify your health today?" }
+        { role: 'system', content: "Hi! I'm your health assistant. I can provide general symptom information, but please note that I may not be fully accurate. For a proper diagnosis, please always consult a doctor." }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +103,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className={`w-full h-full sm:w-[380px] sm:h-[600px] bg-white/80 backdrop-blur-xl sm:rounded-2xl shadow-2xl border border-white/20 flex flex-col overflow-hidden font-sans pointer-events-auto ${embedMode ? 'shadow-none' : ''}`}
+                        className={`w-full h-full sm:w-[380px] sm:h-[600px] ${theme === 'dark' ? 'bg-gray-900/95 border-gray-700' : 'bg-white/80 border-white/20'} backdrop-blur-xl sm:rounded-2xl shadow-2xl border flex flex-col overflow-hidden font-sans pointer-events-auto ${embedMode ? 'shadow-none' : ''}`}
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center justify-between text-white shadow-md">
@@ -128,7 +130,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-gray-50/50">
+                        <div className={`flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50/50'}`}>
                             {messages.map((msg, idx) => (
                                 <motion.div
                                     key={idx}
@@ -136,13 +138,15 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                     animate={{ opacity: 1, y: 0 }}
                                     className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                                 >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-indigo-100 text-indigo-600' : 'bg-blue-100 text-blue-600'
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
+                                        ? (theme === 'dark' ? 'bg-indigo-900/50 text-indigo-400' : 'bg-indigo-100 text-indigo-600')
+                                        : (theme === 'dark' ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-600')
                                         }`}>
                                         {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                                     </div>
                                     <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
                                         ? 'bg-indigo-600 text-white rounded-tr-none'
-                                        : 'bg-white text-gray-700 border border-gray-100 rounded-tl-none'
+                                        : (theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-700' : 'bg-white text-gray-700 border-gray-100') + ' rounded-tl-none border'
                                         }`}>
                                         {msg.content}
                                     </div>
@@ -162,15 +166,15 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 bg-white border-t border-gray-100">
-                            <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-full focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-inner">
+                        <div className={`p-4 border-t ${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
+                            <div className={`relative flex items-center border rounded-full focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-inner ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                                 <input
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyPress}
                                     placeholder="Type your symptoms..."
-                                    className="flex-1 bg-transparent border-none py-3 px-4 focus:ring-0 text-sm placeholder-gray-400 text-gray-700 h-12"
+                                    className={`flex-1 bg-transparent border-none py-3 px-4 focus:ring-0 text-sm h-12 ${theme === 'dark' ? 'text-gray-100 placeholder-gray-500' : 'text-gray-700 placeholder-gray-400'}`}
                                 />
                                 <button
                                     onClick={handleSend}
@@ -182,7 +186,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                 </button>
                             </div>
                             <div className="text-center mt-2">
-                                <p className="text-[10px] text-gray-400">Not a professional diagnosis. Consult a doctor.</p>
+                                <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Not a professional diagnosis. Consult a doctor.</p>
                             </div>
                         </div>
                     </motion.div>
