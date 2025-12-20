@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import HospitalSearch from "../components/HospitalSearch";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { apiRequest } from "../api";
@@ -44,36 +46,53 @@ const FindHospitals = () => {
       setSelectedLocation(decodeURIComponent(locParam));
     } else {
       // Try to detect user's city from geolocation
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            try {
-              const response = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-              );
-              const data = await response.json();
-              if (data.city) {
-                setSelectedLocation(data.city);
-              } else if (data.locality) {
-                setSelectedLocation(data.locality);
-              } else if (data.principalSubdivision) {
-                setSelectedLocation(data.principalSubdivision);
-              } else {
-                setSelectedLocation("Vijayawada");
-              }
-            } catch (error) {
-              console.error("Error getting location:", error);
+      const detectLocation = async () => {
+        let coords = null;
+
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const status = await Geolocation.checkPermissions();
+            if (status.location !== 'granted') {
+              await Geolocation.requestPermissions();
+            }
+            const pos = await Geolocation.getCurrentPosition();
+            coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          } catch (e) { console.error(e); }
+        } else if (navigator.geolocation) {
+          try {
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+              navigator.geolocation.getCurrentPosition(resolve, reject)
+            );
+            coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          } catch (e) { console.error(e); }
+        }
+
+        if (coords) {
+          try {
+            const { latitude, longitude } = coords;
+            const response = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            const data = await response.json();
+            if (data.city) {
+              setSelectedLocation(data.city);
+            } else if (data.locality) {
+              setSelectedLocation(data.locality);
+            } else if (data.principalSubdivision) {
+              setSelectedLocation(data.principalSubdivision);
+            } else {
               setSelectedLocation("Vijayawada");
             }
-          },
-          () => {
+          } catch (error) {
+            console.error("Error getting location:", error);
             setSelectedLocation("Vijayawada");
           }
-        );
-      } else {
-        setSelectedLocation("Vijayawada");
-      }
+        } else {
+          setSelectedLocation("Vijayawada");
+        }
+      };
+
+      detectLocation();
     }
 
     setQuery(urlParams.get("q") || "");
