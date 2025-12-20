@@ -434,7 +434,7 @@ const MedicalReports = () => {
                                     target="_blank"
                                     rel="noreferrer"
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block cursor-pointer"
-                                    onClick={(e) => {
+                                    onClick={() => {
                                         // For mobile, we might need to help it trigger a download
                                         // This default behavior usually works in modern browsers
                                     }}
