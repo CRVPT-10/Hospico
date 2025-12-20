@@ -128,4 +128,4 @@ export const downloadFile = async (url: string, filename: string) => {
   }
 };
 
-export { API_BASE_URL };
+export { API_BASE_URL, apiClient };

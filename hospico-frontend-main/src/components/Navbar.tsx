@@ -60,7 +60,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white dark:bg-slate-900 shadow-md sticky top-0 z-50 border-b dark:border-slate-800 transition-colors duration-200">
+    <nav className="bg-white dark:bg-slate-900 shadow-md sticky top-0 z-50 border-b dark:border-slate-800 transition-colors duration-200 pt-[env(safe-area-inset-top)]">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-20">
           {/* Logo */}
@@ -230,6 +230,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={() => setIsMenuOpen(false)}
                 className="block py-2 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400"
               >
                 {link.name}
@@ -240,6 +241,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={() => setIsMenuOpen(false)}
                 className="block py-2 text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400"
               >
                 {link.name}
@@ -258,9 +260,13 @@ export default function Navbar() {
               </button>
             )}
 
-            <button className="w-full mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md">
+            <Link
+              to="/find-hospitals"
+              onClick={() => setIsMenuOpen(false)}
+              className="block w-full text-center mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md"
+            >
               Book Appointment
-            </button>
+            </Link>
           </div>
         )}
       </div>

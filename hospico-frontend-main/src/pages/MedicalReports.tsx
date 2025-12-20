@@ -3,6 +3,7 @@ import { Upload, FileText, Eye, Trash2, File, Image as ImageIcon, X, ChevronLeft
 import { useSelector } from "react-redux";
 import { useAppDispatch, type RootState } from "../store/store";
 import { fetchUserRecords, uploadRecord, deleteRecord, type ReportCategory } from "../features/medicalRecords/medicalRecordsSlice";
+import { apiClient } from "../api";
 
 const MedicalReports = () => {
     const [activeTab, setActiveTab] = useState<ReportCategory>('Diagnostics');
@@ -19,6 +20,46 @@ const MedicalReports = () => {
 
     const categories: ReportCategory[] = ['Diagnostics', 'Scanning', 'Prescriptions', 'Bills'];
 
+    // Preview State
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewType, setPreviewType] = useState<string>('');
+
+    const closePreview = () => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+            setPreviewType('');
+        }
+    };
+
+    const handleViewFile = async (file: { url?: string; name: string; type: string }) => {
+        if (!file.url) return;
+
+        try {
+            const response = await apiClient.get(file.url, { responseType: 'blob' });
+            const blob = new Blob([response.data], { type: response.headers['content-type'] || file.type });
+            const url = URL.createObjectURL(blob);
+
+            setPreviewUrl(url);
+            setPreviewType(file.type);
+        } catch (e) {
+            console.error("Failed to load file", e);
+            alert("Failed to load file. Please try again.");
+        }
+    };
+
+    // Helper to create upload objects
+    const createUploadObjects = (files: FileList) => {
+        return Array.from(files).map(file => ({
+            file,
+            id: Math.random().toString(36).substr(2, 9),
+            name: file.name
+        }));
+    };
+
+    // Actually, let's just use the `downloadFile` for now but we need to change STRATEGY.
+    // I will pause this Edit and modify api.ts first.
+
     useEffect(() => {
         if (user?.id) {
             dispatch(fetchUserRecords(Number(user.id)));
@@ -32,14 +73,7 @@ const MedicalReports = () => {
         }
     }, [activeTab]);
 
-    // Helper to create upload objects
-    const createUploadObjects = (files: FileList) => {
-        return Array.from(files).map(file => ({
-            file,
-            id: Math.random().toString(36).substr(2, 9),
-            name: file.name
-        }));
-    };
+
 
     // Handle initial file selection/drop
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,7 +321,7 @@ const MedicalReports = () => {
                                         </div>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={() => file.url && import('../api').then(mod => mod.downloadFile(file.url!, file.name))}
+                                                onClick={() => handleViewFile(file)}
                                                 className="p-2 text-gray-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                                 title="View/Download"
                                             >
@@ -364,6 +398,51 @@ const MedicalReports = () => {
                                 {loading ? 'Uploading...' : `Upload ${pendingUploads.length} ${pendingUploads.length === 1 ? 'File' : 'Files'}`}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Preview Modal */}
+            {previewUrl && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closePreview}>
+                    <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={closePreview}
+                            className="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 transition-colors bg-white/10 rounded-full backdrop-blur-md"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        {previewType.startsWith('image/') ? (
+                            <img
+                                src={previewUrl}
+                                alt="Preview"
+                                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                            />
+                        ) : previewType === 'application/pdf' ? (
+                            <iframe
+                                src={previewUrl}
+                                title="PDF Preview"
+                                className="w-full h-[80vh] rounded-lg shadow-2xl bg-white"
+                            />
+                        ) : (
+                            <div className="bg-white p-8 rounded-xl text-center">
+                                <FileText size={64} className="mx-auto text-gray-400 mb-4" />
+                                <p className="text-lg font-semibold mb-4">Preview not available for this file type</p>
+                                <a
+                                    href={previewUrl}
+                                    download="document"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block cursor-pointer"
+                                    onClick={(e) => {
+                                        // For mobile, we might need to help it trigger a download
+                                        // This default behavior usually works in modern browsers
+                                    }}
+                                >
+                                    Download to View
+                                </a>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
