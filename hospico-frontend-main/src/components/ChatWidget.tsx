@@ -1,15 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2, LogIn } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, LogIn, Star, MapPin } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequest } from '../api';
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
+interface Hospital {
+    id: number;
+    name: string;
+    imageUrl: string;
+    city: string;
+    rating: number;
+    address: string;
+}
 
 interface Message {
     role: 'system' | 'user' | 'assistant' | 'bot';
     content: string;
+    hospitals?: Hospital[];
 }
 
 interface ChatWidgetProps {
@@ -17,8 +27,56 @@ interface ChatWidgetProps {
     embedMode?: boolean;
 }
 
+// Hospital Card Component
+const HospitalCard = ({ hospital, onClick, theme }: { hospital: Hospital; onClick: () => void; theme: string }) => (
+    <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick}
+        className={`flex gap-3 p-2 rounded-lg cursor-pointer transition-colors border ${theme === 'dark'
+            ? 'bg-gray-700/50 hover:bg-gray-700 border-gray-600'
+            : 'bg-white hover:bg-gray-50 border-gray-200'
+            }`}
+    >
+        <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200">
+            {hospital.imageUrl ? (
+                <img
+                    src={hospital.imageUrl}
+                    alt={hospital.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=Hospital';
+                    }}
+                />
+            ) : (
+                <div className={`w-full h-full flex items-center justify-center ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'}`}>
+                    <MapPin size={20} className="text-gray-400" />
+                </div>
+            )}
+        </div>
+        <div className="flex-1 min-w-0">
+            <h4 className={`font-medium text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
+                {hospital.name}
+            </h4>
+            <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                <MapPin size={10} className="inline mr-1" />
+                {hospital.city}
+            </p>
+            {hospital.rating > 0 && (
+                <div className="flex items-center gap-1 mt-1">
+                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {hospital.rating.toFixed(1)}
+                    </span>
+                </div>
+            )}
+        </div>
+    </motion.div>
+);
+
 const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) => {
     const { theme } = useTheme();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -90,13 +148,20 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
 
             history.push({ role: 'user', content: userMessage.content });
 
-            const response = await apiRequest<{ reply?: string; error?: string }, { messages: any[] }>(
+            const response = await apiRequest<{ reply?: string; error?: string; type?: string; hospitals?: Hospital[] }, { messages: any[] }>(
                 '/api/chat',
                 'POST',
                 { messages: history }
             );
 
-            if (response.reply) {
+            if (response.type === 'hospitals' && response.hospitals) {
+                // Hospital search response
+                setMessages(prev => [...prev, {
+                    role: 'bot',
+                    content: response.reply || "Here are the hospitals I found:",
+                    hospitals: response.hospitals
+                }]);
+            } else if (response.reply) {
                 setMessages(prev => [...prev, { role: 'bot', content: response.reply || "" }]);
             } else if (response.error) {
                 console.error("Backend Error:", response.error);
@@ -117,6 +182,11 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
             e.preventDefault();
             handleSend();
         }
+    };
+
+    const handleHospitalClick = (hospitalId: number) => {
+        navigate(`/find-hospital/${hospitalId}`);
+        setIsOpen(false);
     };
 
     return (
@@ -174,6 +244,19 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                         : (theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-700' : 'bg-white text-gray-700 border-gray-100') + ' rounded-tl-none border'
                                         }`}>
                                         {msg.content}
+                                        {/* Render hospital cards if present */}
+                                        {msg.hospitals && msg.hospitals.length > 0 && (
+                                            <div className="mt-3 space-y-2">
+                                                {msg.hospitals.map((hospital) => (
+                                                    <HospitalCard
+                                                        key={hospital.id}
+                                                        hospital={hospital}
+                                                        onClick={() => handleHospitalClick(hospital.id)}
+                                                        theme={theme}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             ))}
@@ -211,7 +294,7 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                 </button>
                             </div>
                             <div className="text-center mt-2">
-                                <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Not a professional diagnosis. Consult a doctor.</p>
+                                <p className={`text-[13px] underline ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Not a professional diagnosis. Consult a doctor.</p>
                             </div>
                         </div>
                     </motion.div>
