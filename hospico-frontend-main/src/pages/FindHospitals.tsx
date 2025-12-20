@@ -57,7 +57,13 @@ const FindHospitals = () => {
             }
             const pos = await Geolocation.getCurrentPosition();
             coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-          } catch (e) { console.error(e); }
+          } catch (e) {
+            console.error(e);
+            // Temporary debug alert
+            if (Capacitor.isNativePlatform()) {
+              alert("Location Error: " + (e instanceof Error ? e.message : String(e)));
+            }
+          }
         } else if (navigator.geolocation) {
           try {
             const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
