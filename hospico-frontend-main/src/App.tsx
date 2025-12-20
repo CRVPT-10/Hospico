@@ -1,5 +1,6 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import OfflineScreen from "./components/OfflineScreen";
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
@@ -68,57 +69,84 @@ function App() {
 
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <TitleUpdater />
-        <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
-          <Navbar />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/partner-login" element={<PartnerLogin />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/find-hospitals" element={<FindHospitals />} />
-            <Route path="/hospitals" element={<FindHospitals />} />
-            <Route path="/emergency" element={<Emergency />} />
-            <Route path="/find-hospital/:id" element={<HospitalProfile />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-appointments"
-              element={
-                <ProtectedRoute>
-                  <MyAppointments />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <MedicalReports />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Dashboard />} />
-          </Routes>
-          <ChatWidget />
-        </div>
-      </BrowserRouter>
+      {/* Offline Screen Check */}
+      <ConnectivityHandler>
+        <BrowserRouter>
+          <TitleUpdater />
+          <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
+            <Navbar />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/partner-login" element={<PartnerLogin />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/find-hospitals" element={<FindHospitals />} />
+              <Route path="/hospitals" element={<FindHospitals />} />
+              <Route path="/emergency" element={<Emergency />} />
+              <Route path="/find-hospital/:id" element={<HospitalProfile />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-appointments"
+                element={
+                  <ProtectedRoute>
+                    <MyAppointments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <MedicalReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Dashboard />} />
+            </Routes>
+            <ChatWidget />
+          </div>
+        </BrowserRouter>
+      </ConnectivityHandler>
     </ThemeProvider>
   );
+}
+
+// Internal component to handle connectivity logic cleanly
+function ConnectivityHandler({ children }: { children: React.ReactNode }) {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (!isOnline) {
+    return <OfflineScreen onRetry={() => window.location.reload()} />;
+  }
+
+  return <>{children}</>;
 }
 
 export default App;
