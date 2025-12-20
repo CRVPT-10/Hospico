@@ -100,3 +100,79 @@ Logic and UI are distributed across pages in `src/pages`, utilizing shared `comp
 *   **Environment**:
     *   Backend config uses `application.properties`.
     *   Frontend uses standard Vite environment setup (implied).
+
+---
+
+## 6. Mobile Deployment Strategy (Google Play Store)
+*(Note: The current specific implementation uses **Capacitor + React** (Hybrid), which follows this deployment structure).*
+
+### 6.1 Google Play Store Requirements
+*   **Developer Account**:
+    *   **Process**: Sign up at [Play Console](https://play.google.com/console). Requires a Google account.
+    *   **Cost**: **$25 USD (approx. ₹2,100 INR)**. This is a **one-time** registration fee. There are no recurring annual fees for the Basic Play Console account.
+    *   **Verification**: You will need a valid ID and a credit/debit card for payment. Google may ask for address verification.
+*   **Legal Requirements**:
+    *   **Privacy Policy**: Mandatory. You must host a URL (e.g., on your website) explaining how you handle user data (especially since this is a healthcare app).
+    *   **Terms & Conditions**: Recommended but not strictly enforced by the store itself (though good for liability).
+    *   **Data Safety Section**: You must complete a questionnaire in the Play Console declaring what data you collect (e.g., Location, Health info) and why.
+
+### 6.2 Technical Dependencies
+To build the release APK/AAB for this Capacitor project:
+*   **Tools**:
+    *   **Android Studio**: Required for the final build and signing process.
+    *   **Java Development Kit (JDK)**: Version 17 is generally recommended for modern Gradle plugins (Project uses Java 21, check compatibility).
+    *   **Android SDK**: Install via Android Studio (SDK Platforms and SDK Tools).
+*   **Project Config**:
+    *   Run `npx cap sync android` to ensure the `android/` folder is up to date with your React code.
+    *   Run `npx cap open android` to open the project in Android Studio.
+*   **Signing**:
+    *   **Upload Key**: You generate this locally using `keytool` or Android Studio. This signs the binary you upload to Google.
+    *   **Play App Signing**: Highly recommended. Google manages the actual signing key delivered to devices. You upload with your "Upload Key", and Google re-signs it with the secure "App Signing Key".
+
+### 6.3 App Packaging & Release Process
+1.  **Prepare Release Build**:
+    *   Update `versionCode` (integer, e.g., 10) and `versionName` (string, e.g., "1.0.0") in `android/app/build.gradle`.
+    *   Run `npm run build` to create the production web assets.
+    *   Run `npx cap sync` to copy assets to the Android platform.
+2.  **Generate Bundle (AAB)**:
+    *   Open Android Studio (`npx cap open android`).
+    *   Go to **Build > Generate Signed Bundle / APK**.
+    *   Choose **Android App Bundle (AAB)** (preferred over APK for multiple reasons like smaller download size).
+    *   Create a new Keystore (keep this file SAFE, if you lose it, you cannot update the app).
+    *   Select `release` build variant.
+3.  **Upload to Play Store**:
+    *   Create a **Production** release in Play Console.
+    *   Upload the `.aab` file.
+    *   Fill out the **Store Listing**:
+        *   **App Icon**: 512x512 PNG.
+        *   **Feature Graphic**: 1024x500 PNG.
+        *   **Screenshots**: at least 2 screenshots.
+        *   **Description**: Short (80 chars) and Long description.
+
+### 6.4 Maintenance & Updates
+*   **Versioning**: 
+    *   Every update MUST have a higher `versionCode` than the previous one. `versionName` is just for display.
+*   **Live Updates vs Full Updates**:
+    *   **Full Update**: Required for Native changes (plugins, permission changes, icon changes). Users must download from the Play Store.
+    *   **Live Update (OTA)**: Using services like *Ionic Appflow* or *Microsoft CodePush*, you can push JS/CSS changes immediately without a store review (optional, costs extra/requires setup).
+*   **Backend Changes**:
+    *   **Backward Compatibility**: The mobile app cannot be "refreshed" instantly like a website. Old versions will exist in the wild. **NEVER** break existing API endpoints. Version your API (e.g., `/api/v1/login`, `/api/v2/login`) if you need breaking changes.
+
+### 6.5 Costs & Scaling Considerations
+*   **Initial Cost**: ₹2,100 INR (Play Store Fee).
+*   **Ongoing Costs**:
+    *   **Google Play**: ₹0/month.
+    *   **Backend Hosting (Render)**: Free tier is okay for dev, but for production, expect ~$7-25/month for scaling.
+    *   **Chatbot API**: If using Gemini/OpenAI, costs scale with usage (tokens). Monitor usage limits.
+*   **Scaling**:
+    *   As users grow, your database and backend are the bottlenecks, not the app store. Mobile apps are just clients. Focus on optimizing backend queries.
+
+### 6.6 Best Practices & Common Mistakes (Chatbot Focus)
+*   **Rejection Reasons**:
+    *   **Broken Functionality**: Submitting an app that crashes on login or empty states.
+    *   **Incomplete Login Credentials**: You MUST provide Google a demo "Test Account" (username/password) so reviewers can log in and test the dashboard.
+    *   **Medical Policy**: Since this is "HospiCo", Google performs strict review on "Medical" apps. You must declare if you are a "Health App" and might need to prove you are an authorized healthcare provider or explicitly state you are "Information only" (disclaimer).
+*   **Security**:
+    *   Never store API Keys in the frontend code (React). Proxy all calls through your Spring Boot backend.
+*   **User Trust**:
+    *   Since it's a chatbot, clear specific disclaimers ("Not a medical diagnosis") are crucial to avoid liability and store rejection.

@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, LogIn } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequest } from '../api';
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
+import { Link } from 'react-router-dom';
 
 interface Message {
     role: 'system' | 'user' | 'assistant' | 'bot';
@@ -17,14 +20,36 @@ interface ChatWidgetProps {
 const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) => {
     const { theme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
+    const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+    // Get auth state from Redux store
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+    // Handle auth state changes
+    useEffect(() => {
+        if (isAuthenticated) {
+            setShowAuthPrompt(false);
+        } else {
+            // User logged out
+            setIsOpen(false);
+            setMessages([
+                { role: 'system', content: "Hi! I'm your health assistant. I can provide general symptom information, but please note that I may not be fully accurate. For a proper diagnosis, please always consult a doctor." }
+            ]);
+        }
+    }, [isAuthenticated]);
 
     useEffect(() => {
         if (autoOpen || embedMode || (typeof window !== 'undefined' && window.self !== window.top)) {
             if (embedMode || autoOpen) {
-                setIsOpen(true);
+                // Determine what to do based on auth status
+                if (isAuthenticated) {
+                    setIsOpen(true);
+                }
+                // We might want to show auth prompt for autoOpen if not authenticated
+                // but let's be less intrusive for now unless explicitly requested
             }
         }
-    }, [autoOpen, embedMode]);
+    }, [autoOpen, embedMode, isAuthenticated]);
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.parent) {
@@ -198,7 +223,19 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => {
+                        if (isAuthenticated) {
+                            setIsOpen(!isOpen);
+                        } else {
+                            if (isOpen) setIsOpen(false); // Close if open (shouldn't be, but just in case)
+                            setShowAuthPrompt(!showAuthPrompt);
+
+                            // Auto hide after 5 seconds
+                            if (!showAuthPrompt) {
+                                setTimeout(() => setShowAuthPrompt(false), 5000);
+                            }
+                        }
+                    }}
                     className={`p-4 rounded-full shadow-2xl transition-all duration-300 pointer-events-auto 
                         ${isOpen ? 'bg-red-500 hover:bg-red-600 rotate-90 hidden sm:flex' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-500/50 flex'}
                         `}
@@ -206,6 +243,65 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                     {isOpen ? <X size={28} color="white" /> : <MessageCircle size={28} color="white" />}
                 </motion.button>
             )}
+
+            {/* Auth Prompt Popover */}
+            <AnimatePresence>
+                {showAuthPrompt && !isAuthenticated && !embedMode && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 10, x: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10, x: 10 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className={`absolute bottom-20 right-0 w-72 p-4 rounded-xl shadow-xl border z-50 pointer-events-auto
+                            ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-800'}
+                        `}
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                <Bot size={16} className="text-blue-500" />
+                                Restricted Access
+                            </h4>
+                            <button
+                                onClick={() => setShowAuthPrompt(false)}
+                                className={`p-1 rounded-full hover:bg-opacity-20 ${theme === 'dark' ? 'hover:bg-gray-500' : 'hover:bg-gray-200'}`}
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Login or Sign up to access the Chatbot feature and explore the website.
+                        </p>
+
+                        <div className="flex gap-2">
+                            <Link
+                                to="/login"
+                                onClick={() => setShowAuthPrompt(false)}
+                                className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                            >
+                                <LogIn size={12} />
+                                Login
+                            </Link>
+                            <Link
+                                to="/signup"
+                                onClick={() => setShowAuthPrompt(false)}
+                                className={`flex-1 py-2 px-3 border text-xs font-medium rounded-lg transition-colors flex items-center justify-center
+                                    ${theme === 'dark'
+                                        ? 'border-gray-600 hover:bg-gray-700 text-gray-200'
+                                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'}
+                                `}
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
+
+                        {/* Little triangle pointer at the bottom right */}
+                        <div className={`absolute -bottom-2 right-6 w-4 h-4 transform rotate-45 border-b border-r
+                             ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}
+                        `}></div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
