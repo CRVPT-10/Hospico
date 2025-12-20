@@ -246,6 +246,18 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left py-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
+              >
+                Sign Out
+              </button>
+            )}
+
             <button className="w-full mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md">
               Book Appointment
             </button>
