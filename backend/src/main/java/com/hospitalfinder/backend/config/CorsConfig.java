@@ -20,7 +20,8 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com")
+                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
+                                "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
                         .exposedHeaders("Set-Cookie")
@@ -30,16 +31,18 @@ public class CorsConfig {
         };
     }
 
-    // Modern Security CORS config (if using SecurityFilterChain in Spring Security 6+)
+    // Modern Security CORS config (if using SecurityFilterChain in Spring Security
+    // 6+)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "http://192.168.*:*", // allow LAN/mobile devices hitting dev machine
-            "https://hospico.onrender.com",
-            "https://hospital-finder-backend-ls4y.onrender.com"
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://192.168.*:*", // allow LAN/mobile devices hitting dev machine
+                "https://hospico.onrender.com",
+                "https://hospital-finder-backend-ls4y.onrender.com",
+                "*" // Allow all origins safely with setAllowedOriginPatterns
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));

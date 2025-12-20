@@ -47,34 +47,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract the JWT token
         jwt = authHeader.substring(7);
-        
-        // Extract the user email from the token
-        userEmail = jwtService.extractUsername(jwt);
-        
-        // If we have a user email and no authentication is set in the context
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Load the user details
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            
-            // Validate the token
-            if (jwtService.validateToken(jwt)) {
-                // Create an authentication token
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                
-                // Set the details
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                
-                // Set the authentication in the context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        try {
+            // Extract the user email from the token
+            userEmail = jwtService.extractUsername(jwt);
+
+            // If we have a user email and no authentication is set in the context
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Load the user details
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+                // Validate the token
+                if (jwtService.validateToken(jwt)) {
+                    // Create an authentication token
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
+
+                    // Set the details
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Set the authentication in the context
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Log the error but don't crash the request. The user will simply be
+            // unauthenticated.
+            // This prevents 500 errors if the token is malformed or expired.
+            System.err.println("JWT Authentication Warning: " + e.getMessage());
         }
-        
+
         // Continue with the filter chain
         filterChain.doFilter(request, response);
     }
