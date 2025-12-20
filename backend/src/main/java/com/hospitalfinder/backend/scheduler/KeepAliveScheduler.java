@@ -14,8 +14,10 @@ public class KeepAliveScheduler {
 
     // Render automatically sets 'RENDER_EXTERNAL_URL' env var
     // Default fallback to null if not present
+    // Default fallback to null if not present
     private final String backendUrl = System.getenv("RENDER_EXTERNAL_URL");
-    private final String frontendUrl = System.getenv("FRONTEND_URL");
+    private final String frontendUrl = System.getenv("FRONTEND_URL") != null ? System.getenv("FRONTEND_URL")
+            : "https://hospico.onrender.com";
 
     // Ping every 10 minutes (600,000 ms)
     @Scheduled(fixedRate = 600000)

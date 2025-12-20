@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiRequest } from '../api';
 
 interface Message {
     role: 'system' | 'user' | 'assistant' | 'bot';
@@ -64,18 +65,17 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
 
             history.push({ role: 'user', content: userMessage.content });
 
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: history }),
-            });
-            const data = await response.json();
+            const response = await apiRequest<{ reply?: string; error?: string }, { messages: any[] }>(
+                '/api/chat',
+                'POST',
+                { messages: history }
+            );
 
-            if (data.reply) {
-                setMessages(prev => [...prev, { role: 'bot', content: data.reply }]);
-            } else if (data.error) {
-                console.error("Backend Error:", data.error);
-                setMessages(prev => [...prev, { role: 'bot', content: `Error: ${data.error}` }]);
+            if (response.reply) {
+                setMessages(prev => [...prev, { role: 'bot', content: response.reply || "" }]);
+            } else if (response.error) {
+                console.error("Backend Error:", response.error);
+                setMessages(prev => [...prev, { role: 'bot', content: `Error: ${response.error}` }]);
             } else {
                 setMessages(prev => [...prev, { role: 'bot', content: "Received empty response from server." }]);
             }
