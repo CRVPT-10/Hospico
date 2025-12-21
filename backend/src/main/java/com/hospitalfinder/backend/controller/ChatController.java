@@ -96,16 +96,27 @@ public class ChatController {
         System.out.println("Received chat request with "
                 + (request.getMessages() != null ? request.getMessages().size() : 0) + " messages.");
 
+        // Get language from request (default to English)
+        String language = request.getLanguage();
+        String languageName = getLanguageName(language != null ? language : "en");
+        System.out.println("Response language: " + languageName);
+
         // 1. Prepare Headers
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(apiKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 2. Prepare System Message
+        // 2. Prepare System Message with language instruction
         Map<String, String> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
-        systemMessage.put("content",
-                "You are a helpful healthcare assistant. Maintain conversational context. Provide general possible causes for symptoms. Limit responses to 4-6 lines. Do NOT diagnose. Always advise consulting a doctor. If user asks about hospitals near a place, tell them to use the format 'hospital near [city name]' for better results.");
+        String systemPrompt = "You are a helpful healthcare assistant. Maintain conversational context. Provide general possible causes for symptoms. Limit responses to 4-6 lines. Do NOT diagnose. Always advise consulting a doctor. If user asks about hospitals near a place, tell them to use the format 'hospital near [city name]' for better results.";
+
+        // Add language instruction if not English
+        if (language != null && !language.equals("en")) {
+            systemPrompt += " IMPORTANT: You MUST respond in " + languageName
+                    + " language. All your responses should be written in " + languageName + ".";
+        }
+        systemMessage.put("content", systemPrompt);
 
         // 3. Combine Messages
         List<Object> allMessages = new ArrayList<>();
@@ -120,7 +131,7 @@ public class ChatController {
         // body.put("model", "mixtral-8x7b-32768"); // Alternative model if needed
         body.put("messages", allMessages);
         body.put("temperature", 0.3);
-        body.put("max_tokens", 150);
+        body.put("max_tokens", 250); // Increased for other languages which may need more tokens
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
@@ -161,5 +172,28 @@ public class ChatController {
             return ResponseEntity.status(500)
                     .body(Collections.singletonMap("error", "Internal Server Error: " + e.getMessage()));
         }
+    }
+
+    // Helper method to map language codes to full language names
+    private String getLanguageName(String langCode) {
+        Map<String, String> languageNames = new HashMap<>();
+        languageNames.put("en", "English");
+        languageNames.put("hi", "Hindi");
+        languageNames.put("te", "Telugu");
+        languageNames.put("ta", "Tamil");
+        languageNames.put("kn", "Kannada");
+        languageNames.put("ml", "Malayalam");
+        languageNames.put("mr", "Marathi");
+        languageNames.put("gu", "Gujarati");
+        languageNames.put("bn", "Bengali");
+        languageNames.put("pa", "Punjabi");
+        languageNames.put("or", "Odia");
+        languageNames.put("as", "Assamese");
+        languageNames.put("ur", "Urdu");
+        languageNames.put("kok", "Konkani");
+        languageNames.put("ks", "Kashmiri");
+        languageNames.put("mni", "Manipuri");
+
+        return languageNames.getOrDefault(langCode, "English");
     }
 }

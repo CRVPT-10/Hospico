@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2, LogIn, Star, MapPin } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, LogIn, Star, MapPin, Mic, MicOff, Volume2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequest } from '../api';
@@ -120,7 +120,139 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const recognitionRef = useRef<any>(null);
+
+    // Initialize Speech Recognition
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognitionRef.current = new SpeechRecognition();
+                recognitionRef.current.continuous = false;
+                recognitionRef.current.interimResults = false;
+                recognitionRef.current.lang = 'en-US';
+
+                recognitionRef.current.onresult = (event: any) => {
+                    const transcript = event.results[0][0].transcript;
+                    setInput(prev => prev + ' ' + transcript);
+                    setIsListening(false);
+                };
+
+                recognitionRef.current.onerror = () => {
+                    setIsListening(false);
+                };
+
+                recognitionRef.current.onend = () => {
+                    setIsListening(false);
+                };
+            }
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.abort();
+            }
+            window.speechSynthesis?.cancel();
+        };
+    }, []);
+
+    // Toggle speech recognition
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert('Speech recognition is not supported in your browser.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+            setIsListening(false);
+        } else {
+            recognitionRef.current.start();
+            setIsListening(true);
+        }
+    };
+
+    // Get current website language from Google Translate
+    const getCurrentLanguage = (): string => {
+        // Try to get language from Google Translate combo
+        const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+        if (select && select.value) {
+            return select.value;
+        }
+
+        // Fallback: check the html lang attribute (Google Translate modifies this)
+        const htmlLang = document.documentElement.lang;
+        if (htmlLang && htmlLang !== 'en') {
+            return htmlLang.split('-')[0]; // Get base language code
+        }
+
+        return 'en';
+    };
+
+    // Map language codes to speech synthesis locale codes
+    const getVoiceLocale = (langCode: string): string => {
+        const localeMap: { [key: string]: string } = {
+            'en': 'en-US',
+            'hi': 'hi-IN',
+            'te': 'te-IN',
+            'ta': 'ta-IN',
+            'kn': 'kn-IN',
+            'ml': 'ml-IN',
+            'mr': 'mr-IN',
+            'gu': 'gu-IN',
+            'bn': 'bn-IN',
+            'pa': 'pa-IN',
+            'or': 'or-IN',
+            'as': 'as-IN',
+            'ur': 'ur-IN',
+        };
+        return localeMap[langCode] || 'en-US';
+    };
+
+    // Text-to-speech for bot messages
+    const speakMessage = (text: string, messageIndex: number) => {
+        if (!window.speechSynthesis) {
+            alert('Text-to-speech is not supported in your browser.');
+            return;
+        }
+
+        // If already speaking this message, stop it
+        if (speakingMessageId === messageIndex) {
+            window.speechSynthesis.cancel();
+            setSpeakingMessageId(null);
+            return;
+        }
+
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        // Get the current website language
+        const currentLang = getCurrentLanguage();
+        const voiceLocale = getVoiceLocale(currentLang);
+
+        console.log('Speaking in language:', currentLang, 'Locale:', voiceLocale);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.lang = voiceLocale;
+
+        // Try to find a voice for the selected language
+        const voices = window.speechSynthesis.getVoices();
+        const matchingVoice = voices.find(v => v.lang.startsWith(currentLang));
+        if (matchingVoice) {
+            utterance.voice = matchingVoice;
+        }
+
+        utterance.onstart = () => setSpeakingMessageId(messageIndex);
+        utterance.onend = () => setSpeakingMessageId(null);
+        utterance.onerror = () => setSpeakingMessageId(null);
+
+        window.speechSynthesis.speak(utterance);
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -148,10 +280,13 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
 
             history.push({ role: 'user', content: userMessage.content });
 
-            const response = await apiRequest<{ reply?: string; error?: string; type?: string; hospitals?: Hospital[] }, { messages: any[] }>(
+            // Get current website language
+            const currentLang = getCurrentLanguage();
+
+            const response = await apiRequest<{ reply?: string; error?: string; type?: string; hospitals?: Hospital[] }, { messages: any[], language?: string }>(
                 '/api/chat',
                 'POST',
-                { messages: history }
+                { messages: history, language: currentLang }
             );
 
             if (response.type === 'hospitals' && response.hospitals) {
@@ -239,23 +374,38 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                         }`}>
                                         {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                                     </div>
-                                    <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
-                                        ? 'bg-indigo-600 text-white rounded-tr-none'
-                                        : (theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-700' : 'bg-white text-gray-700 border-gray-100') + ' rounded-tl-none border'
-                                        }`}>
-                                        {msg.content}
-                                        {/* Render hospital cards if present */}
-                                        {msg.hospitals && msg.hospitals.length > 0 && (
-                                            <div className="mt-3 space-y-2">
-                                                {msg.hospitals.map((hospital) => (
-                                                    <HospitalCard
-                                                        key={hospital.id}
-                                                        hospital={hospital}
-                                                        onClick={() => handleHospitalClick(hospital.id)}
-                                                        theme={theme}
-                                                    />
-                                                ))}
-                                            </div>
+                                    <div className={`max-w-[80%] ${msg.role === 'user' ? '' : 'flex flex-col'}`}>
+                                        <div className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
+                                            ? 'bg-indigo-600 text-white rounded-tr-none'
+                                            : (theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-700' : 'bg-white text-gray-700 border-gray-100') + ' rounded-tl-none border'
+                                            }`}>
+                                            {msg.content}
+                                            {/* Render hospital cards if present */}
+                                            {msg.hospitals && msg.hospitals.length > 0 && (
+                                                <div className="mt-3 space-y-2">
+                                                    {msg.hospitals.map((hospital) => (
+                                                        <HospitalCard
+                                                            key={hospital.id}
+                                                            hospital={hospital}
+                                                            onClick={() => handleHospitalClick(hospital.id)}
+                                                            theme={theme}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Speaker button for bot messages */}
+                                        {(msg.role === 'bot' || msg.role === 'system') && (
+                                            <button
+                                                onClick={() => speakMessage(msg.content, idx)}
+                                                className={`mt-1 p-1.5 rounded-full self-start transition-all ${speakingMessageId === idx
+                                                    ? 'bg-indigo-500 text-white animate-pulse'
+                                                    : theme === 'dark' ? 'text-gray-500 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                                    }`}
+                                                title={speakingMessageId === idx ? 'Stop speaking' : 'Listen to response'}
+                                            >
+                                                <Volume2 size={14} />
+                                            </button>
                                         )}
                                     </div>
                                 </motion.div>
@@ -284,6 +434,17 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                     placeholder="Type your symptoms..."
                                     className={`flex-1 bg-transparent border-none py-3 px-4 focus:ring-0 text-sm h-12 ${theme === 'dark' ? 'text-gray-100 placeholder-gray-500' : 'text-gray-700 placeholder-gray-400'}`}
                                 />
+                                {/* Microphone Button */}
+                                <button
+                                    onClick={toggleListening}
+                                    className={`p-2 rounded-full transition-all ${isListening
+                                        ? 'bg-red-500 text-white animate-pulse'
+                                        : theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                                    title={isListening ? 'Stop listening' : 'Start voice input'}
+                                >
+                                    {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                                </button>
+                                {/* Send Button */}
                                 <button
                                     onClick={handleSend}
                                     disabled={!input.trim() || isLoading}

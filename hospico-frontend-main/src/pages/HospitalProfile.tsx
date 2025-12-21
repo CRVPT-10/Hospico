@@ -245,141 +245,21 @@ const HospitalProfile = () => {
           </div>
         </div>
       </div>
-      {/* Doctors Section */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Our Doctors</h2>
-
-          {/* Specialization Filters */}
-          <div className="flex flex-wrap gap-2">
-            {uniqueSpecializations.map((spec) => (
-              <button
-                key={spec}
-                onClick={() => setSelectedSpecialization(spec)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${selectedSpecialization === spec
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                  : "bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-700"
-                  }`}
-              >
-                {spec}
-              </button>
-            ))}
+      {/* Patient Reviews Section - Social Proof immediately after Hero */}
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">What Patients Say</h2>
+              <p className="text-sm text-gray-500 dark:text-slate-400">Real experiences from our patients</p>
+            </div>
           </div>
         </div>
-
-        {/* Doctors List */}
-        {filteredDoctors && filteredDoctors.length > 0 ? (
-          <div className="space-y-6">
-            {filteredDoctors.map((doctor) => (
-              <div key={doctor.id} className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-100 dark:border-transparent p-4 sm:p-6 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                  {/* Left Section - Doctor Image & Info */}
-                  <div className="flex gap-4 items-start">
-                    <div className="flex-shrink-0">
-                      <img src={getDoctorImageUrl(doctor.imageUrl)} alt={doctor.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">{doctor.name}</h3>
-                      <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">{doctor.specialization || "General Practitioner"}</p>
-                      <p className="text-xs text-gray-600 dark:text-slate-500 mb-3">15 years exp • {doctor.qualification || "MD"}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">🟢 Available</span>
-                        <span className="text-xs text-gray-500 dark:text-slate-400">Next: Today, 4:00 PM</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Middle Section - Services & Timings Tabs */}
-                  <div className="flex-1 lg:border-l border-gray-200 dark:border-slate-600 lg:pl-6">
-                    <div className="flex gap-6 mb-4">
-                      <button
-                        onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'services' })}
-                        className={`pb-2 text-sm font-medium transition-colors ${activeTab[doctor.id] !== 'timings'
-                          ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                          : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
-                          }`}
-                      >
-                        Services Offered
-                      </button>
-                      <button
-                        onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'timings' })}
-                        className={`pb-2 text-sm font-medium transition-colors ${activeTab[doctor.id] === 'timings'
-                          ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                          : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
-                          }`}
-                      >
-                        Timings
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {activeTab[doctor.id] === 'timings' ? (
-                        <div className="space-y-3 mt-2">
-                          <div className="bg-blue-50 dark:bg-blue-500/20 border-l-4 border-blue-400 rounded-lg p-4">
-                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase mb-2">Weekdays & Saturday</p>
-                            <div className="flex flex-wrap gap-2">
-                              <span className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-full">
-                                MON–SAT
-                              </span>
-                              <div className="flex items-center gap-2 flex-1">
-                                <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">09:00 AM – 01:00 PM</span>
-                                <span className="text-gray-400 dark:text-slate-400">&</span>
-                                <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">02:00 PM – 08:00 PM</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-orange-50 dark:bg-orange-500/20 border-l-4 border-orange-400 rounded-lg p-4">
-                            <p className="text-xs font-semibold text-orange-600 dark:text-orange-300 uppercase mb-2">Sunday</p>
-                            <div className="flex flex-wrap gap-2">
-                              <span className="bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-full">
-                                SUN
-                              </span>
-                              <div className="flex items-center gap-2 flex-1">
-                                <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">09:00 AM – 01:00 PM</span>
-                                <span className="text-gray-400 dark:text-slate-400">&</span>
-                                <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">02:00 PM – 06:00 PM</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-base font-bold text-gray-900 dark:text-slate-100">
-                            {doctor.specialization || 'General Practitioner'}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
-                            {doctor.biography || 'Day time OPD'}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* Right Section - Rating & Book Button */}
-                  <div className="flex flex-col gap-3 items-end justify-center flex-shrink-0 lg:border-l border-gray-200 dark:border-slate-600 lg:pl-6">
-
-                    <button
-                      onClick={() => {
-                        setActiveTab({});
-                        setSelectedDoctorId(doctor.id);
-                        setShowBookingModal(true);
-                      }}
-                      className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm"
-                    >
-                      Book
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 text-center">
-            <p className="text-gray-500 dark:text-slate-300">No doctors available</p>
-          </div>
-        )}
-      </div>
-
-      {/* Reviews Section */}
-      <div className="max-w-7xl mx-auto px-4 py-8 border-t border-gray-200 dark:border-slate-700">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Patient Reviews</h2>
 
         {filteredReviews.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -387,13 +267,15 @@ const HospitalProfile = () => {
               const reviewDoctor = hospital?.doctors?.find(d => Number(d.id) === review.doctorId);
 
               return (
-                <div key={review.id} className="relative bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-shadow group">
-
+                <div
+                  key={review.id}
+                  className="relative bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300 group"
+                >
                   {/* Delete Button - Only show if current user owns the review */}
                   {(Number(review.userId) === Number(currentUserId) || currentUserId === 1) && (
                     <button
                       onClick={() => handleDeleteReview(review.id)}
-                      className="absolute bottom-6 right-6 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition-colors z-10"
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/40 rounded-lg transition-all z-10"
                       title="Delete Review"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -401,46 +283,246 @@ const HospitalProfile = () => {
                         <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
                         <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                       </svg>
-                      Remove
                     </button>
                   )}
 
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
-                        U{index + 1}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-slate-100">User {index + 1}</p>
-                        <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="flex bg-yellow-50 dark:bg-yellow-900/10 px-2 py-1 rounded-lg">
-                      <span className="text-yellow-500 text-sm">★</span>
-                      <span className="ml-1 text-sm font-bold text-gray-700 dark:text-gray-300">{review.rating}</span>
-                    </div>
+                  {/* Large Quote Icon */}
+                  <div className="absolute -top-3 -left-2 text-blue-100 dark:text-slate-700">
+                    <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                    </svg>
                   </div>
 
-                  {reviewDoctor && (
-                    <div className="mb-3 px-3 py-1.5 bg-gray-50 dark:bg-slate-700/50 rounded-lg inline-block">
-                      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium uppercase tracking-wide">Doctor</p>
-                      <p className="text-sm font-semibold text-gray-800 dark:text-slate-200">{reviewDoctor.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-slate-400">{reviewDoctor.specialization}</p>
-                    </div>
-                  )}
+                  {/* Review Content */}
+                  <div className="relative pt-4">
+                    <p className="text-gray-700 dark:text-slate-300 text-base leading-relaxed mb-4 min-h-[80px]">
+                      "{review.comment}"
+                    </p>
 
-                  <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed italic border-l-2 border-gray-200 dark:border-slate-600 pl-3">
-                    "{review.comment}"
-                  </p>
+                    {/* Reviewer Info */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        {String.fromCharCode(65 + (index % 26))}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm">
+                          Verified Patient
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Doctor Tag */}
+                    {reviewDoctor && (
+                      <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+                        <svg className="w-4 h-4 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                          {reviewDoctor.name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="text-center py-10 bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
-            <p className="text-gray-500 dark:text-slate-400">No reviews yet.</p>
+          /* Graceful Empty State */
+          <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-slate-800/50 dark:to-slate-800 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <svg className="w-8 h-8 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              No Reviews Yet
+            </h3>
+            <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto text-sm">
+              Be the first to share your experience! Your feedback helps other patients make informed decisions about their healthcare.
+            </p>
           </div>
         )}
+      </div>
+
+      {/* Doctors Section - Main Action Area */}
+      <div className="bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-800/50 py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Our Expert Doctors</h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Book an appointment with our specialists</p>
+              </div>
+            </div>
+
+            {/* Specialization Filters */}
+            <div className="flex flex-wrap gap-2 mt-6">
+              {uniqueSpecializations.map((spec) => (
+                <button
+                  key={spec}
+                  onClick={() => setSelectedSpecialization(spec)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${selectedSpecialization === spec
+                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105"
+                    : "bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700"
+                    }`}
+                >
+                  {spec}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Doctors List */}
+          {filteredDoctors && filteredDoctors.length > 0 ? (
+            <div className="space-y-4">
+              {filteredDoctors.map((doctor) => (
+                <div
+                  key={doctor.id}
+                  ref={(el) => { tabRefs.current[doctor.id] = el; }}
+                  className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 sm:p-6 hover:shadow-xl hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300"
+                >
+                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                    {/* Left Section - Doctor Image & Info */}
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-shrink-0 relative">
+                        <img
+                          src={getDoctorImageUrl(doctor.imageUrl)}
+                          alt={doctor.name}
+                          className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl shadow-md"
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{doctor.name}</h3>
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">
+                          {doctor.specialization || "General Practitioner"}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">
+                          15 years exp • {doctor.qualification || "MD"}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-full">
+                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                            Available Today
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Middle Section - Services & Timings Tabs */}
+                    <div className="flex-1 lg:border-l border-gray-200 dark:border-slate-700 lg:pl-6">
+                      <div className="flex gap-4 mb-4">
+                        <button
+                          onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'services' })}
+                          className={`pb-2 text-sm font-medium transition-colors ${activeTab[doctor.id] !== 'timings'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+                            }`}
+                        >
+                          Services
+                        </button>
+                        <button
+                          onClick={() => setActiveTab({ ...activeTab, [doctor.id]: 'timings' })}
+                          className={`pb-2 text-sm font-medium transition-colors ${activeTab[doctor.id] === 'timings'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+                            }`}
+                        >
+                          Timings
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {activeTab[doctor.id] === 'timings' ? (
+                          <div className="space-y-3">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 rounded-lg p-4">
+                              <p className="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase mb-2">Weekdays & Saturday</p>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                                  MON–SAT
+                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">09:00 AM – 01:00 PM</span>
+                                  <span className="text-gray-400 dark:text-slate-500">&</span>
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">02:00 PM – 08:00 PM</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-400 rounded-lg p-4">
+                              <p className="text-xs font-semibold text-orange-600 dark:text-orange-300 uppercase mb-2">Sunday</p>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                                  SUN
+                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">09:00 AM – 01:00 PM</span>
+                                  <span className="text-gray-400 dark:text-slate-500">&</span>
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">02:00 PM – 06:00 PM</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-base font-bold text-gray-900 dark:text-slate-100">
+                              {doctor.specialization || 'General Practitioner'}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed mt-1">
+                              {doctor.biography || 'Providing comprehensive healthcare services with personalized attention to every patient.'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Section - Book Button */}
+                    <div className="flex flex-col gap-3 items-stretch lg:items-end justify-center flex-shrink-0 lg:border-l border-gray-200 dark:border-slate-700 lg:pl-6 pt-4 lg:pt-0">
+                      <button
+                        onClick={() => {
+                          setActiveTab({});
+                          setSelectedDoctorId(doctor.id);
+                          setShowBookingModal(true);
+                        }}
+                        className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold text-sm shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 transform hover:scale-105"
+                      >
+                        Book Appointment
+                      </button>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 text-center lg:text-right">
+                        Next available: Today
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 dark:text-slate-400 font-medium">No doctors available for this specialization</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">Try selecting a different specialty filter</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Appointment Booking Modal */}

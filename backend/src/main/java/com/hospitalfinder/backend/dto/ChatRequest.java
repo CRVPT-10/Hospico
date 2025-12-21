@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ChatRequest {
     private List<Message> messages;
+    private String language;
 
     public List<Message> getMessages() {
         return messages;
@@ -11,6 +12,14 @@ public class ChatRequest {
 
     public void setMessages(List<Message> messages) {
         this.messages = messages;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public static class Message {

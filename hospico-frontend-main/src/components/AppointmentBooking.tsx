@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { apiRequest } from "../api";
+import AppointmentConfirmation from "./AppointmentConfirmation";
 
 interface UserProfile {
   name?: string;
@@ -59,6 +60,11 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
   const [success, setSuccess] = useState<string | null>(null);
   const [selfBooking, setSelfBooking] = useState<boolean>(true);
   const [cachedProfile, setCachedProfile] = useState<UserProfile | null>(null);
+
+  // Confirmation modal state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationStatus, setConfirmationStatus] = useState<"loading" | "success" | "error">("loading");
+  const [confirmationError, setConfirmationError] = useState<string | null>(null);
 
   // Apply cached profile (or fallback user) to patient fields
   const applyProfileToFields = useCallback(() => {
@@ -262,6 +268,11 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
     setError(null);
     setSuccess(null);
 
+    // Show loading state immediately
+    setConfirmationStatus("loading");
+    setConfirmationError(null);
+    setShowConfirmation(true);
+
     try {
       // Combine date and time
       const appointmentDateTime = `${selectedDate}T${selectedSlot}:00`;
@@ -286,15 +297,13 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
       );
 
       if (response) {
-        setSuccess("Appointment booked successfully!");
-        // Close the modal after a delay
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        // Transition to success state
+        setConfirmationStatus("success");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to book appointment";
-      setError(message);
+      setConfirmationStatus("error");
+      setConfirmationError(message);
       console.error(err);
     } finally {
       setBookingLoading(false);
@@ -542,6 +551,23 @@ const AppointmentBooking = ({ hospitalId, doctorId, doctorName, specialization, 
           )}
         </div>
       </div>
+
+      {/* Confirmation Popup */}
+      <AppointmentConfirmation
+        isOpen={showConfirmation}
+        status={confirmationStatus}
+        errorMessage={confirmationError || undefined}
+        onClose={() => {
+          setShowConfirmation(false);
+          if (confirmationStatus === "success") {
+            onClose(); // Close the booking modal on success
+          }
+        }}
+        onRetry={() => {
+          // Close confirmation and let user try again
+          setShowConfirmation(false);
+        }}
+      />
     </div>
   );
 };
