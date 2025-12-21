@@ -5,6 +5,8 @@ import java.util.List;
 public class ChatRequest {
     private List<Message> messages;
     private String language;
+    private Double latitude;
+    private Double longitude;
 
     public List<Message> getMessages() {
         return messages;
@@ -20,6 +22,22 @@ public class ChatRequest {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public static class Message {

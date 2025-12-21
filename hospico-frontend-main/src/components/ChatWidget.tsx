@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2, LogIn, Star, MapPin, Mic, MicOff, Volume2 } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, LogIn, Star, MapPin, Mic, MicOff, Volume2, Navigation } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequest } from '../api';
@@ -14,12 +14,22 @@ interface Hospital {
     city: string;
     rating: number;
     address: string;
+    distance?: number; // Distance in km from user
+    latitude?: number;
+    longitude?: number;
 }
 
 interface Message {
     role: 'system' | 'user' | 'assistant' | 'bot';
     content: string;
     hospitals?: Hospital[];
+    symptomMatch?: {
+        symptom: string;
+        inferredIssue: string;
+        specializations: string[];
+        confidence: string;
+        disclaimer: string;
+    };
 }
 
 interface ChatWidgetProps {
@@ -28,51 +38,82 @@ interface ChatWidgetProps {
 }
 
 // Hospital Card Component
-const HospitalCard = ({ hospital, onClick, theme }: { hospital: Hospital; onClick: () => void; theme: string }) => (
-    <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={onClick}
-        className={`flex gap-3 p-2 rounded-lg cursor-pointer transition-colors border ${theme === 'dark'
-            ? 'bg-gray-700/50 hover:bg-gray-700 border-gray-600'
-            : 'bg-white hover:bg-gray-50 border-gray-200'
-            }`}
-    >
-        <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200">
-            {hospital.imageUrl ? (
-                <img
-                    src={hospital.imageUrl}
-                    alt={hospital.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=Hospital';
-                    }}
-                />
-            ) : (
-                <div className={`w-full h-full flex items-center justify-center ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'}`}>
-                    <MapPin size={20} className="text-gray-400" />
+const HospitalCard = ({ hospital, onClick, theme }: { hospital: Hospital; onClick: () => void; theme: string }) => {
+    const handleMapClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click
+        if (hospital.latitude && hospital.longitude) {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${hospital.latitude},${hospital.longitude}`, '_blank');
+        }
+    };
+
+    return (
+        <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onClick}
+            className={`flex gap-3 p-2 rounded-lg cursor-pointer transition-colors border relative ${theme === 'dark'
+                ? 'bg-gray-700/50 hover:bg-gray-700 border-gray-600'
+                : 'bg-white hover:bg-gray-50 border-gray-200'
+                }`}
+        >
+            <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200">
+                {hospital.imageUrl ? (
+                    <img
+                        src={hospital.imageUrl}
+                        alt={hospital.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64?text=Hospital';
+                        }}
+                    />
+                ) : (
+                    <div className={`w-full h-full flex items-center justify-center ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'}`}>
+                        <MapPin size={20} className="text-gray-400" />
+                    </div>
+                )}
+            </div>
+            <div className="flex-1 min-w-0 pr-8">
+                <h4 className={`font-medium text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
+                    {hospital.name}
+                </h4>
+                <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <MapPin size={10} className="inline mr-1" />
+                    {hospital.city}
+                </p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {hospital.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                            <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                            <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                {hospital.rating.toFixed(1)}
+                            </span>
+                        </div>
+                    )}
+                    {hospital.distance !== undefined && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${theme === 'dark'
+                            ? 'bg-green-900/50 text-green-300'
+                            : 'bg-green-100 text-green-700'
+                            }`}>
+                            📍 {hospital.distance} km
+                        </span>
+                    )}
                 </div>
+            </div>
+            {hospital.latitude && hospital.longitude && (
+                <button
+                    onClick={handleMapClick}
+                    className={`absolute bottom-2 right-2 p-1.5 rounded-md transition-all shadow-sm ${theme === 'dark'
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/40'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200'
+                        }`}
+                    title="View on Google Maps"
+                >
+                    <Navigation size={12} fill="currentColor" />
+                </button>
             )}
-        </div>
-        <div className="flex-1 min-w-0">
-            <h4 className={`font-medium text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                {hospital.name}
-            </h4>
-            <p className={`text-xs truncate ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                <MapPin size={10} className="inline mr-1" />
-                {hospital.city}
-            </p>
-            {hospital.rating > 0 && (
-                <div className="flex items-center gap-1 mt-1">
-                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {hospital.rating.toFixed(1)}
-                    </span>
-                </div>
-            )}
-        </div>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) => {
     const { theme } = useTheme();
@@ -122,8 +163,29 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
     const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<any>(null);
+
+    // Get user location on mount
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    });
+                    console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    console.log('Geolocation error:', error.message);
+                    // Continue without location - hospitals will be sorted by rating
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+            );
+        }
+    }, []);
 
     // Initialize Speech Recognition
     useEffect(() => {
@@ -283,14 +345,43 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
             // Get current website language
             const currentLang = getCurrentLanguage();
 
-            const response = await apiRequest<{ reply?: string; error?: string; type?: string; hospitals?: Hospital[] }, { messages: any[], language?: string }>(
+            const response = await apiRequest<{
+                reply?: string;
+                error?: string;
+                type?: string;
+                hospitals?: Hospital[];
+                symptom?: string;
+                inferredIssue?: string;
+                specializations?: string[];
+                confidence?: string;
+                disclaimer?: string;
+            }, { messages: any[], language?: string, latitude?: number, longitude?: number }>(
                 '/api/chat',
                 'POST',
-                { messages: history, language: currentLang }
+                {
+                    messages: history,
+                    language: currentLang,
+                    latitude: userLocation?.latitude,
+                    longitude: userLocation?.longitude
+                }
             );
 
-            if (response.type === 'hospitals' && response.hospitals) {
-                // Hospital search response
+            if (response.type === 'specialization_match' && response.hospitals) {
+                // Symptom-based hospital search response
+                setMessages(prev => [...prev, {
+                    role: 'bot',
+                    content: response.reply || "Based on your symptoms, here are some recommended hospitals:",
+                    hospitals: response.hospitals,
+                    symptomMatch: {
+                        symptom: response.symptom || '',
+                        inferredIssue: response.inferredIssue || '',
+                        specializations: response.specializations || [],
+                        confidence: response.confidence || 'medium',
+                        disclaimer: response.disclaimer || 'This is not a medical diagnosis. Please consult a qualified doctor.'
+                    }
+                }]);
+            } else if (response.type === 'hospitals' && response.hospitals) {
+                // Explicit hospital search response
                 setMessages(prev => [...prev, {
                     role: 'bot',
                     content: response.reply || "Here are the hospitals I found:",
@@ -380,6 +471,35 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                             : (theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-700' : 'bg-white text-gray-700 border-gray-100') + ' rounded-tl-none border'
                                             }`}>
                                             {msg.content}
+
+                                            {/* Symptom match - show specialization badges & disclaimer */}
+                                            {msg.symptomMatch && (
+                                                <div className="mt-3">
+                                                    {/* Specialization badges */}
+                                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                                        {msg.symptomMatch.specializations.map((spec, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className={`px-2 py-0.5 text-xs font-medium rounded-full ${theme === 'dark'
+                                                                    ? 'bg-blue-900/50 text-blue-300'
+                                                                    : 'bg-blue-100 text-blue-700'
+                                                                    }`}
+                                                            >
+                                                                {spec}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Disclaimer banner */}
+                                                    <div className={`mt-2 p-2 rounded-lg text-xs ${theme === 'dark'
+                                                        ? 'bg-amber-900/30 text-amber-200 border border-amber-700/50'
+                                                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                                        }`}>
+                                                        ⚠️ {msg.symptomMatch.disclaimer}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {/* Render hospital cards if present */}
                                             {msg.hospitals && msg.hospitals.length > 0 && (
                                                 <div className="mt-3 space-y-2">
@@ -391,6 +511,46 @@ const ChatWidget = ({ autoOpen = false, embedMode = false }: ChatWidgetProps) =>
                                                             theme={theme}
                                                         />
                                                     ))}
+
+                                                    {/* Map Overview Section */}
+                                                    {msg.hospitals[0] && msg.hospitals[0].latitude && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="mt-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:shadow-md"
+                                                        >
+                                                            <div className="relative h-36 w-full bg-gray-100 dark:bg-gray-800 group">
+                                                                <iframe
+                                                                    className="h-full w-full grayscale-[20%] group-hover:grayscale-0 transition-all"
+                                                                    frameBorder="0"
+                                                                    src={`https://maps.google.com/maps?q=${msg.hospitals[0].latitude},${msg.hospitals[0].longitude}&z=13&output=embed`}
+                                                                    allowFullScreen
+                                                                ></iframe>
+                                                                {/* Transparent overlay for click redirection */}
+                                                                <a
+                                                                    href={`https://www.google.com/maps/search/hospitals+near+${msg.hospitals[0].latitude},${msg.hospitals[0].longitude}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="absolute inset-0 z-10"
+                                                                    title="Open Google Maps"
+                                                                ></a>
+                                                            </div>
+                                                            <div className={`p-2 transition-colors ${theme === 'dark'
+                                                                ? 'bg-gray-800 hover:bg-gray-750 text-blue-400 border-t border-gray-700'
+                                                                : 'bg-white hover:bg-gray-50 text-blue-600 border-t border-gray-100'
+                                                                }`}>
+                                                                <a
+                                                                    href={`https://www.google.com/maps/search/hospitals+near+${msg.hospitals[0].latitude},${msg.hospitals[0].longitude}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider"
+                                                                >
+                                                                    <MapPin size={14} className="animate-bounce" />
+                                                                    View all on Google Maps
+                                                                </a>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
