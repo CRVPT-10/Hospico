@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import HospitalSearch from "../components/HospitalSearch";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { apiRequest } from "../api";
-import defaultHospitalImage from "../assets/images/default-hospital.jpg";
-import NearbyHospitals from "../components/NearbyHospitals";
 
-interface Hospital {
-  id: string;
-  clinicId?: string; // Temporary property for mapping
-  name: string;
-  city?: string;
-  address?: string; // Added address field
-  specialties?: string[];
-  specializations?: string[]; // Temporary property for mapping
-  rating?: number;
-  distance?: number; // Added distance field
-  imageUrl?: string; // Added property for hospital image URL
-  imageurl?: string; // Added property for mapping fetched data
-}
+import NearbyHospitals from "../components/NearbyHospitals";
+import HospitalCardComponent, { type Hospital as HospitalType } from "../components/HospitalCard";
+
+interface Hospital extends HospitalType { }
 
 const FindHospitals = () => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Parse URL params on mount
@@ -31,6 +19,7 @@ const FindHospitals = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentRealPosition, setCurrentRealPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   // Data states
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -103,6 +92,13 @@ const FindHospitals = () => {
       detectLocation();
     }
 
+    // Always try to get real position for distance calculation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setCurrentRealPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      });
+    }
+
     setQuery(urlParams.get("q") || "");
     const specsParam = urlParams.getAll("spec");
     if (specsParam.length > 0) {
@@ -149,32 +145,25 @@ const FindHospitals = () => {
           params.append("search", query);
         }
 
-        // If user coordinates are available, use the sorted-by-distance endpoint
-        if (userCoordinates) {
-          params.append("lat", userCoordinates.lat.toString());
-          params.append("lng", userCoordinates.lng.toString());
+        // If current real position is available, always add lat/lng for distance calculation
+        const effectiveLat = userCoordinates?.lat || currentRealPosition?.lat;
+        const effectiveLng = userCoordinates?.lng || currentRealPosition?.lng;
 
-          const queryString = params.toString();
-          const url = `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`;
-
-          data = await apiRequest<Hospital[]>(url, "GET");
-        } else {
-          const queryString = params.toString();
-          const url = `/api/clinics${queryString ? `?${queryString}` : ""}`;
-
-          data = await apiRequest<Hospital[]>(url, "GET");
+        if (effectiveLat && effectiveLng) {
+          params.append("lat", effectiveLat.toString());
+          params.append("lng", effectiveLng.toString());
         }
 
-        if (!cancelled) {
-          const transformedData = (data || []).map((hospital) => ({
-            ...hospital,
-            id: hospital.clinicId ? hospital.clinicId.toString() : "unknown",
-            specialties: hospital.specializations || hospital.specializations,
-            imageUrl: hospital.imageurl || hospital.imageUrl,
-            address: hospital.address,
-          }));
+        const queryString = params.toString();
+        // If user coordinates (from search/nearby) are specifically requested, use distance sorting endpoint
+        const url = userCoordinates
+          ? `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`
+          : `/api/clinics${queryString ? `?${queryString}` : ""}`;
 
-          setHospitals(transformedData);
+        data = await apiRequest<Hospital[]>(url, "GET");
+
+        if (!cancelled) {
+          setHospitals(data || []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -199,24 +188,7 @@ const FindHospitals = () => {
   // No need for client-side filtering anymore since backend handles it
   const filteredHospitals = hospitals;
 
-  // Function to get the correct image URL
-  const getImageUrl = (imageUrl: string | undefined) => {
-    if (!imageUrl) return defaultHospitalImage;
 
-    // If it's already an absolute URL, return it as is
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-
-    // If it's a relative path that points to our assets, use the default image
-    if (imageUrl.includes('/src/assets/images/')) {
-      return defaultHospitalImage;
-    }
-
-    // For other relative paths, try to construct a proper URL
-    // In a real app, you might want to serve these from a CDN or static folder
-    return defaultHospitalImage;
-  };
 
   return (
     <ProtectedRoute>
@@ -275,48 +247,11 @@ const FindHospitals = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredHospitals.map((hospital) => (
-                  <div
-                    key={hospital.id}
-                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg p-4 sm:p-6 shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg transition-all flex flex-col"
-                  >
-                    <img
-                      src={getImageUrl(hospital.imageUrl)}
-                      alt={hospital.name}
-                      className="w-full h-48 object-cover rounded-md mb-4"
-                    />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">
-                      {hospital.name}
-                    </h3>
-                    <div className="text-sm text-gray-600 dark:text-slate-300 mb-3">
-                      {hospital.address && <p>📍 {hospital.address}</p>}
-                      {hospital.distance !== undefined && (
-                        <p>
-                          {hospital.distance < 1
-                            ? `${Math.round(hospital.distance * 1000)}m`
-                            : `${hospital.distance.toFixed(1)}km`}
-                        </p>
-                      )}
-                      <p>⭐ {hospital.rating ?? "—"}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {(hospital.specialties || []).map((specialty) => (
-                        <span
-                          key={specialty}
-                          className="rounded-full bg-blue-100 dark:bg-blue-600/30 text-blue-800 dark:text-blue-300 px-2 py-1 text-xs font-medium"
-                        >
-                          {specialty}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex space-x-2 mt-auto">
-                      <button
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium text-sm transition-colors flex-1"
-                        onClick={() => navigate(`/find-hospital/${hospital.id}`)}
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </div>
+                  <HospitalCardComponent
+                    key={hospital.id || hospital.clinicId}
+                    hospital={hospital}
+                    theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                  />
                 ))}
               </div>
             )}

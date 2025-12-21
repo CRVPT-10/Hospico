@@ -9,39 +9,29 @@ import com.hospitalfinder.backend.entity.Specialization;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class ClinicSummaryDTO {
-    @Getter
-    @Setter
     private Long clinicId;
-    @Getter
-    @Setter
     private String name;
-    @Getter
-    @Setter
     private String address;
-    @Getter
-    @Setter
     private String city;
-    @Getter
-    @Setter
     private Double latitude;
-    @Getter
-    @Setter
     private Double longitude;
-    @Getter
-    @Setter
     private List<String> specializations;
-    @Getter
-    @Setter
     private Double rating;
-    @Getter
-    @Setter
     private Integer reviews;
-    @Getter
-    @Setter
     private String imageUrl;
+    private Double distance; // in kilometers
+    private Double distanceKm; // in kilometers (aliased)
+    private Integer estimatedTime; // in minutes
+    private Integer estimatedWaitMinutes; // in minutes (aliased)
 
     public ClinicSummaryDTO(Clinic clinic) {
+        this(clinic, null, null);
+    }
+
+    public ClinicSummaryDTO(Clinic clinic, Double distance, Integer estimatedTime) {
         this.clinicId = clinic.getId();
         this.name = clinic.getName();
         this.address = clinic.getAddress();
@@ -55,5 +45,9 @@ public class ClinicSummaryDTO {
         this.rating = clinic.getRating();
         this.reviews = clinic.getReviews();
         this.imageUrl = clinic.getImageUrl();
+        this.distance = distance;
+        this.distanceKm = distance;
+        this.estimatedTime = estimatedTime;
+        this.estimatedWaitMinutes = estimatedTime;
     }
 }

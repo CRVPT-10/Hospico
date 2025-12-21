@@ -1,0 +1,11 @@
+
+> hospico-frontend@0.0.0 build
+> tsc -b && vite build
+
+src/components/ChatWidget.tsx(2,54): error TS6133: 'LogIn' is declared but its value is never read.
+src/components/ChatWidget.tsx(2,61): error TS6133: 'Star' is declared but its value is never read.
+src/components/ChatWidget.tsx(2,97): error TS6133: 'Navigation' is declared but its value is never read.
+src/components/ChatWidget.tsx(33,11): error TS6133: 'navigate' is declared but its value is never read.
+src/pages/FindHospitals.tsx(10,33): error TS1484: 'Hospital' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/FindHospitals.tsx(15,9): error TS6133: 'navigate' is declared but its value is never read.
+src/pages/FindHospitals.tsx(193,9): error TS6133: 'getImageUrl' is declared but its value is never read.

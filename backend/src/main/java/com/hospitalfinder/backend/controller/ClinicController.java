@@ -34,8 +34,10 @@ public class ClinicController {
     public List<ClinicSummaryDTO> getClinics(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) List<String> spec,
-            @RequestParam(required = false) String search) {
-        return clinicService.getFilteredClinics(city, spec, search);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lng) {
+        return clinicService.getFilteredClinics(city, spec, search, lat, lng);
     }
 
     @GetMapping("/nearby")

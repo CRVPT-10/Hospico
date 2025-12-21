@@ -22,7 +22,8 @@ public class ClinicService {
     private final ClinicRepository clinicRepository;
     private final SpecializationRepository specializationRepository;
 
-    public List<ClinicSummaryDTO> getFilteredClinics(String city, List<String> specializations, String search) {
+    public List<ClinicSummaryDTO> getFilteredClinics(String city, List<String> specializations, String search,
+            Double lat, Double lng) {
         List<Clinic> clinics;
 
         // Start with city-filtered list if provided, otherwise all clinics
@@ -61,8 +62,37 @@ public class ClinicService {
         }
 
         return clinics.stream()
-                .map(ClinicSummaryDTO::new)
+                .map(clinic -> {
+                    Double distance = null;
+                    Integer estimatedTime = null;
+                    if (lat != null && lng != null && clinic.getLatitude() != null && clinic.getLongitude() != null) {
+                        distance = calculateDistance(lat, lng, clinic.getLatitude(), clinic.getLongitude());
+
+                        double speed;
+                        if (distance < 5)
+                            speed = 20.0;
+                        else if (distance < 20)
+                            speed = 30.0;
+                        else
+                            speed = 40.0;
+                        estimatedTime = (int) Math.round(distance / speed * 60);
+                    }
+                    return new ClinicSummaryDTO(clinic, distance, estimatedTime);
+                })
                 .collect(Collectors.toList());
+    }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int EARTH_RADIUS = 6371; // Earth radius in kilometers
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS * c;
     }
 
     private int getMatchCount(Clinic clinic, List<String> normalizedSpecs) {

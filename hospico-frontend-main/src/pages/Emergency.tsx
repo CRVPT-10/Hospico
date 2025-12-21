@@ -1,19 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { Phone, MapPin, AlertTriangle, Ambulance, ChevronFirst as FirstAid, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { Phone, AlertTriangle, Ambulance, ChevronFirst as FirstAid, MapPin, Clock } from 'lucide-react';
 import { apiRequest } from "../api";
+import HospitalCardComponent, { type Hospital } from "../components/HospitalCard";
 
-interface NearbyFacility {
-  id: string | number;
-  name: string;
-  address: string;
-  distanceKm?: number;
-  distance?: number;
-  estimatedWaitMinutes?: number;
-  etaMinutes?: number;
-  estimatedTime?: number;
-  latitude?: number;
-  longitude?: number;
-}
+type NearbyFacility = Hospital;
 
 export default function Emergency() {
   const [facilities, setFacilities] = useState<NearbyFacility[]>([]);
@@ -61,13 +51,6 @@ export default function Emergency() {
   useEffect(() => {
     fetchNearbyFacilities();
   }, [fetchNearbyFacilities]);
-
-  const getDirectionsLink = (facility: NearbyFacility) => {
-    if (facility.latitude && facility.longitude) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${facility.latitude},${facility.longitude}`;
-    }
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + " " + facility.address)}`;
-  };
 
   return (
     <div className="space-y-16">
@@ -173,33 +156,11 @@ export default function Emergency() {
           )}
 
           {!loadingNearby && !errorNearby && facilities.map((facility) => (
-            <div key={facility.id} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
-              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">{facility.name}</h3>
-              <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  {facility.address}
-                  {(() => {
-                    const d = facility.distanceKm ?? facility.distance;
-                    return d != null ? ` (${d.toFixed(1)} km)` : "";
-                  })()}
-                </p>
-                {(facility.estimatedWaitMinutes ?? facility.etaMinutes ?? facility.estimatedTime) != null && (
-                  <p className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    Current wait: {facility.estimatedWaitMinutes ?? facility.etaMinutes ?? facility.estimatedTime} minutes
-                  </p>
-                )}
-              </div>
-              <a
-                href={getDirectionsLink(facility)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex justify-center w-full py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                Get Directions
-              </a>
-            </div>
+            <HospitalCardComponent
+              key={facility.clinicId || facility.id}
+              hospital={facility}
+              theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+            />
           ))}
         </div>
       </section>
