@@ -55,14 +55,16 @@ const FindHospitals = () => {
             if (status.location !== 'granted') {
               await Geolocation.requestPermissions();
             }
-            const pos = await Geolocation.getCurrentPosition();
+            // Increased timeout to 30s and enabled high accuracy for better results
+            const pos = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 30000,
+              maximumAge: Infinity // Accept any cached position to be faster
+            });
             coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
           } catch (e) {
-            console.error(e);
-            // Temporary debug alert
-            if (Capacitor.isNativePlatform()) {
-              alert("Location Error: " + (e instanceof Error ? e.message : String(e)));
-            }
+            console.error("Native location error:", e);
+            // Fallback is handled below (coords remains null)
           }
         } else if (navigator.geolocation) {
           try {
