@@ -32,7 +32,7 @@ public class ChatController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Maximum hospitals to return in symptom-based search
-    private static final int MAX_HOSPITAL_RESULTS = 8;
+    private static final int MAX_HOSPITAL_RESULTS = 5;
 
     // Pattern to detect "hospital near X" or "hospitals in X" queries
     private static final Pattern HOSPITAL_QUERY_PATTERN = Pattern.compile(
