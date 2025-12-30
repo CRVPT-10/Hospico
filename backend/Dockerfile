@@ -26,4 +26,5 @@ RUN cp target/backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application
+ENTRYPOINT ["java", "-Xmx350m", "-jar", "app.jar"]
