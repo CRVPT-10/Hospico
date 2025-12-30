@@ -29,3 +29,7 @@ springdoc:
 
 application:
   name: hospital-booking-backend
+
+groq:
+  api:
+    key: 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

@@ -114,6 +114,8 @@ public class ChatController {
         System.out.println("Received chat request with "
                 + (request.getMessages() != null ? request.getMessages().size() : 0) + " messages.");
         System.out.println("Contains symptoms: " + containsSymptoms);
+        System.out.println("Using API Key: "
+                + (apiKey != null && apiKey.length() > 5 ? apiKey.substring(0, 5) + "..." : "NULL/EMPTY"));
 
         // Get language from request (default to English)
         String language = request.getLanguage();
