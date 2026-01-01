@@ -1,0 +1,1 @@
+{ " scripts\: { \build\: \mvn -DskipTests clean package\, \start\: \java -jar target/backend-0.0.1-SNAPSHOT.jar --server.port=\ }, \env_variables\: { \DB_URL\: \jdbc:postgresql://dpg-d4rh6lqli9vc73a291e0-a:5432/hospital_booking_k625\, \DB_USER\: \hospital_user\, \DB_PASSWORD\: \\, \GROQ_API_KEY\: \\ } }
