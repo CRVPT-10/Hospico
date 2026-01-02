@@ -1,8 +1,13 @@
 {
     "stack": "java17",
     "scripts": {
-        "build": "mvn -DskipTests clean package",
-        "start": "java -jar target/backend-0.0.1-SNAPSHOT.jar"
+        "build": "mvn clean package -DskipTests",
+        "start": "java -Dserver.port=${PORT:-8080} -Dspring.profiles.active=prod -jar target/backend-0.0.1-SNAPSHOT.jar"
     },
-    "port": 8080
+    "port": 8080,
+    "health_check": "/api/health",
+    "env_variables": {
+        "SPRING_PROFILES_ACTIVE": "prod",
+        "SERVER_PORT": "8080"
+    }
 }
