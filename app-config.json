@@ -1,9 +1,7 @@
 {
-	"command": "echo Please specify the start-up command in the app-config.json file under the key command for AppSail $X_ZC_RESOURCE_NAME",
-	"build_path": "backend",
-	"stack": "java17",
-	"env_variables": {},
-	"memory": 256,
-	"scripts": {},
-	"platform": "javase"
+    "stack": "java17",
+    "scripts": {
+        "build": "mvn -f backend/pom.xml -DskipTests clean package",
+        "start": "java -jar backend/target/backend-0.0.1-SNAPSHOT.jar"
+    }
 }

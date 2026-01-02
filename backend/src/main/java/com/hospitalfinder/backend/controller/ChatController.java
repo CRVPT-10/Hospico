@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173") // Vite default port
+@CrossOrigin(origins = {"http://localhost:5173", "https://hospico-mysphmus.onslate.in"}) // Vite default port + Catalyst Slate
 public class ChatController {
 
     @Value("${groq.api.key:}")

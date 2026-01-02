@@ -21,7 +21,9 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
-                                "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com")
+                                "https://hospico.onrender.com", "https://hospital-finder-backend-ls4y.onrender.com",
+                                "https://hospico-mysphmus.onslate.in",
+                                "https://hospico-backend-60061261997.development.zohocatalystappsail.com")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
                         .exposedHeaders("Set-Cookie")
@@ -42,6 +44,8 @@ public class CorsConfig {
                 "http://192.168.*:*", // allow LAN/mobile devices hitting dev machine
                 "https://hospico.onrender.com",
                 "https://hospital-finder-backend-ls4y.onrender.com",
+                "https://*.onslate.in", // Catalyst Slate
+                "https://*.zohocatalystappsail.com", // Catalyst AppSail
                 "*" // Allow all origins safely with setAllowedOriginPatterns
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -27,4 +27,4 @@ EXPOSE 8080
 
 # Run the application
 # Run the application
-ENTRYPOINT ["java", "-Xmx350m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar"]
