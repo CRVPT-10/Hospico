@@ -55,7 +55,3 @@ springdoc:
 
 application:
   name: hospital-booking-backend
-
-groq:
-  api:
-    key: ${GROQ_API_KEY}
