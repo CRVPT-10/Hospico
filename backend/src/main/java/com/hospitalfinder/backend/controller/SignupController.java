@@ -5,7 +5,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,12 +29,13 @@ public class SignupController {
 
     private static final String DOCTOR_EMAIL_DOMAIN = "@hospiico.com";
     private static final String HOSPITAL_EMAIL_DOMAIN = "@hospiico.com";
+    private static final String ADMIN_BOOTSTRAP_EMAIL = "admin@hospiico.com";
 
     private final JwtService jwtService;
     private final UserStoreService userStoreService;
     private final ClinicService clinicService;
 
-    public SignupController(PasswordEncoder passwordEncoder,
+    public SignupController(
             JwtService jwtService, UserStoreService userStoreService, ClinicService clinicService) {
         this.jwtService = jwtService;
         this.userStoreService = userStoreService;
@@ -103,13 +103,68 @@ public class SignupController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/admin/bootstrap")
+    public ResponseEntity<?> bootstrapAdmin(@RequestBody Map<String, String> request) {
+        String email = firstNonBlank(request.get("email"));
+        String password = firstNonBlank(request.get("password"));
+        String name = firstNonBlank(request.get("name"), "admin");
+        String phone = normalizePhone(firstNonBlank(request.get("phone"), "9999999999"));
+
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "email and password are required"));
+        }
+
+        if (!ADMIN_BOOTSTRAP_EMAIL.equalsIgnoreCase(email.trim())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Only admin@hospiico.com can be bootstrapped"));
+        }
+
+        String normalizedEmail = email.trim();
+        UserData existing = userStoreService.findByEmail(normalizedEmail);
+        if (existing == null) {
+            UserData created = userStoreService.createUser(name, normalizedEmail, phone, password, Role.ADMIN);
+            if (created == null) {
+                return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Failed to create admin user"));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Admin user created",
+                    "id", created.getId(),
+                    "email", created.getEmail(),
+                    "role", created.getRole() != null ? created.getRole().name() : "ADMIN"));
+        }
+
+        UserData updatedPassword = userStoreService.updateUser(
+                normalizedEmail,
+                name,
+                phone,
+                null,
+                null,
+                password);
+
+        if (updatedPassword == null) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Failed to update admin password"));
+        }
+
+        UserData promoted = userStoreService.updateUserRole(normalizedEmail, Role.ADMIN);
+        if (promoted == null) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Failed to promote user to ADMIN"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "User promoted to ADMIN",
+                "id", promoted.getId(),
+                "email", promoted.getEmail(),
+                "role", promoted.getRole() != null ? promoted.getRole().name() : "ADMIN"));
+    }
+
     private ResponseEntity<LoginResponse> signupWithMongo(SignupRequest request, HttpServletResponse response) {
         if (userStoreService.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest()
                     .body(new LoginResponse(false, "Email already registered", null, null, null, null, null));
         }
 
-        Role role = isDoctorDomainEmail(request.getEmail()) ? Role.DOCTOR : Role.USER;
+        Role role = resolveSignupRole(request);
         UserData userData = userStoreService.createUser(
                 request.getName(),
                 request.getEmail(),
@@ -143,6 +198,17 @@ public class SignupController {
 
     private boolean isDoctorDomainEmail(String email) {
         return email != null && email.trim().toLowerCase().endsWith(DOCTOR_EMAIL_DOMAIN);
+    }
+
+    private Role resolveSignupRole(SignupRequest request) {
+        Role requestedRole = request.getRole();
+        String email = request.getEmail() == null ? "" : request.getEmail().trim().toLowerCase(Locale.ROOT);
+
+        if (requestedRole == Role.ADMIN && ADMIN_BOOTSTRAP_EMAIL.equals(email)) {
+            return Role.ADMIN;
+        }
+
+        return isDoctorDomainEmail(request.getEmail()) ? Role.DOCTOR : Role.USER;
     }
 
     private String generateHospitalEmail(String name, Long clinicId) {

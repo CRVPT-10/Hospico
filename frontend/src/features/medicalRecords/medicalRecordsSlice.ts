@@ -33,7 +33,10 @@ const getApiUrl = (path: string) => {
     // Remove trailing slash from base if present
     const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     // Remove leading slash from path if present
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    let cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    if ((cleanBase === '/api' || cleanBase.endsWith('/api')) && cleanPath.startsWith('api/')) {
+        cleanPath = cleanPath.slice(4);
+    }
     return `${cleanBase}/${cleanPath}`;
 }
 

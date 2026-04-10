@@ -6,13 +6,16 @@ import { useEffect } from 'react';
  */
 export const useKeepAlive = () => {
   useEffect(() => {
-    const backendUrl = import.meta.env.VITE_API_BASE_URL;
+    const backendUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '');
+    const healthEndpoint = backendUrl
+      ? (backendUrl.endsWith('/api') ? `${backendUrl}/health` : `${backendUrl}/api/health`)
+      : '/api/health';
     
     const pingServices = async () => {
       // Ping backend health endpoint
-      if (backendUrl) {
+      if (healthEndpoint) {
         try {
-          await fetch(`${backendUrl}/api/health`, { 
+          await fetch(healthEndpoint, {
             method: 'GET',
             cache: 'no-cache'
           });

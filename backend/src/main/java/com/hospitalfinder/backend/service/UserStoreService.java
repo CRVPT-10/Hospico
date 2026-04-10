@@ -13,4 +13,8 @@ public interface UserStoreService {
     UserData createUser(String name, String email, String phone, String password, Role role);
 
     UserData updateUser(String email, String name, String phone, Integer age, String gender, String password);
+
+    UserData updateUserRole(String email, Role role);
+
+    UserData markPhoneVerified(String email, String phone);
 }

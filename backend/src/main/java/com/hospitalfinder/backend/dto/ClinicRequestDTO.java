@@ -22,6 +22,7 @@ public class ClinicRequestDTO {
     @Getter @Setter
     private List<Long> specializationIds;  // IDs of specializations selected from the dropdown
     @Getter @Setter
+    @com.fasterxml.jackson.annotation.JsonProperty("specializations")
     private List<String> specializations;  // Names of specializations (alternative to IDs)
     @Getter @Setter
     private String phone;

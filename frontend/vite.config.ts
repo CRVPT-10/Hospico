@@ -15,6 +15,11 @@ export default defineConfig({
   // Proxy /api calls to the backend during local development to avoid CORS issues
   server: {
     host: true, // allow access from mobile devices on the same network
+    // Allow ngrok domains for remote/mobile testing over tunnel.
+    allowedHosts: [
+      "unlackeyed-dori-unnocturnally.ngrok-free.dev",
+      ".ngrok-free.dev",
+    ],
     proxy: {
       "/api": {
         target: process.env.VITE_DEV_API ?? "http://127.0.0.1:8080",

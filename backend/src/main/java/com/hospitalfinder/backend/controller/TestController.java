@@ -48,6 +48,17 @@ public class TestController {
             report.put("clinics_fetch_error", e.getMessage());
         }
 
+        // Test: Fetch clinic-specialization mappings
+        try {
+            JsonNode result = dataStoreService.executeQuery("SELECT * FROM clinic_specializations");
+            report.put("clinic_specializations_fetch_status", "SUCCESS");
+            report.put("clinic_specializations_count", result != null ? result.size() : 0);
+            report.put("clinic_specializations_sample", result);
+        } catch (Exception e) {
+            report.put("clinic_specializations_fetch_status", "FAILED");
+            report.put("clinic_specializations_fetch_error", e.getMessage());
+        }
+
         return ResponseEntity.ok(report);
     }
 }

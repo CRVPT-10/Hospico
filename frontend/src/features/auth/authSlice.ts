@@ -11,6 +11,7 @@ export type AuthUser = {
   name?: string;
   role?: string;
   phone?: string;
+  phoneVerified?: boolean;
   age?: number;
   gender?: string;
 };
@@ -52,6 +53,7 @@ type UserProfileResponse = {
   email: string;
   name?: string;
   phone?: string;
+  phoneVerified?: boolean;
   age?: number;
   gender?: string;
   role?: string;
@@ -345,9 +347,12 @@ const authSlice = createSlice({
             email: data.email || state.user?.email || "",
             name: data.name || undefined,
             phone: data.phone || undefined,
+            phoneVerified: data.phoneVerified ?? undefined,
             age: data.age ?? undefined,
             gender: data.gender || undefined,
+            role: data.role || state.user?.role,
           };
+          persistAuthUser(state.user);
           state.isAuthenticated = true;
         }
       })

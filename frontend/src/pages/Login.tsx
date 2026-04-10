@@ -29,8 +29,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-      <div className="flex w-full max-w-6xl bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden transition-colors duration-200">
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-3 py-4 sm:px-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+      <div className="flex w-full max-w-6xl bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/70 dark:border-slate-700 transition-colors duration-200">
         {/* Left marketing panel */}
         <div
           className="hidden md:flex flex-1 bg-cover bg-center items-center p-8 text-white relative"
@@ -52,12 +52,12 @@ const Login = () => {
         </div>
 
         {/* Right login form panel */}
-        <div className="w-full md:w-1/2 flex items-center justify-center sm:p-8">
+        <div className="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-sm">
             <h2 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white text-center">
               Welcome!
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400 mb-5 text-center text-sm sm:text-base">
               Please enter your email and password to continue
             </p>
 
@@ -67,19 +67,16 @@ const Login = () => {
               </div>
             )}
 
-            <form
-              onSubmit={handleLogin}
-              className="space-y-4"
-            >
+            <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
               <input
-                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                className="w-full px-4 py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                 placeholder="Email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
-                className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                className="w-full px-4 py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                 placeholder="Password"
                 type="password"
                 value={password}
@@ -103,17 +100,17 @@ const Login = () => {
               <hr className="flex-grow border-t border-gray-300 dark:border-gray-600" />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <Link
                 to="/partner-login"
-                className="w-full flex items-center justify-center p-3 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-full flex items-center justify-center p-3.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Hospital Partner
                 <span className="ml-auto text-xl">→</span>
               </Link>
               <Link
                 to="/doctor-login"
-                className="w-full flex items-center justify-center p-3 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                className="w-full flex items-center justify-center p-3.5 rounded-md border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Doctor
                 <span className="ml-auto text-xl">→</span>

@@ -2,10 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { Star, MapPin, Navigation, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import defaultHospitalImage from "../assets/images/default-hospital.jpg";
+import { API_BASE_URL } from "../api";
 
 export interface Hospital {
     id: string | number;
     clinicId?: string | number; // Support both naming conventions
+    publicId?: string;
     name: string;
     address?: string;
     city?: string;
@@ -36,11 +38,26 @@ const HospitalCard = ({
     const navigate = useNavigate();
 
     // Normalize fields
-    const id = hospital.clinicId || hospital.id;
-    const imageUrl = hospital.imageurl || hospital.imageUrl || defaultHospitalImage;
+    const id = hospital.publicId || hospital.clinicId || hospital.id;
+    const resolveImageUrl = (value: string | undefined) => {
+        if (!value) return defaultHospitalImage;
+        if (/^(https?:|data:|blob:)/i.test(value)) {
+            return value;
+        }
+        if (value.startsWith("/")) {
+            if (!API_BASE_URL || API_BASE_URL === "/api" || API_BASE_URL.endsWith("/api")) {
+                return value;
+            }
+            return `${API_BASE_URL}${value}`;
+        }
+        return defaultHospitalImage;
+    };
+    const imageUrl = resolveImageUrl(hospital.imageurl || hospital.imageUrl);
     const specializations = hospital.specializations || hospital.specialties || [];
     const distance = hospital.distanceKm ?? hospital.distance;
     const time = hospital.estimatedWaitMinutes ?? hospital.estimatedTime;
+    const hasDistance = typeof distance === "number" && Number.isFinite(distance);
+    const hasWaitTime = typeof time === "number" && Number.isFinite(time);
 
     const handleCardClick = () => {
         navigate(`/find-hospital/${id}`);
@@ -89,7 +106,7 @@ const HospitalCard = ({
                 )}
 
                 {/* Distance Overlay (if desired to show on image) */}
-                {showDistance && distance !== undefined && (
+                {showDistance && hasDistance && (
                     <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-blue-600 text-white rounded-lg flex items-center gap-1 text-xs font-bold shadow-lg">
                         <MapPin size={12} />
                         {formatDistance(distance)}
@@ -111,7 +128,7 @@ const HospitalCard = ({
                 </p>
 
                 {/* Proximity Info (Optional secondary location display) */}
-                {time !== undefined && (
+                {hasWaitTime && (
                     <div className={`flex items-center gap-3 mb-4 text-[10px] font-medium uppercase tracking-wider ${theme === "dark" ? "text-slate-500" : "text-gray-400"
                         }`}>
                         <span className="flex items-center gap-1">

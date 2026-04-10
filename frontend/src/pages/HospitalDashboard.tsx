@@ -1,6 +1,7 @@
 import {
   Building2,
   CalendarDays,
+  CheckCircle2,
   ClipboardList,
   Clock3,
   MessageSquare,
@@ -11,6 +12,7 @@ import {
   Stethoscope,
   Trash2,
   X,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -75,6 +77,18 @@ type ClinicApiResponse = {
   doctors?: HospitalDoctor[];
 };
 
+type ModerationReview = {
+  id: string | number;
+  hospitalId?: string | number;
+  doctorId?: string | number;
+  comment?: string;
+  createdAt?: string;
+  proofStatus?: string;
+  proofType?: string;
+  proofUrl?: string;
+  badgeType?: string;
+};
+
 const extractClinicIdFromHospitalEmail = (email?: string) => {
   if (!email) return null;
   const match = email.match(/\.(\d+)@hospiico\.com$/i);
@@ -112,6 +126,11 @@ const HospitalDashboard = () => {
   const [slotEnd, setSlotEnd] = useState("10:00");
   const [slotError, setSlotError] = useState<string | null>(null);
   const [doctorSlots, setDoctorSlots] = useState<DoctorSlot[]>([]);
+  const [pendingProofs, setPendingProofs] = useState<ModerationReview[]>([]);
+  const [loadingProofs, setLoadingProofs] = useState(false);
+  const [proofError, setProofError] = useState<string | null>(null);
+  const [proofSuccess, setProofSuccess] = useState<string | null>(null);
+  const [proofActionId, setProofActionId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [profile, setProfile] = useState<HospitalProfile>(() => {
@@ -324,14 +343,49 @@ const HospitalDashboard = () => {
     }
   };
 
+  const loadPendingProofs = async () => {
+    setLoadingProofs(true);
+    setProofError(null);
+    try {
+      const response = await apiRequest<ModerationReview[]>("/api/reviews/moderation/pending", "GET");
+      setPendingProofs(response || []);
+    } catch (error) {
+      setProofError((error as Error).message || "Failed to load pending proof reviews");
+    } finally {
+      setLoadingProofs(false);
+    }
+  };
+
+  const handleProofDecision = async (reviewId: string | number, status: "approved" | "rejected") => {
+    setProofError(null);
+    setProofSuccess(null);
+    setProofActionId(String(reviewId));
+    try {
+      await apiRequest(`/api/reviews/moderation/${reviewId}/status`, "PUT", { status });
+      setProofSuccess(`Proof ${status} successfully`);
+      await loadPendingProofs();
+    } catch (error) {
+      setProofError((error as Error).message || "Failed to update proof status");
+    } finally {
+      setProofActionId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "reviews") {
+      void loadPendingProofs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   const stats = useMemo(
     () => ({
       appointments: appointments.length,
       doctors: doctors.length,
-      reviews: 0,
+      reviews: pendingProofs.length,
       rating: "0.0",
     }),
-    [appointments.length, doctors.length]
+    [appointments.length, doctors.length, pendingProofs.length]
   );
 
   const quickActions = [
@@ -598,7 +652,95 @@ const HospitalDashboard = () => {
                   </div>
                 </div>
               )}
-              {activeTab === "reviews" && <Placeholder icon={<MessageSquare className="h-6 w-6 text-yellow-400" />} title="Reviews" subtitle="No reviews available." />}
+              {activeTab === "reviews" && (
+                <div className="space-y-4">
+                  {(proofError || proofSuccess) && (
+                    <div className={`rounded-xl px-4 py-3 ${proofError
+                      ? "border border-red-500/40 bg-red-500/10 text-red-200"
+                      : "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                      }`}>
+                      {proofError || proofSuccess}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-semibold">Pending Proof Reviews</h3>
+                    <button
+                      onClick={() => void loadPendingProofs()}
+                      className="px-4 py-2 rounded-xl border border-[#35517f] bg-[#13233d] text-[#d2ddf1]"
+                    >
+                      Refresh Queue
+                    </button>
+                  </div>
+
+                  <div className="bg-[#1e2f4d] border border-[#2b3f63] rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[980px]">
+                        <thead>
+                          <tr className="bg-[#13233d]">
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Review ID</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Doctor ID</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Proof Type</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Submitted</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Comment</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Proof</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold tracking-wider text-[#9db0cf] uppercase">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingProofs.map((review) => {
+                            const busy = proofActionId === String(review.id);
+                            return (
+                              <tr key={String(review.id)} className="border-t border-[#2b3f63]">
+                                <td className="px-6 py-4">{String(review.id)}</td>
+                                <td className="px-6 py-4 text-[#d2ddf1]">{String(review.doctorId || "-")}</td>
+                                <td className="px-6 py-4 text-[#d2ddf1]">{review.proofType || "other"}</td>
+                                <td className="px-6 py-4 text-[#d2ddf1]">{review.createdAt ? new Date(review.createdAt).toLocaleString() : "-"}</td>
+                                <td className="px-6 py-4 text-[#d2ddf1] max-w-xs truncate">{review.comment || "-"}</td>
+                                <td className="px-6 py-4">
+                                  {review.proofUrl ? (
+                                    <a href={review.proofUrl} target="_blank" rel="noreferrer" className="text-blue-300 hover:underline">View File</a>
+                                  ) : (
+                                    <span className="text-[#9db0cf]">No file</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => void handleProofDecision(review.id, "approved")}
+                                      disabled={busy}
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs"
+                                    >
+                                      <CheckCircle2 className="h-4 w-4" /> Approve
+                                    </button>
+                                    <button
+                                      onClick={() => void handleProofDecision(review.id, "rejected")}
+                                      disabled={busy}
+                                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-xs"
+                                    >
+                                      <XCircle className="h-4 w-4" /> Reject
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {!loadingProofs && pendingProofs.length === 0 && (
+                            <tr>
+                              <td colSpan={7} className="px-6 py-10 text-center text-[#9db0cf]">No pending proof reviews.</td>
+                            </tr>
+                          )}
+                          {loadingProofs && (
+                            <tr>
+                              <td colSpan={7} className="px-6 py-10 text-center text-[#9db0cf]">Loading pending proof reviews...</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>

@@ -17,6 +17,9 @@ public class ClinicResponseDTO {
     private String clinicId;
     @Getter
     @Setter
+    private String publicId;
+    @Getter
+    @Setter
     private String name;
     @Getter
     @Setter

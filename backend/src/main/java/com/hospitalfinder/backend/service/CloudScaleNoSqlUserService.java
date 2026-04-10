@@ -1,18 +1,18 @@
 package com.hospitalfinder.backend.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.hospitalfinder.backend.dto.UserData;
-import com.hospitalfinder.backend.entity.Role;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.hospitalfinder.backend.dto.UserData;
+import com.hospitalfinder.backend.entity.Role;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * User service backed by Zoho Data Store REST API.
@@ -128,6 +128,61 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
         }
     }
 
+    @Override
+    public UserData updateUserRole(String email, Role role) {
+        try {
+            JsonNode existing = dataStoreService.findByField(usersTable, "email", email);
+            if (existing == null) {
+                return null;
+            }
+
+            Long rowId = extractRowId(existing);
+            if (rowId == null) {
+                return null;
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("role", role.name());
+            updates.put("updated_at",
+                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+
+            JsonNode updated = dataStoreService.updateRecord(usersTable, rowId, updates);
+            return updated != null ? mapToUserData(updated) : null;
+        } catch (Exception e) {
+            log.error("Error updating role for user: {}", email, e);
+            return null;
+        }
+    }
+
+    @Override
+    public UserData markPhoneVerified(String email, String phone) {
+        try {
+            JsonNode existing = dataStoreService.findByField(usersTable, "email", email);
+            if (existing == null) {
+                return null;
+            }
+
+            Long rowId = extractRowId(existing);
+            if (rowId == null) {
+                return null;
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("phone_verified", true);
+            if (phone != null && !phone.isBlank()) {
+                updates.put("phone", phone);
+            }
+            updates.put("updated_at",
+                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+
+            JsonNode updated = dataStoreService.updateRecord(usersTable, rowId, updates);
+            return updated != null ? mapToUserData(updated) : null;
+        } catch (Exception e) {
+            log.error("Error marking phone verified for user: {}", email, e);
+            return null;
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────
 
     private UserData mapToUserData(JsonNode node) {
@@ -143,6 +198,7 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
                 ? node.get("age").asInt()
                 : null);
         user.setGender(getTextOrNull(node, "gender"));
+        user.setPhoneVerified(getBooleanOrNull(node, "phone_verified"));
         String roleStr = getTextOrNull(node, "role");
         user.setRole(roleStr != null ? Role.valueOf(roleStr) : null);
         return user;
@@ -160,6 +216,13 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
                 } catch (Exception ignored) {
                 }
             }
+        }
+        return null;
+    }
+
+    private Boolean getBooleanOrNull(JsonNode node, String field) {
+        if (node.has(field) && !node.get(field).isNull()) {
+            return node.get(field).asBoolean();
         }
         return null;
     }

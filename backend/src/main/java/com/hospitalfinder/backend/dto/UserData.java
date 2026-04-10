@@ -13,6 +13,7 @@ public class UserData {
     private Integer age;
     private String gender;
     private Role role;
+    private Boolean phoneVerified;
 
     public Long getId() {
         return id;
@@ -76,5 +77,13 @@ public class UserData {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public Boolean getPhoneVerified() {
+        return phoneVerified;
+    }
+
+    public void setPhoneVerified(Boolean phoneVerified) {
+        this.phoneVerified = phoneVerified;
     }
 }

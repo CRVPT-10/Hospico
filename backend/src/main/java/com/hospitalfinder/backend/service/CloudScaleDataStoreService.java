@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,11 +15,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hospitalfinder.backend.config.CloudScaleConfig;
-
-import org.springframework.beans.factory.annotation.Value;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +42,14 @@ public class CloudScaleDataStoreService implements DataStoreService {
     @Override
     public JsonNode insertRecord(String tableName, Map<String, Object> data) {
         String url = config.getBaseUrl() + "/table/" + tableName + "/row";
+        String jsonBody = null;
         try {
             // Zoho expects a JSON array of row objects: [{...}]
-            String jsonBody = objectMapper.writeValueAsString(java.util.List.of(data));
+            jsonBody = objectMapper.writeValueAsString(java.util.List.of(data));
             log.debug("INSERT into '{}' url={} body={}", tableName, url, jsonBody);
             HttpEntity<String> request = new HttpEntity<>(jsonBody, authHeaders());
             ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            log.info("Insert response status={}, body={}", response.getStatusCode(), response.getBody());
             JsonNode body = parseResponse(response);
             // Response is an array; return the first inserted row
             if (body != null && body.isArray() && body.size() > 0) {
@@ -57,7 +57,28 @@ public class CloudScaleDataStoreService implements DataStoreService {
             }
             return body;
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            log.error("Failed to insert record into '{}'. Response: {}", tableName, e.getResponseBodyAsString());
+            log.error("Failed to insert record into '{}'. Status: {} Response: {}", tableName,
+                    e.getRawStatusCode(), e.getResponseBodyAsString());
+            if (e.getRawStatusCode() == 401) {
+                log.warn("Insert unauthorized for '{}'. Refreshing token and retrying once.", tableName);
+                try {
+                    if (jsonBody == null) {
+                        throw new IllegalStateException("Insert request body was not initialized");
+                    }
+                    config.forceRefreshAccessToken();
+                    HttpEntity<String> retryRequest = new HttpEntity<>(jsonBody, authHeaders());
+                    ResponseEntity<String> retryResponse = restTemplate.postForEntity(url, retryRequest, String.class);
+                    log.info("Insert retry response status={}, body={}", retryResponse.getStatusCode(),
+                            retryResponse.getBody());
+                    JsonNode retryBody = parseResponse(retryResponse);
+                    if (retryBody != null && retryBody.isArray() && retryBody.size() > 0) {
+                        return retryBody.get(0);
+                    }
+                    return retryBody;
+                } catch (Exception retryEx) {
+                    log.error("Insert retry failed for '{}': {}", tableName, retryEx.getMessage(), retryEx);
+                }
+            }
             throw new RuntimeException("Failed to insert record into " + tableName + ": " + e.getResponseBodyAsString(),
                     e);
         } catch (Exception e) {
@@ -69,15 +90,17 @@ public class CloudScaleDataStoreService implements DataStoreService {
     @Override
     public JsonNode updateRecord(String tableName, Long rowId, Map<String, Object> data) {
         String url = config.getBaseUrl() + "/table/" + tableName + "/row";
+        String jsonBody = null;
         try {
             // Zoho expects a JSON array of objects for updates as well, containing ROWID
             Map<String, Object> updateData = new HashMap<>(data);
             updateData.put("ROWID", rowId);
-            String jsonBody = objectMapper.writeValueAsString(java.util.List.of(updateData));
+            jsonBody = objectMapper.writeValueAsString(java.util.List.of(updateData));
 
-            log.debug("UPDATE '{}' url={} body={}", tableName, url, jsonBody);
+            log.info("UPDATE '{}' rowId={} url={} body={}", tableName, rowId, url, jsonBody);
             HttpEntity<String> request = new HttpEntity<>(jsonBody, authHeaders());
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+            log.info("Update response status={}, body={}", response.getStatusCode(), response.getBody());
             JsonNode body = parseResponse(response);
 
             // Response is usually an array
@@ -86,8 +109,29 @@ public class CloudScaleDataStoreService implements DataStoreService {
             }
             return body;
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            log.error("Failed to update record in '{}', rowId={}. Response: {}", tableName, rowId,
-                    e.getResponseBodyAsString());
+            log.error("Failed to update record in '{}', rowId={}. Status: {} Response: {}", tableName, rowId,
+                    e.getRawStatusCode(), e.getResponseBodyAsString());
+            if (e.getRawStatusCode() == 401) {
+                log.warn("Update unauthorized for '{}'. Refreshing token and retrying once.", tableName);
+                try {
+                    if (jsonBody == null) {
+                        throw new IllegalStateException("Update request body was not initialized");
+                    }
+                    config.forceRefreshAccessToken();
+                    HttpEntity<String> retryRequest = new HttpEntity<>(jsonBody, authHeaders());
+                    ResponseEntity<String> retryResponse = restTemplate.exchange(url, HttpMethod.PUT, retryRequest,
+                            String.class);
+                    log.info("Update retry response status={}, body={}", retryResponse.getStatusCode(),
+                            retryResponse.getBody());
+                    JsonNode retryBody = parseResponse(retryResponse);
+                    if (retryBody != null && retryBody.isArray() && retryBody.size() > 0) {
+                        return retryBody.get(0);
+                    }
+                    return retryBody;
+                } catch (Exception retryEx) {
+                    log.error("Update retry failed for '{}': {}", tableName, retryEx.getMessage(), retryEx);
+                }
+            }
             throw new RuntimeException("Failed to update record in " + tableName + ": " + e.getResponseBodyAsString(),
                     e);
         } catch (Exception e) {
@@ -103,6 +147,25 @@ public class CloudScaleDataStoreService implements DataStoreService {
             HttpEntity<Void> request = new HttpEntity<>(authHeaders());
             restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
             log.debug("Deleted record from '{}', rowId={}", tableName, rowId);
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            log.error("Failed to delete record from '{}', rowId={}. Status: {} Response: {}",
+                    tableName, rowId, e.getRawStatusCode(), e.getResponseBodyAsString());
+
+            if (e.getRawStatusCode() == 401) {
+                log.warn("Delete unauthorized for '{}'. Refreshing token and retrying once.", tableName);
+                try {
+                    config.forceRefreshAccessToken();
+                    HttpEntity<Void> retryRequest = new HttpEntity<>(authHeaders());
+                    restTemplate.exchange(url, HttpMethod.DELETE, retryRequest, String.class);
+                    log.debug("Deleted record from '{}' on retry, rowId={}", tableName, rowId);
+                    return;
+                } catch (Exception retryEx) {
+                    log.error("Delete retry failed for '{}', rowId={}: {}", tableName, rowId,
+                            retryEx.getMessage(), retryEx);
+                }
+            }
+            throw new RuntimeException("Failed to delete record from " + tableName + ": " + e.getResponseBodyAsString(),
+                    e);
         } catch (Exception e) {
             log.error("Failed to delete record from '{}', rowId={}", tableName, rowId, e);
             throw new RuntimeException("Failed to delete record from " + tableName, e);

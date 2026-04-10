@@ -13,6 +13,7 @@ import lombok.Setter;
 @Setter
 public class NearbyClinicDTO {
     private Long clinicId;
+    private String publicId;
     private String name;
     private String address;
     private String city;

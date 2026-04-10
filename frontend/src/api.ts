@@ -1,7 +1,17 @@
 import axios, { AxiosError, type Method } from "axios";
 
 // Prefer env override in hosted envs; fall back to same-origin proxy
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+const usesApiPrefixBase = API_BASE_URL === "/api" || API_BASE_URL.endsWith("/api");
+
+const normalizeRequestPath = (path: string) => {
+  if (!path) return path;
+  const trimmed = path.trim();
+  if (usesApiPrefixBase && trimmed.startsWith("/api/")) {
+    return trimmed.slice(4);
+  }
+  return trimmed;
+};
 
 // Create an axios instance with default configuration
 const apiClient = axios.create({
@@ -15,6 +25,18 @@ const apiClient = axios.create({
 // Add a request interceptor to handle authentication
 apiClient.interceptors.request.use(
   (config) => {
+    if (typeof config.url === "string") {
+      config.url = normalizeRequestPath(config.url);
+    }
+
+    // Let browser/axios set multipart boundary automatically for FormData
+    if (config.data instanceof FormData) {
+      if (config.headers) {
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
+      }
+    }
+
     // Get JWT token from localStorage
     const token = localStorage.getItem('jwt_token');
     if (token) {
@@ -45,7 +67,7 @@ export async function apiRequest<TResponse, TBody = unknown>(
 ): Promise<TResponse> {
   try {
     const response = await apiClient.request<TResponse>({
-      url: path,
+      url: normalizeRequestPath(path),
       method,
       data: body,
     });
@@ -109,7 +131,7 @@ export async function apiRequest<TResponse, TBody = unknown>(
 
 export const downloadFile = async (url: string, filename: string) => {
   try {
-    const response = await apiClient.get(url, { responseType: 'blob' });
+    const response = await apiClient.get(normalizeRequestPath(url), { responseType: 'blob' });
     const blob = new Blob([response.data], { type: response.headers['content-type'] });
     const downloadUrl = window.URL.createObjectURL(blob);
 

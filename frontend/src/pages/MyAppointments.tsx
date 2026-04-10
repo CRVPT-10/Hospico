@@ -179,69 +179,62 @@ export default function MyAppointments() {
                 <div className="space-y-4">
                   {upcomingAppointments.map((appointment) => (
                     <div key={appointment.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-md dark:shadow-lg border border-gray-200 dark:border-slate-600 p-6 hover:shadow-lg dark:hover:shadow-xl transition-shadow">
-                      <div className="flex flex-col lg:flex-row gap-6">
-                        <div className="flex-shrink-0">
-                          <div className="bg-blue-50 dark:bg-blue-600/20 rounded-lg p-4 text-center border-2 border-blue-200 dark:border-blue-600">
+                      <div className="flex items-start gap-4">
+                        <div className="w-28 sm:w-36 flex-shrink-0">
+                          <div className="bg-blue-50 dark:bg-blue-600/20 rounded-lg p-3 text-center border border-blue-200 dark:border-blue-600">
                             <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                             <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">{formatDate(appointment.appointmentTime)}</p>
-                            <p className="text-lg font-bold text-blue-900 dark:text-blue-300 mt-1">{formatTime(appointment.appointmentTime)}</p>
+                            <p className="text-base font-bold text-blue-900 dark:text-blue-300 mt-1">{formatTime(appointment.appointmentTime)}</p>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appointment.status)}`}>
                               {appointment.status}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex-1 space-y-4">
-                          <div className="border-b border-gray-200 dark:border-slate-700 pb-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-2">{appointment.clinicName}</h3>
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 leading-tight mb-3">{appointment.clinicName}</h3>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-slate-400 uppercase font-semibold mb-2">Doctor</p>
-                              <div className="flex items-start gap-2">
-                                <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-1" />
-                                <div className="flex-1">
-                                  <p className="font-semibold text-gray-900 dark:text-slate-100">
-                                    {appointment.doctorName}
-                                    {appointment.doctorSpecialization && <span className="text-gray-500 dark:text-slate-400 font-normal"> - {appointment.doctorSpecialization}</span>}
-                                  </p>
-                                  {appointment.reason && (
-                                    <p className="text-xs text-gray-600 dark:text-slate-300 mt-2 bg-gray-100 dark:bg-slate-700 rounded px-2 py-1 border border-gray-200 dark:border-slate-600">{appointment.reason}</p>
-                                  )}
-                                </div>
-                              </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start gap-2">
+                              <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                              <p className="text-gray-900 dark:text-slate-100 font-semibold leading-tight">
+                                {appointment.doctorName}
+                                {appointment.doctorSpecialization && (
+                                  <span className="text-gray-500 dark:text-slate-400 font-normal"> - {appointment.doctorSpecialization}</span>
+                                )}
+                              </p>
                             </div>
 
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-slate-400 uppercase font-semibold mb-2">Patient</p>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <UserIcon className="h-4 w-4 text-gray-500" />
-                                  <span className="text-gray-900 dark:text-slate-100">{appointment.patientName}, {appointment.patientAge}yrs, {appointment.patientGender}</span>
-                                </div>
-                                {appointment.patientPhone && (
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span className="text-gray-600 dark:text-slate-400">{appointment.patientPhone}</span>
-                                  </div>
-                                )}
-                                {appointment.patientEmail && (
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span className="text-gray-600 dark:text-slate-400">{appointment.patientEmail}</span>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-slate-300">
+                              <UserIcon className="h-4 w-4 text-gray-500" />
+                              <span className="truncate">{appointment.patientName}, {appointment.patientAge}yrs, {appointment.patientGender}</span>
                             </div>
-                          </div>
-                        </div>
 
-                        <div className="flex-shrink-0 flex items-start">
+                            {appointment.patientPhone && (
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-slate-400">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <span className="truncate">{appointment.patientPhone}</span>
+                              </div>
+                            )}
+
+                            {appointment.patientEmail && (
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-slate-400">
+                                <Mail className="h-4 w-4 text-gray-500" />
+                                <span className="truncate">{appointment.patientEmail}</span>
+                              </div>
+                            )}
+
+                            {appointment.reason && (
+                              <p className="text-xs text-gray-600 dark:text-slate-300 mt-2 bg-gray-100 dark:bg-slate-700 rounded px-2 py-1 border border-gray-200 dark:border-slate-600 truncate">
+                                {appointment.reason}
+                              </p>
+                            )}
+                          </div>
+
                           <button
                             onClick={() => handleCancelAppointment(appointment.id)}
                             disabled={cancellingId === appointment.id}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-700 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-600 hover:bg-red-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-700 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-600 hover:bg-red-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {cancellingId === appointment.id ? (
                               <>
@@ -272,65 +265,58 @@ export default function MyAppointments() {
                 <div className="space-y-4">
                   {pastAppointments.map((appointment) => (
                     <div key={appointment.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-md dark:shadow-lg border border-gray-200 dark:border-slate-600 p-6 opacity-75 hover:opacity-100 transition-opacity duration-200">
-                      <div className="flex flex-col lg:flex-row gap-6">
-                        <div className="flex-shrink-0">
-                          <div className="bg-gray-100 dark:bg-slate-700 rounded-lg p-4 text-center border-2 border-gray-200 dark:border-slate-600">
+                      <div className="flex items-start gap-4">
+                        <div className="w-28 sm:w-36 flex-shrink-0">
+                          <div className="bg-gray-100 dark:bg-slate-700 rounded-lg p-3 text-center border border-gray-200 dark:border-slate-600">
                             <Calendar className="h-6 w-6 text-gray-500 mx-auto mb-2" />
                             <p className="text-sm font-semibold text-gray-500 dark:text-slate-400">{formatDate(appointment.appointmentTime)}</p>
-                            <p className="text-lg font-bold text-gray-600 dark:text-slate-400 mt-1">{formatTime(appointment.appointmentTime)}</p>
+                            <p className="text-base font-bold text-gray-600 dark:text-slate-400 mt-1">{formatTime(appointment.appointmentTime)}</p>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(appointment.status)}`}>
                               {appointment.status}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex-1 space-y-4">
-                          <div className="border-b border-gray-200 dark:border-slate-700 pb-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-2">{appointment.clinicName}</h3>
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 leading-tight mb-3">{appointment.clinicName}</h3>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-slate-400 uppercase font-semibold mb-2">Doctor</p>
-                              <div className="flex items-start gap-2">
-                                <Stethoscope className="h-4 w-4 text-gray-500 mt-1" />
-                                <div className="flex-1">
-                                  <p className="font-semibold text-gray-900 dark:text-slate-100">
-                                    {appointment.doctorName}
-                                    {appointment.doctorSpecialization && <span className="text-gray-500 dark:text-slate-400 font-normal"> - {appointment.doctorSpecialization}</span>}
-                                  </p>
-                                  {appointment.reason && (
-                                    <p className="text-xs text-gray-600 dark:text-slate-400 mt-2 bg-gray-100 dark:bg-slate-700 rounded px-2 py-1 border border-gray-200 dark:border-slate-600">{appointment.reason}</p>
-                                  )}
-                                </div>
-                              </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start gap-2">
+                              <Stethoscope className="h-4 w-4 text-gray-500 mt-0.5" />
+                              <p className="text-gray-900 dark:text-slate-100 font-semibold leading-tight">
+                                {appointment.doctorName}
+                                {appointment.doctorSpecialization && (
+                                  <span className="text-gray-500 dark:text-slate-400 font-normal"> - {appointment.doctorSpecialization}</span>
+                                )}
+                              </p>
                             </div>
 
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-slate-400 uppercase font-semibold mb-2">Patient</p>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <UserIcon className="h-4 w-4 text-gray-500" />
-                                  <span className="text-gray-900 dark:text-slate-100">{appointment.patientName}, {appointment.patientAge}yrs, {appointment.patientGender}</span>
-                                </div>
-                                {appointment.patientPhone && (
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span className="text-gray-600 dark:text-slate-400">{appointment.patientPhone}</span>
-                                  </div>
-                                )}
-                                {appointment.patientEmail && (
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span className="text-gray-600 dark:text-slate-400">{appointment.patientEmail}</span>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-slate-300">
+                              <UserIcon className="h-4 w-4 text-gray-500" />
+                              <span className="truncate">{appointment.patientName}, {appointment.patientAge}yrs, {appointment.patientGender}</span>
                             </div>
-                          </div>
-                        </div>
 
-                        <div className="flex-shrink-0 flex items-start">
+                            {appointment.patientPhone && (
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-slate-400">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <span className="truncate">{appointment.patientPhone}</span>
+                              </div>
+                            )}
+
+                            {appointment.patientEmail && (
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-slate-400">
+                                <Mail className="h-4 w-4 text-gray-500" />
+                                <span className="truncate">{appointment.patientEmail}</span>
+                              </div>
+                            )}
+
+                            {appointment.reason && (
+                              <p className="text-xs text-gray-600 dark:text-slate-400 mt-2 bg-gray-100 dark:bg-slate-700 rounded px-2 py-1 border border-gray-200 dark:border-slate-600 truncate">
+                                {appointment.reason}
+                              </p>
+                            )}
+                          </div>
+
                           {/* Use a separate component or logic to check if reviewed. 
                       Since we are mapping, we can check easily if we have the list of reviews. */
                           }
@@ -338,7 +324,7 @@ export default function MyAppointments() {
                             const hasReviewed = userReviews.some(r => r.doctorId === Number(appointment.doctorId));
                             return (
                               <button
-                                className={`px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${hasReviewed
+                                className={`mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${hasReviewed
                                   ? "bg-gray-400 cursor-not-allowed"
                                   : "bg-blue-600 hover:bg-blue-700"
                                   }`}

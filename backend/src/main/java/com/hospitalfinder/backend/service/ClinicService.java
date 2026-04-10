@@ -1,8 +1,10 @@
 package com.hospitalfinder.backend.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,7 +30,26 @@ public class ClinicService {
 
     private final DataStoreService dataStoreService;
     private final DoctorService doctorService;
+    private final ClinicPublicIdService clinicPublicIdService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final long SPECIALIZATIONS_CACHE_TTL_MS = 5 * 60 * 1000;
+    private static final long CLINIC_MAPPING_CACHE_TTL_MS = 2 * 60 * 1000;
+    private final Object specializationCacheLock = new Object();
+    private final Object clinicMappingCacheLock = new Object();
+    private volatile long specializationsCacheAt = 0L;
+    private Map<Long, Specialization> specializationsByIdCache = new HashMap<>();
+    private final Map<Long, CachedClinicSpecIds> clinicSpecIdsCache = new HashMap<>();
+
+    private static class CachedClinicSpecIds {
+        private final List<Long> specIds;
+        private final long cachedAt;
+
+        private CachedClinicSpecIds(List<Long> specIds, long cachedAt) {
+            this.specIds = specIds;
+            this.cachedAt = cachedAt;
+        }
+    }
 
     public List<ClinicSummaryDTO> getFilteredClinics(String city, List<String> specializations, String search,
             Double lat, Double lng) {
@@ -75,7 +96,9 @@ public class ClinicService {
                         double speed = (distance < 5) ? 20.0 : (distance < 20) ? 30.0 : 40.0;
                         estimatedTime = (int) Math.round(distance / speed * 60);
                     }
-                    return new ClinicSummaryDTO(clinic, distance, estimatedTime);
+                    ClinicSummaryDTO dto = new ClinicSummaryDTO(clinic, distance, estimatedTime);
+                    dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
+                    return dto;
                 })
                 .collect(Collectors.toList());
     }
@@ -98,6 +121,10 @@ public class ClinicService {
                     .collect(Collectors.toList());
         }
 
+                clinics = clinics.stream()
+                    .filter(c -> c.getLatitude() != null && c.getLongitude() != null)
+                    .collect(Collectors.toList());
+
         return clinics.stream()
                 .map(clinic -> {
                     Double distance = calculateDistance(lat, lng, clinic.getLatitude(), clinic.getLongitude());
@@ -107,7 +134,9 @@ public class ClinicService {
                     double speed = (distance < 5) ? 20.0 : (distance < 20) ? 30.0 : 40.0;
                     int estimatedTime = (int) Math.round(distance / speed * 60);
 
-                    return new NearbyClinicDTO(clinic, distance, estimatedTime);
+                    NearbyClinicDTO dto = new NearbyClinicDTO(clinic, distance, estimatedTime);
+                    dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
+                    return dto;
                 })
                 .filter(dto -> dto != null)
                 .collect(Collectors.toList());
@@ -138,36 +167,55 @@ public class ClinicService {
 
         class ClinicDist {
             Clinic c;
-            double d;
-            int t;
+            Double d;
+            Integer t;
             int m;
+            boolean hasCoordinates;
 
-            ClinicDist(Clinic c, double d, int t, int m) {
+            ClinicDist(Clinic c, Double d, Integer t, int m, boolean hasCoordinates) {
                 this.c = c;
                 this.d = d;
                 this.t = t;
                 this.m = m;
+                this.hasCoordinates = hasCoordinates;
             }
         }
 
         return clinics.stream()
                 .map(c -> {
-                    double dist = calculateDistance(lat, lng, c.getLatitude(), c.getLongitude());
-                    double speed = (dist < 5) ? 20.0 : (dist < 20) ? 30.0 : 40.0;
-                    int time = (int) Math.round(dist / speed * 60);
+                    boolean hasCoordinates = c.getLatitude() != null && c.getLongitude() != null;
+                    Double dist = null;
+                    Integer time = null;
+                    if (hasCoordinates) {
+                        dist = calculateDistance(lat, lng, c.getLatitude(), c.getLongitude());
+                        double speed = (dist < 5) ? 20.0 : (dist < 20) ? 30.0 : 40.0;
+                        time = (int) Math.round(dist / speed * 60);
+                    }
                     int match = getMatchCount(c, normalizedSpecs);
-                    return new ClinicDist(c, dist, time, match);
+                    return new ClinicDist(c, dist, time, match, hasCoordinates);
                 })
-                .filter(cd -> normalizedSpecs.isEmpty() || cd.m > 0)
+                // Exclude only coordinate-based nearby hospitals (already shown in "Nearby" section).
+                // Hospitals without coordinates should still appear in "Other Hospitals".
+                .filter(cd -> (!cd.hasCoordinates || cd.d == null || cd.d > 5.0) && (normalizedSpecs.isEmpty() || cd.m > 0))
                 .sorted((a, b) -> {
                     if (!normalizedSpecs.isEmpty()) {
                         int cmp = Integer.compare(b.m, a.m);
                         if (cmp != 0)
                             return cmp;
                     }
+                    if (a.hasCoordinates != b.hasCoordinates) {
+                        return a.hasCoordinates ? -1 : 1;
+                    }
+                    if (!a.hasCoordinates) {
+                        return a.c.getName().compareToIgnoreCase(b.c.getName());
+                    }
                     return Double.compare(a.d, b.d);
                 })
-                .map(cd -> new NearbyClinicDTO(cd.c, cd.d, cd.t))
+                .map(cd -> {
+                    NearbyClinicDTO dto = new NearbyClinicDTO(cd.c, cd.d, cd.t);
+                    dto.setPublicId(clinicPublicIdService.encode(cd.c.getId()));
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -198,7 +246,39 @@ public class ClinicService {
     }
 
     private Clinic mapToClinic(JsonNode node) {
-        return objectMapper.convertValue(node, Clinic.class);
+        Clinic clinic = objectMapper.convertValue(node, Clinic.class);
+
+        // Ensure clinic ID is set: Jackson @JsonAlias may not always work
+        if (clinic.getId() == null) {
+            Long clinicId = extractId(node);
+            if (clinicId != null) {
+                clinic.setId(clinicId);
+            }
+        }
+
+        // Fallback for deployments storing specializations as text on clinic rows.
+        if ((clinic.getSpecializations() == null || clinic.getSpecializations().isEmpty()) && node != null) {
+            String raw = null;
+            if (node.has("specializations") && !node.get("specializations").isNull()) {
+                raw = node.get("specializations").asText();
+            } else if (node.has("specialization") && !node.get("specialization").isNull()) {
+                raw = node.get("specialization").asText();
+            }
+
+            if (raw != null && !raw.isBlank()) {
+                clinic.setSpecializations(Arrays.stream(raw.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .map(name -> {
+                            Specialization sp = new Specialization();
+                            sp.setName(name);
+                            return sp;
+                        })
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        return clinic;
     }
 
     private void populateSpecializations(List<Clinic> clinics) {
@@ -206,34 +286,108 @@ public class ClinicService {
             return;
 
         try {
-            JsonNode specsResult = dataStoreService.executeQuery("SELECT * FROM specializations");
-            List<Specialization> allSpecs = new ArrayList<>();
-            if (specsResult != null && specsResult.isArray()) {
-                for (JsonNode node : specsResult) {
-                    JsonNode data = node.has("specializations") ? node.get("specializations") : node;
-                    allSpecs.add(objectMapper.convertValue(data, Specialization.class));
-                }
+            Map<Long, Clinic> clinicsById = clinics.stream()
+                    .filter(c -> c.getId() != null)
+                    .collect(Collectors.toMap(Clinic::getId, c -> c, (a, b) -> a));
+            if (clinicsById.isEmpty()) {
+                return;
             }
-            Map<Long, Specialization> specMap = allSpecs.stream()
-                    .collect(Collectors.toMap(Specialization::getId, s -> s));
 
-            JsonNode mappingResult = dataStoreService.executeQuery("SELECT * FROM clinic_specializations");
-            if (mappingResult != null && mappingResult.isArray()) {
-                for (JsonNode node : mappingResult) {
-                    JsonNode data = node.has("clinic_specializations") ? node.get("clinic_specializations") : node;
-                    Long clinicId = data.get("clinic_id").asLong();
-                    Long specId = data.get("specialization_id").asLong();
-
-                    clinics.stream().filter(c -> c.getId().equals(clinicId)).findFirst()
-                            .ifPresent(c -> {
-                                Specialization s = specMap.get(specId);
-                                if (s != null)
-                                    c.getSpecializations().add(s);
-                            });
+            Map<Long, Specialization> specMap = getSpecializationsByIdCached();
+            for (Map.Entry<Long, Clinic> entry : clinicsById.entrySet()) {
+                Long clinicId = entry.getKey();
+                Clinic clinic = entry.getValue();
+                List<Long> specIds = getClinicSpecializationIdsCached(clinicId);
+                if (specIds.isEmpty()) {
+                    continue;
+                }
+                for (Long specId : specIds) {
+                    Specialization specialization = specMap.get(specId);
+                    if (specialization != null) {
+                        clinic.getSpecializations().add(specialization);
+                    }
                 }
             }
         } catch (Exception e) {
             log.error("Error populating specializations", e);
+        }
+    }
+
+    private Map<Long, Specialization> getSpecializationsByIdCached() {
+        long now = System.currentTimeMillis();
+        synchronized (specializationCacheLock) {
+            if (now - specializationsCacheAt < SPECIALIZATIONS_CACHE_TTL_MS && !specializationsByIdCache.isEmpty()) {
+                return new HashMap<>(specializationsByIdCache);
+            }
+
+            JsonNode specsResult = dataStoreService.executeQuery("SELECT * FROM specializations");
+            Map<Long, Specialization> specMap = new HashMap<>();
+            if (specsResult != null && specsResult.isArray()) {
+                for (JsonNode node : specsResult) {
+                    JsonNode data = node.has("specializations") ? node.get("specializations") : node;
+                    Specialization specialization = objectMapper.convertValue(data, Specialization.class);
+                    if (specialization != null && specialization.getId() != null) {
+                        specMap.putIfAbsent(specialization.getId(), specialization);
+                    }
+                }
+            }
+
+            specializationsByIdCache = specMap;
+            specializationsCacheAt = now;
+            return new HashMap<>(specializationsByIdCache);
+        }
+    }
+
+    private List<Long> getClinicSpecializationIdsCached(Long clinicId) {
+        long now = System.currentTimeMillis();
+        synchronized (clinicMappingCacheLock) {
+            CachedClinicSpecIds cached = clinicSpecIdsCache.get(clinicId);
+            if (cached != null && now - cached.cachedAt < CLINIC_MAPPING_CACHE_TTL_MS) {
+                return cached.specIds;
+            }
+        }
+
+        List<Long> specIds = fetchClinicSpecializationIds(clinicId);
+        synchronized (clinicMappingCacheLock) {
+            clinicSpecIdsCache.put(clinicId, new CachedClinicSpecIds(specIds, now));
+        }
+        return specIds;
+    }
+
+    private List<Long> fetchClinicSpecializationIds(Long clinicId) {
+        JsonNode mappingResult = dataStoreService.executeQuery(
+                "SELECT * FROM clinic_specializations WHERE clinic_id = " + clinicId);
+        if (mappingResult == null || !mappingResult.isArray() || mappingResult.isEmpty()) {
+            mappingResult = dataStoreService.executeQuery(
+                    "SELECT * FROM clinic_specializations WHERE clinic_id = '" + clinicId + "'");
+        }
+
+        if (mappingResult == null || !mappingResult.isArray()) {
+            return List.of();
+        }
+
+        LinkedHashSet<Long> specIds = new LinkedHashSet<>();
+        for (JsonNode node : mappingResult) {
+            JsonNode data = node.has("clinic_specializations") ? node.get("clinic_specializations") : node;
+            if (data == null || data.isNull() ||
+                    !data.has("specialization_id") || data.get("specialization_id").isNull()) {
+                continue;
+            }
+            specIds.add(data.get("specialization_id").asLong());
+        }
+        return new ArrayList<>(specIds);
+    }
+
+    private void invalidateClinicSpecializationCache(Long clinicId) {
+        synchronized (clinicMappingCacheLock) {
+            clinicSpecIdsCache.remove(clinicId);
+        }
+    }
+
+    private void invalidateSpecializationsCache() {
+        synchronized (specializationCacheLock) {
+            specializationsByIdCache = new HashMap<>();
+            specializationsCacheAt = 0L;
         }
     }
 
@@ -310,8 +464,12 @@ public class ClinicService {
             }
         }
 
+        invalidateClinicSpecializationCache(clinicId);
+
         populateSpecializations(Collections.singletonList(clinic));
-        return new ClinicResponseDTO(clinic);
+        ClinicResponseDTO dto = new ClinicResponseDTO(clinic);
+        dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
+        return dto;
     }
 
     public ClinicResponseDTO updateClinic(Long id, ClinicRequestDTO request) {
@@ -370,6 +528,8 @@ public class ClinicService {
                 mapping.put("specialization_id", specId);
                 dataStoreService.insertRecord("clinic_specializations", mapping);
             }
+
+            invalidateClinicSpecializationCache(id);
         }
 
         return getClinicById(id);
@@ -397,9 +557,20 @@ public class ClinicService {
 
     private Long createSpecialization(String name) {
         Map<String, Object> values = new HashMap<>();
-        values.put("name", name); // Schema confirmed column is 'name'
+        values.put("name", name);
         JsonNode created = dataStoreService.insertRecord("specializations", values);
-        return extractId(created);
+        Long createdId = extractId(created);
+        if (createdId != null) {
+            invalidateSpecializationsCache();
+            return createdId;
+        }
+
+        // Some deployments expose column as "specialization" instead of "name".
+        Map<String, Object> fallbackValues = new HashMap<>();
+        fallbackValues.put("specialization", name);
+        JsonNode fallbackCreated = dataStoreService.insertRecord("specializations", fallbackValues);
+        invalidateSpecializationsCache();
+        return extractId(fallbackCreated);
     }
 
     private Long extractId(JsonNode node) {
@@ -412,6 +583,27 @@ public class ClinicService {
         if (node.has("ROWID")) {
             return node.get("ROWID").asLong();
         }
+
+        // Handle wrapped payloads, e.g. {"specializations": {"ROWID": ...}}
+        if (node.isObject()) {
+            java.util.Iterator<JsonNode> fields = node.elements();
+            while (fields.hasNext()) {
+                Long nested = extractId(fields.next());
+                if (nested != null) {
+                    return nested;
+                }
+            }
+        }
+
+        if (node.isArray()) {
+            for (JsonNode child : node) {
+                Long nested = extractId(child);
+                if (nested != null) {
+                    return nested;
+                }
+            }
+        }
+
         return null;
     }
 
@@ -420,12 +612,20 @@ public class ClinicService {
                 .orElseThrow(() -> new RuntimeException("Clinic not found"));
         populateSpecializations(Collections.singletonList(clinic));
         clinic.setDoctors(doctorService.findByClinicId(id));
-        return new ClinicResponseDTO(clinic);
+        ClinicResponseDTO dto = new ClinicResponseDTO(clinic);
+        dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
+        return dto;
+    }
+
+    public ClinicResponseDTO getClinicByPublicId(String publicId) {
+        Long clinicId = clinicPublicIdService.decode(publicId);
+        return getClinicById(clinicId);
     }
 
     public void deleteClinic(Long id) {
         try {
             dataStoreService.executeQuery("DELETE FROM clinics WHERE ROWID = '" + id + "'");
+            invalidateClinicSpecializationCache(id);
         } catch (Exception e) {
             log.error("Failed to delete clinic", e);
             throw new RuntimeException("Failed to delete clinic", e);

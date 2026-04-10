@@ -21,6 +21,7 @@ export default function Navbar() {
 
   const { isAuthenticated, user } = useSelector((s: RootState) => s.auth);
   const isDoctor = user?.role?.toUpperCase() === "DOCTOR";
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
 
   const mainLinks = [
     { name: "Find Hospitals", to: "/find-hospitals" },
@@ -35,6 +36,8 @@ export default function Navbar() {
 
   const userLinks = isDoctor
     ? []
+    : isAdmin
+      ? [{ name: "Admin Dashboard", to: "/admin-dashboard" }]
     : [
         { name: "My Profile", to: "/profile" },
         { name: "My Appointments", to: "/my-appointments" },

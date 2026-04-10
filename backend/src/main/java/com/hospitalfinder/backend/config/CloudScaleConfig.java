@@ -25,17 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CloudScaleConfig {
 
-    @Value("${zoho.project.id}")
+    @Value("${zoho.project.id:${ZOHO_PROJECT_ID:26566000000013009}}")
     @Getter
     private String projectId;
 
-    @Value("${zoho.client.id}")
+    @Value("${zoho.client.id:${ZOHO_CLIENT_ID:1000.56NL5XKO8B4W1XBL3TEJ52F62LQIEM}}")
     private String clientId;
 
-    @Value("${zoho.client.secret}")
+    @Value("${zoho.client.secret:${ZOHO_CLIENT_SECRET:a197f6020c7998385e4500d9c9bab92135e63a3060}}")
     private String clientSecret;
 
-    @Value("${zoho.refresh.token}")
+    @Value("${zoho.refresh.token:${ZOHO_REFRESH_TOKEN:1000.1eae503a133b1aebc701f859e2bb40be.a82ed7964f7b0980c44f1b19da4e3bcd}}")
     private String refreshToken;
 
     @Value("${zoho.region:accounts.zoho.in}")
@@ -65,6 +65,13 @@ public class CloudScaleConfig {
             refreshAccessToken();
         }
         return accessToken;
+    }
+
+    /**
+     * Forces refresh of access token, used when Zoho returns 401 unexpectedly.
+     */
+    public synchronized void forceRefreshAccessToken() {
+        refreshAccessToken();
     }
 
     /**

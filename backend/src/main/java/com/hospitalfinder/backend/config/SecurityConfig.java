@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/health", "/health/**", "/actuator/**", "/actuator/health")
                         .permitAll()
                         // Auth endpoints
-                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/doctor/login", "/api/auth/partner/bootstrap", "/api/users/me").permitAll()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/doctor/login", "/api/auth/partner/bootstrap", "/api/auth/admin/bootstrap", "/api/users/me").permitAll()
                         // Public API endpoints
                         .requestMatchers("/api/clinics", "/api/clinics/**",
                                 "/api/specializations", "/api/specializations/**",
@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/api/reviews", "/api/reviews/**")
                         .permitAll()
                         .requestMatchers("/api/requests", "/api/requests/**").permitAll()
+                        .requestMatchers("/api/hospital-requests", "/api/hospital-requests/**").permitAll()
                         // Documentation
                         .requestMatchers("/error", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Protected endpoints
@@ -75,6 +76,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
+        String originPatterns = environment.getProperty("CORS_ALLOWED_ORIGIN_PATTERNS", "");
+        List<String> allowedOriginPatterns = new ArrayList<>();
+        for (String pattern : originPatterns.split(",")) {
+            String trimmed = pattern.trim();
+            if (!trimmed.isEmpty() && !allowedOriginPatterns.contains(trimmed)) {
+                allowedOriginPatterns.add(trimmed);
+            }
+        }
+
+        if (!allowedOriginPatterns.isEmpty()) {
+            config.setAllowedOriginPatterns(allowedOriginPatterns);
+        }
+
         String origins = environment.getProperty("CORS_ALLOWED_ORIGINS", "http://localhost:5173");
         List<String> allowedOrigins = new ArrayList<>();
         for (String origin : origins.split(",")) {
@@ -83,8 +98,12 @@ public class SecurityConfig {
                 allowedOrigins.add(trimmed);
             }
         }
-        // Use setAllowedOrigins for exact match (prevents pattern wildcards)
-        config.setAllowedOrigins(allowedOrigins);
+
+        // Keep explicit origins as well (used when no patterns are provided).
+        if (!allowedOrigins.isEmpty()) {
+            config.setAllowedOrigins(allowedOrigins);
+        }
+
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);

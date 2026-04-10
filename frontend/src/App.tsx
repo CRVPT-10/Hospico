@@ -24,6 +24,7 @@ import HospitalProfile from "./pages/HospitalProfile";
 import Profile from "./pages/Profile.tsx";
 import MyAppointments from "./pages/MyAppointments";
 import MedicalReports from "./pages/MedicalReports";
+import AdminDashboard from "./pages/AdminDashboard";
 import ChatWidget from "./features/chatbot/src/components/ChatWidget";
 
 import { ThemeProvider } from "./context/ThemeContext";
@@ -167,6 +168,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MedicalReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin-dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />
