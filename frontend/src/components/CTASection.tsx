@@ -16,12 +16,6 @@ export default function CTASection() {
           >
             Find a Hospital
           </Link>
-          <Link
-            to="/register"
-            className="px-8 py-3 border-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-          >
-            Register Your Hospital
-          </Link>
         </div>
       </div>
     </section>

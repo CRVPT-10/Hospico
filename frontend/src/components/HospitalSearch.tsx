@@ -424,7 +424,11 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
       try {
         const data = await apiRequest<Specialization[]>(
           "/api/specializations",
-          "GET"
+          "GET",
+          undefined,
+          {
+            cacheTtlMs: 10 * 60 * 1000,
+          }
         );
         setSpecialties(data);
       } catch (error) {

@@ -13,6 +13,85 @@ const normalizeRequestPath = (path: string) => {
   return trimmed;
 };
 
+type CacheEntry = {
+  expiresAt: number;
+  data: unknown;
+};
+
+type ApiRequestOptions = {
+  cacheTtlMs?: number;
+  cacheKey?: string;
+  bypassCache?: boolean;
+};
+
+const API_CACHE_PREFIX = "hospiico_api_cache:";
+const memoryCache = new Map<string, CacheEntry>();
+
+const isBrowser = typeof window !== "undefined";
+
+const buildCacheKey = (method: Method, path: string, customCacheKey?: string) => {
+  if (customCacheKey && customCacheKey.trim()) {
+    return `${API_CACHE_PREFIX}${customCacheKey.trim()}`;
+  }
+  return `${API_CACHE_PREFIX}${String(method).toUpperCase()}:${normalizeRequestPath(path)}`;
+};
+
+const readCache = <T>(key: string): T | null => {
+  const now = Date.now();
+
+  const memory = memoryCache.get(key);
+  if (memory) {
+    if (memory.expiresAt > now) {
+      return memory.data as T;
+    }
+    memoryCache.delete(key);
+  }
+
+  if (!isBrowser) {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as CacheEntry;
+    if (!parsed || typeof parsed.expiresAt !== "number") {
+      window.sessionStorage.removeItem(key);
+      return null;
+    }
+    if (parsed.expiresAt <= now) {
+      window.sessionStorage.removeItem(key);
+      return null;
+    }
+
+    memoryCache.set(key, parsed);
+    return parsed.data as T;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key: string, value: unknown, ttlMs: number) => {
+  const entry: CacheEntry = {
+    data: value,
+    expiresAt: Date.now() + ttlMs,
+  };
+
+  memoryCache.set(key, entry);
+
+  if (!isBrowser) {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(entry));
+  } catch {
+    // Ignore storage quota and serialization issues.
+  }
+};
+
 // Create an axios instance with default configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -63,14 +142,35 @@ apiClient.interceptors.response.use(
 export async function apiRequest<TResponse, TBody = unknown>(
   path: string,
   method: Method = "GET",
-  body?: TBody
+  body?: TBody,
+  options?: ApiRequestOptions
 ): Promise<TResponse> {
   try {
+    const requestMethod = String(method).toUpperCase() as Method;
+    const normalizedPath = normalizeRequestPath(path);
+    const cacheTtlMs = options?.cacheTtlMs ?? 0;
+    const shouldUseCache = requestMethod === "GET" && cacheTtlMs > 0 && !options?.bypassCache;
+    const cacheKey = shouldUseCache
+      ? buildCacheKey(requestMethod, normalizedPath, options?.cacheKey)
+      : null;
+
+    if (cacheKey) {
+      const cached = readCache<TResponse>(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
+    }
+
     const response = await apiClient.request<TResponse>({
-      url: normalizeRequestPath(path),
-      method,
+      url: normalizedPath,
+      method: requestMethod,
       data: body,
     });
+
+    if (cacheKey) {
+      writeCache(cacheKey, response.data, cacheTtlMs);
+    }
+
     return response.data;
   } catch (error) {
     const err = error as AxiosError<{ message?: string } | string>;

@@ -27,8 +27,6 @@ import MedicalReports from "./pages/MedicalReports";
 import AdminDashboard from "./pages/AdminDashboard";
 import ChatWidget from "./features/chatbot/src/components/ChatWidget";
 
-import { ThemeProvider } from "./context/ThemeContext";
-
 const extractClinicIdFromHospitalEmail = (email?: string) => {
   if (!email) return null;
   const match = email.match(/\.(\d+)@hospiico\.com$/i);
@@ -87,105 +85,102 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
-      {/* Offline Screen Check */}
-      <ConnectivityHandler>
-        <BrowserRouter>
-          <TitleUpdater />
-          <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
-            <Navbar />
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/partner-login" element={<PartnerLogin />} />
-              <Route path="/doctor-login" element={<DoctorLogin />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    {isDoctor
-                      ? <Navigate to={`/doctor-dashboard/${user?.id ?? ""}`} replace />
-                      : isHospital
-                        ? <Navigate to={`/hospital-dashboard/${hospitalClinicId}`} replace />
-                        : <Dashboard />}
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/doctor-dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DoctorDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/doctor-dashboard/:doctorId"
-                element={
-                  <ProtectedRoute>
-                    <DoctorDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/hospital-dashboard"
-                element={
-                  <ProtectedRoute>
-                    <HospitalDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/hospital-dashboard/:hospitalId"
-                element={
-                  <ProtectedRoute>
-                    <HospitalDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/find-hospitals" element={<FindHospitals />} />
-              <Route path="/hospitals" element={<FindHospitals />} />
-              <Route path="/emergency" element={<Emergency />} />
-              <Route path="/find-hospital/:id" element={<HospitalProfile />} />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-appointments"
-                element={
-                  <ProtectedRoute>
-                    <MyAppointments />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <ProtectedRoute>
-                    <MedicalReports />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin-dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<Dashboard />} />
-            </Routes>
-            <ChatWidget />
-          </div>
-        </BrowserRouter>
-      </ConnectivityHandler>
-    </ThemeProvider>
+    <ConnectivityHandler>
+      <BrowserRouter>
+        <TitleUpdater />
+        <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
+          <Navbar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/partner-login" element={<PartnerLogin />} />
+            <Route path="/doctor-login" element={<DoctorLogin />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  {isDoctor
+                    ? <Navigate to={`/doctor-dashboard/${user?.id ?? ""}`} replace />
+                    : isHospital
+                      ? <Navigate to={`/hospital-dashboard/${hospitalClinicId}`} replace />
+                      : <Dashboard />}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctor-dashboard"
+              element={
+                <ProtectedRoute>
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctor-dashboard/:doctorId"
+              element={
+                <ProtectedRoute>
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital-dashboard"
+              element={
+                <ProtectedRoute>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital-dashboard/:hospitalId"
+              element={
+                <ProtectedRoute>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/find-hospitals" element={<FindHospitals />} />
+            <Route path="/hospitals" element={<FindHospitals />} />
+            <Route path="/emergency" element={<Emergency />} />
+            <Route path="/find-hospital/:id" element={<HospitalProfile />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-appointments"
+              element={
+                <ProtectedRoute>
+                  <MyAppointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <MedicalReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Dashboard />} />
+          </Routes>
+          <ChatWidget />
+        </div>
+      </BrowserRouter>
+    </ConnectivityHandler>
   );
 }
 

@@ -1,5 +1,12 @@
 package com.hospitalfinder.backend.service;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,10 +14,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,11 +46,21 @@ public class ClinicService {
 
     private static final long SPECIALIZATIONS_CACHE_TTL_MS = 5 * 60 * 1000;
     private static final long CLINIC_MAPPING_CACHE_TTL_MS = 2 * 60 * 1000;
+        private static final long ROUTE_METRICS_CACHE_TTL_MS = 5 * 60 * 1000;
+        private static final int DISTANCE_MATRIX_DESTINATION_BATCH = 25;
+        private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(6))
+            .build();
     private final Object specializationCacheLock = new Object();
     private final Object clinicMappingCacheLock = new Object();
+        private final Object routeMetricsCacheLock = new Object();
     private volatile long specializationsCacheAt = 0L;
     private Map<Long, Specialization> specializationsByIdCache = new HashMap<>();
     private final Map<Long, CachedClinicSpecIds> clinicSpecIdsCache = new HashMap<>();
+        private final Map<String, CachedRouteMetrics> routeMetricsCache = new HashMap<>();
+
+        @Value("${google.maps.api-key:}")
+        private String googleMapsApiKey;
 
     private static class CachedClinicSpecIds {
         private final List<Long> specIds;
@@ -49,6 +68,26 @@ public class ClinicService {
 
         private CachedClinicSpecIds(List<Long> specIds, long cachedAt) {
             this.specIds = specIds;
+            this.cachedAt = cachedAt;
+        }
+    }
+
+    private static class TravelMetrics {
+        private final Double distanceKm;
+        private final Integer durationMinutes;
+
+        private TravelMetrics(Double distanceKm, Integer durationMinutes) {
+            this.distanceKm = distanceKm;
+            this.durationMinutes = durationMinutes;
+        }
+    }
+
+    private static class CachedRouteMetrics {
+        private final TravelMetrics metrics;
+        private final long cachedAt;
+
+        private CachedRouteMetrics(TravelMetrics metrics, long cachedAt) {
+            this.metrics = metrics;
             this.cachedAt = cachedAt;
         }
     }
@@ -95,14 +134,23 @@ public class ClinicService {
                     .collect(Collectors.toList());
         }
 
+        final Map<Long, TravelMetrics> travelMetrics = (lat != null && lng != null)
+            ? getTravelMetricsForClinics(lat, lng, clinics)
+            : Collections.emptyMap();
+
         return clinics.stream()
                 .map(clinic -> {
                     Double distance = null;
                     Integer estimatedTime = null;
                     if (lat != null && lng != null && clinic.getLatitude() != null && clinic.getLongitude() != null) {
-                        distance = calculateDistance(lat, lng, clinic.getLatitude(), clinic.getLongitude());
-                        double speed = (distance < 5) ? 20.0 : (distance < 20) ? 30.0 : 40.0;
-                        estimatedTime = (int) Math.round(distance / speed * 60);
+                TravelMetrics metrics = resolveTravelMetrics(
+                    travelMetrics.get(clinic.getId()),
+                    lat,
+                    lng,
+                    clinic.getLatitude(),
+                    clinic.getLongitude());
+                distance = metrics.distanceKm;
+                estimatedTime = metrics.durationMinutes;
                     }
                     ClinicSummaryDTO dto = new ClinicSummaryDTO(clinic, distance, estimatedTime);
                     dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
@@ -138,21 +186,31 @@ public class ClinicService {
                     .filter(c -> c.getLatitude() != null && c.getLongitude() != null)
                     .collect(Collectors.toList());
 
+        final Map<Long, TravelMetrics> travelMetrics = getTravelMetricsForClinics(lat, lng, clinics);
+
         return clinics.stream()
                 .map(clinic -> {
-                    Double distance = calculateDistance(lat, lng, clinic.getLatitude(), clinic.getLongitude());
+                    TravelMetrics metrics = resolveTravelMetrics(
+                            travelMetrics.get(clinic.getId()),
+                            lat,
+                            lng,
+                            clinic.getLatitude(),
+                            clinic.getLongitude());
+                    Double distance = metrics.distanceKm;
                     if (distance > 5.0)
                         return null;
 
-                    double speed = (distance < 5) ? 20.0 : (distance < 20) ? 30.0 : 40.0;
-                    int estimatedTime = (int) Math.round(distance / speed * 60);
+                    int estimatedTime = metrics.durationMinutes;
 
                     NearbyClinicDTO dto = new NearbyClinicDTO(clinic, distance, estimatedTime);
                     dto.setPublicId(clinicPublicIdService.encode(clinic.getId()));
                     return dto;
                 })
                 .filter(dto -> dto != null)
-                .sorted(Comparator.comparingDouble(dto -> dto.getDistanceKm() != null ? dto.getDistanceKm() : Double.MAX_VALUE))
+                .sorted(Comparator.comparingDouble(dto -> {
+                    Double value = dto.getDistanceKm();
+                    return value != null ? value.doubleValue() : Double.MAX_VALUE;
+                }))
                 .collect(Collectors.toList());
     }
 
@@ -205,15 +263,22 @@ public class ClinicService {
             }
         }
 
+        final Map<Long, TravelMetrics> travelMetrics = getTravelMetricsForClinics(lat, lng, clinics);
+
         return clinics.stream()
                 .map(c -> {
                     boolean hasCoordinates = c.getLatitude() != null && c.getLongitude() != null;
                     Double dist = null;
                     Integer time = null;
                     if (hasCoordinates) {
-                        dist = calculateDistance(lat, lng, c.getLatitude(), c.getLongitude());
-                        double speed = (dist < 5) ? 20.0 : (dist < 20) ? 30.0 : 40.0;
-                        time = (int) Math.round(dist / speed * 60);
+                        TravelMetrics metrics = resolveTravelMetrics(
+                                travelMetrics.get(c.getId()),
+                                lat,
+                                lng,
+                                c.getLatitude(),
+                                c.getLongitude());
+                        dist = metrics.distanceKm;
+                        time = metrics.durationMinutes;
                     }
                     int match = getMatchCount(c, normalizedSpecs);
                     return new ClinicDist(c, dist, time, match, hasCoordinates);
@@ -691,6 +756,158 @@ public class ClinicService {
         } catch (Exception e) {
             log.error("Failed to delete clinic", e);
             throw new RuntimeException("Failed to delete clinic", e);
+        }
+    }
+
+    private TravelMetrics resolveTravelMetrics(TravelMetrics routeMetrics, double lat1, double lon1, double lat2, double lon2) {
+        if (routeMetrics != null && routeMetrics.distanceKm != null && routeMetrics.durationMinutes != null) {
+            return routeMetrics;
+        }
+
+        double distance = calculateDistance(lat1, lon1, lat2, lon2);
+        double speed = (distance < 5) ? 20.0 : (distance < 20) ? 30.0 : 40.0;
+        int estimatedTime = (int) Math.round(distance / speed * 60);
+        return new TravelMetrics(distance, estimatedTime);
+    }
+
+    private Map<Long, TravelMetrics> getTravelMetricsForClinics(double originLat, double originLng, List<Clinic> clinics) {
+        if (googleMapsApiKey == null || googleMapsApiKey.isBlank() || clinics == null || clinics.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Clinic> coordinateClinics = clinics.stream()
+                .filter(c -> c.getId() != null && c.getLatitude() != null && c.getLongitude() != null)
+                .collect(Collectors.toList());
+        if (coordinateClinics.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<Long, TravelMetrics> metrics = new HashMap<>();
+        List<Clinic> unresolved = new ArrayList<>();
+
+        for (Clinic clinic : coordinateClinics) {
+            String cacheKey = getRouteCacheKey(originLat, originLng, clinic.getLatitude(), clinic.getLongitude());
+            TravelMetrics cached = readRouteMetricsCache(cacheKey);
+            if (cached != null) {
+                metrics.put(clinic.getId(), cached);
+            } else {
+                unresolved.add(clinic);
+            }
+        }
+
+        for (int start = 0; start < unresolved.size(); start += DISTANCE_MATRIX_DESTINATION_BATCH) {
+            int end = Math.min(start + DISTANCE_MATRIX_DESTINATION_BATCH, unresolved.size());
+            List<Clinic> batch = unresolved.subList(start, end);
+            Map<Long, TravelMetrics> fetched = fetchDistanceMatrixBatch(originLat, originLng, batch);
+            fetched.forEach((clinicId, travel) -> {
+                metrics.put(clinicId, travel);
+                Clinic clinic = batch.stream().filter(c -> clinicId.equals(c.getId())).findFirst().orElse(null);
+                if (clinic != null) {
+                    String cacheKey = getRouteCacheKey(originLat, originLng, clinic.getLatitude(), clinic.getLongitude());
+                    writeRouteMetricsCache(cacheKey, travel);
+                }
+            });
+        }
+
+        return metrics;
+    }
+
+    private Map<Long, TravelMetrics> fetchDistanceMatrixBatch(double originLat, double originLng, List<Clinic> clinics) {
+        if (clinics == null || clinics.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            String origins = String.format(Locale.US, "%.6f,%.6f", originLat, originLng);
+            String destinations = clinics.stream()
+                    .map(c -> String.format(Locale.US, "%.6f,%.6f", c.getLatitude(), c.getLongitude()))
+                    .collect(Collectors.joining("|"));
+
+            String url = "https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&mode=driving"
+                    + "&origins=" + URLEncoder.encode(origins, StandardCharsets.UTF_8)
+                    + "&destinations=" + URLEncoder.encode(destinations, StandardCharsets.UTF_8)
+                    + "&key=" + URLEncoder.encode(googleMapsApiKey, StandardCharsets.UTF_8);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(url))
+                    .timeout(Duration.ofSeconds(10))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                log.warn("Google Distance Matrix returned status {}", response.statusCode());
+                return Collections.emptyMap();
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            if (!"OK".equalsIgnoreCase(root.path("status").asText())) {
+                log.warn("Google Distance Matrix error status: {}", root.path("status").asText());
+                return Collections.emptyMap();
+            }
+
+            JsonNode elements = root.path("rows").path(0).path("elements");
+            if (!elements.isArray()) {
+                return Collections.emptyMap();
+            }
+
+            Map<Long, TravelMetrics> result = new HashMap<>();
+            for (int i = 0; i < clinics.size() && i < elements.size(); i++) {
+                JsonNode element = elements.get(i);
+                if (!"OK".equalsIgnoreCase(element.path("status").asText())) {
+                    continue;
+                }
+
+                double meters = element.path("distance").path("value").asDouble(-1);
+                double seconds = element.path("duration").path("value").asDouble(-1);
+                if (meters < 0 || seconds < 0) {
+                    continue;
+                }
+
+                double km = meters / 1000.0;
+                int minutes = (int) Math.max(1, Math.round(seconds / 60.0));
+                result.put(clinics.get(i).getId(), new TravelMetrics(km, minutes));
+            }
+
+            return result;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            log.warn("Google route metrics request interrupted: {}", ex.getMessage());
+            return Collections.emptyMap();
+        } catch (IOException ex) {
+            log.warn("Failed to fetch Google route metrics: {}", ex.getMessage());
+            return Collections.emptyMap();
+        } catch (RuntimeException ex) {
+            log.warn("Failed to fetch Google route metrics: {}", ex.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    private String getRouteCacheKey(double originLat, double originLng, double destinationLat, double destinationLng) {
+        return String.format(Locale.US, "%.4f,%.4f->%.4f,%.4f", originLat, originLng, destinationLat, destinationLng);
+    }
+
+    private TravelMetrics readRouteMetricsCache(String key) {
+        long now = System.currentTimeMillis();
+        synchronized (routeMetricsCacheLock) {
+            CachedRouteMetrics cached = routeMetricsCache.get(key);
+            if (cached == null) {
+                return null;
+            }
+            if ((now - cached.cachedAt) > ROUTE_METRICS_CACHE_TTL_MS) {
+                routeMetricsCache.remove(key);
+                return null;
+            }
+            return cached.metrics;
+        }
+    }
+
+    private void writeRouteMetricsCache(String key, TravelMetrics metrics) {
+        if (metrics == null) {
+            return;
+        }
+        synchronized (routeMetricsCacheLock) {
+            routeMetricsCache.put(key, new CachedRouteMetrics(metrics, System.currentTimeMillis()));
         }
     }
 

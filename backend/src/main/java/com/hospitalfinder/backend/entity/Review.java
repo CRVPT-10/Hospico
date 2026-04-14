@@ -60,4 +60,6 @@ public class Review {
     private String reviewerIp;
 
     private String reviewerPhone;
+
+    private String reviewerEmail;
 }

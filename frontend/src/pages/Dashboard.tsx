@@ -9,6 +9,13 @@ import {
   Clock,
   BarChart as ChartBar,
   Lock,
+  ShieldCheck,
+  Building2,
+  BadgeCheck,
+  Plus,
+  ChevronRight,
+  Star,
+  FileText,
 } from "lucide-react";
 import Footer from "../components/Footer";
 
@@ -16,40 +23,154 @@ const Dashboard = () => {
   return (
     <div className="bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
       {/* HERO SECTION */}
-      <div className="bg-gradient-to-r from-indigo-500 to-sky-500 dark:from-indigo-600 dark:to-blue-900 mx-3 px-4 sm:py-8 lg:py-12 transition-all duration-500">
-        <div className="sm:px-15 lg:px-20">
+      <div className="bg-gradient-to-r from-indigo-500 to-sky-500 dark:from-indigo-600 dark:to-blue-900 px-4 pt-4 pb-0 sm:py-8 lg:py-10 transition-all duration-500">
+        <div className="max-w-7xl mx-auto lg:px-8">
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-2 sm:mb-4 text-white">
             India's Healthcare Search Engine
           </h1>
           <p className="text-sm sm:text-base text-white mb-6">
             Connect with top rated hospitals and specialties in your area
           </p>
-          <div className="mx-auto px-4 pt-6 sm:py-8 lg:py-12 -mt-8">
+          <div className="mx-auto px-0 pt-4 sm:py-8 lg:py-10 -mt-2 sm:-mt-8">
             <HospitalSearch />
           </div>
         </div>
       </div>
 
-      {/* ACTION BUTTONS */}
-      <div className="max-w-7xl mx-auto px-4 mt-16">
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/find-hospitals"
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-blue-600 transition-all duration-300 text-center shadow-soft hover:shadow-hover dark:shadow-blue-500/20 transform hover:scale-[1.02]"
-          >
-            Book an Appointment
-          </Link>
-          <Link
-            to="/partner-login"
-            className="px-8 py-4 border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 rounded-xl text-lg font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 text-center shadow-soft hover:shadow-hover transform hover:scale-[1.02]"
-          >
-            Partner with Us
-          </Link>
+      {/* SOCIAL PROOF SECTION */}
+      <section className="bg-white dark:bg-slate-900 pt-8 sm:pt-10 pb-4 sm:pb-6 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="rounded-t-2xl rounded-b-xl bg-gradient-to-b from-[#f4f8ff] to-white dark:from-slate-800 dark:to-slate-900 border border-[#dbe7ff] dark:border-slate-700/70 px-3 sm:px-5 py-4 sm:py-6 shadow-sm">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl sm:text-4xl font-bold text-[#1a2b62] dark:text-white">Real Patients. Real Experiences.</h2>
+              <p className="text-[#7a86a8] dark:text-slate-400 text-sm sm:text-lg">India's First Verified Hospital Reviews</p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mb-4 flex-wrap text-sm">
+              <span className="px-3 py-1 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                100% Verified
+              </span>
+              <span className="px-3 py-1 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-blue-500" />
+                Real Visits
+              </span>
+              <span className="px-3 py-1 rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 inline-flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-blue-500" />
+                Trusted
+              </span>
+            </div>
+
+            <div className="flex md:grid md:grid-cols-3 gap-3 overflow-x-auto md:overflow-visible pb-2 snap-x snap-mandatory md:snap-none">
+              <div className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-start rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-3xl font-bold text-[#1f2b54] dark:text-white leading-none">4.6</span>
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-slate-300 mb-3">"Doctor explained everything clearly and answered all my questions."</p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 text-white text-sm font-semibold mb-2">
+                  <BadgeCheck className="w-4 h-4" />
+                  Verified Patient
+                </span>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Apollo Hospital,</p>
+                <p className="text-2sm text-slate-600 dark:text-slate-400 mb-2">Hyderabad</p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm">
+                  <Plus className="w-3 h-3 text-blue-500" />
+                  General Surgery
+                </span>
+              </div>
+              <div className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-start rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-3xl font-bold text-[#1f2b54] dark:text-white leading-none">3.9</span>
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 text-amber-200" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-slate-300 mb-3">"Long waiting time, but the treatment was effective."</p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 text-white text-sm font-semibold mb-2">
+                  <BadgeCheck className="w-4 h-4" />
+                  Verified Patient
+                </span>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Care Hospital,</p>
+                <p className="text-2sm text-slate-600 dark:text-slate-400 mb-2">Vijayawada</p>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm">
+                    <Plus className="w-3 h-3 text-blue-500" />
+                    Orthopedics
+                  </span>
+                  <span className="text-slate-400">...</span>
+                  <ChevronRight className="w-4 h-4 text-slate-500" />
+                </div>
+              </div>
+              <div className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-start rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-3xl font-bold text-[#1f2b54] dark:text-white leading-none">4.2</span>
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 text-amber-200" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-slate-300 mb-3">"Helpful staff, clean facilities, and smooth appointment process."</p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500 text-white text-sm font-semibold mb-2">
+                  <BadgeCheck className="w-4 h-4" />
+                  Verified Patient
+                </span>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Sunrise Hospital,</p>
+                <p className="text-2sm text-slate-600 dark:text-slate-400 mb-2">Hyderabad</p>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm">
+                  <Plus className="w-3 h-3 text-blue-500" />
+                  Cardiology
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 text-center">
+              <Link
+                to="/find-hospitals"
+                className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold"
+              >
+                Explore Trusted Hospitals
+              </Link>
+            </div>
+
+            <div className="mt-6 text-center">
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4">How Reviews Are Verified</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 text-center">
+                  <Building2 className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+                  1. Visit Hospital
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 text-center">
+                  <FileText className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+                  2. Upload Proof
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 text-center">
+                  <ShieldCheck className="w-5 h-5 mx-auto mb-1 text-blue-500" />
+                  3. We Verify
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 text-center">
+                  <BadgeCheck className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
+                  4. Review Goes Live
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* VALUE PROPOSITION SECTION */}
-      <section className="bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900 dark:to-slate-800 py-16 mt-12 transition-colors duration-200">
+      <section className="bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900 dark:to-slate-800 py-16 mt-4 sm:mt-6 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
             {/* For Patients */}

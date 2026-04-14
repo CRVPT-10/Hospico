@@ -358,14 +358,10 @@ const HospitalProfile = () => {
     return null;
   };
 
-  const mapLatitude = parseCoordinate(hospital.latitude);
-  const mapLongitude = parseCoordinate(hospital.longitude);
   const fallbackMapParts = [hospital.name, hospital.address, hospital.city]
     .map((part) => (part ?? "").trim())
     .filter(Boolean);
-  const mapQuery = mapLatitude != null && mapLongitude != null
-    ? `${mapLatitude},${mapLongitude}`
-    : (fallbackMapParts.length > 0 ? fallbackMapParts.join(", ") : null);
+  const mapQuery = fallbackMapParts.length > 0 ? fallbackMapParts.join(", ") : null;
   const mapOpenHref = mapQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`
     : null;

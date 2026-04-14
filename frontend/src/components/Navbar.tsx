@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Phone, User, Menu, X, ChevronDown } from "lucide-react";
+import { User, Menu, X, ChevronDown } from "lucide-react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { useAppDispatch } from "../store/store";
@@ -138,14 +138,6 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            <a
-              href="tel:1234567890"
-              className="flex items-center space-x-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
-            >
-              <Phone className="h-5 w-5" />
-              <span>1-234-567-890</span>
-            </a>
-
             {/* Account Dropdown (click-based) */}
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
@@ -188,30 +180,21 @@ export default function Navbar() {
               <></>
             )}
 
-            {!isDoctor && (
-              isAuthenticated ? (
+            {!isDoctor && !isAuthenticated && (
+              <div className="flex items-center gap-2">
                 <Link
-                  to="/find-hospitals"
+                  to="/login"
+                  className="px-4 py-2 rounded-lg border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
                 >
-                  Book Appointment
+                  Signup
                 </Link>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/login"
-                    className="px-4 py-2 rounded-lg border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    Signup
-                  </Link>
-                </div>
-              )
+              </div>
             )}
           </div>
 
@@ -254,7 +237,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            {!isDoctor && [...mainLinks, ...resourceLinks].map((link) => (
+            {!isDoctor && mainLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -288,33 +271,23 @@ export default function Navbar() {
               </button>
             )}
 
-            {!isDoctor && (
-              isAuthenticated ? (
+            {!isDoctor && !isAuthenticated && (
+              <div className="mt-4 grid grid-cols-2 gap-3">
                 <Link
-                  to="/find-hospitals"
+                  to="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center mt-4 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md"
+                  className="block w-full text-center px-4 py-2.5 rounded-lg border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                 >
-                  Book Appointment
+                  Login
                 </Link>
-              ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2.5 rounded-lg border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md"
-                  >
-                    Signup
-                  </Link>
-                </div>
-              )
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md"
+                >
+                  Signup
+                </Link>
+              </div>
             )}
           </div>
         )}

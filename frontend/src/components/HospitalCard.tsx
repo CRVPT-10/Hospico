@@ -65,11 +65,15 @@ const HospitalCard = ({
 
     const handleMapClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (hospital.latitude && hospital.longitude) {
-            window.open(`https://www.google.com/maps/search/?api=1&query=${hospital.latitude},${hospital.longitude}`, '_blank');
-        } else {
-            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hospital.name + " " + (hospital.address || hospital.city || ""))}`, '_blank');
+        const mapQuery = [hospital.name, hospital.address, hospital.city]
+            .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+            .join(", ");
+
+        if (!mapQuery) {
+            return;
         }
+
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`, '_blank');
     };
 
     const formatDistance = (d: number): string => {
@@ -92,6 +96,9 @@ const HospitalCard = ({
                 <img
                     src={imageUrl}
                     alt={hospital.name}
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     onError={(e) => {
                         (e.target as HTMLImageElement).src = defaultHospitalImage;

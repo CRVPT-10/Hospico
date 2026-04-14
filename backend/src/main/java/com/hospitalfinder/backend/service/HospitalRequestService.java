@@ -29,7 +29,7 @@ public class HospitalRequestService {
     private final AtomicLong idSequence = new AtomicLong(1);
     private final Map<Long, HospitalRequestRecord> requests = new ConcurrentHashMap<>();
 
-    public HospitalRequestDTO submitRequest(HospitalRequestCreateDTO request) {
+    public HospitalRequestDTO submitRequest(HospitalRequestCreateDTO request, String authenticatedEmail) {
         validateRequest(request);
 
         long id = idSequence.getAndIncrement();
@@ -44,6 +44,7 @@ public class HospitalRequestService {
         record.longitude = request.getLongitude();
         record.imageUrl = request.getImageUrl() == null ? null : request.getImageUrl().trim();
         record.specializations = request.getSpecializations() == null ? null : request.getSpecializations().trim();
+        record.requesterEmail = resolveRequesterEmail(request.getRequesterEmail(), authenticatedEmail);
         record.status = "pending";
         record.createdAt = LocalDateTime.now();
 
@@ -152,7 +153,18 @@ public class HospitalRequestService {
                 .createdAt(record.createdAt == null ? null : record.createdAt.format(FORMATTER))
                 .reviewedAt(record.reviewedAt == null ? null : record.reviewedAt.format(FORMATTER))
                 .createdClinicId(record.createdClinicId)
+                .requesterEmail(record.requesterEmail)
                 .build();
+    }
+
+    private String resolveRequesterEmail(String fromRequest, String authenticatedEmail) {
+        if (authenticatedEmail != null && !authenticatedEmail.isBlank()) {
+            return authenticatedEmail.trim().toLowerCase();
+        }
+        if (fromRequest != null && !fromRequest.isBlank()) {
+            return fromRequest.trim().toLowerCase();
+        }
+        return null;
     }
 
     private static class HospitalRequestRecord {
@@ -170,5 +182,6 @@ public class HospitalRequestService {
         private LocalDateTime createdAt;
         private LocalDateTime reviewedAt;
         private String createdClinicId;
+        private String requesterEmail;
     }
 }

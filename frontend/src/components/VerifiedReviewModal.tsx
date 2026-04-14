@@ -304,6 +304,19 @@ export default function VerifiedReviewModal({
         };
         const updatedReview = await apiRequest<{ id?: string | number }>(`/api/reviews/${editingReview.id}`, "PUT", updateData);
         savedReviewId = updatedReview?.id ?? editingReview.id;
+
+        if (!withoutProof && file && savedReviewId != null) {
+          if (!proofType) {
+            throw new Error("Please select proof type before uploading proof");
+          }
+
+          const proofFormData = new FormData();
+          proofFormData.append("reviewId", String(savedReviewId));
+          proofFormData.append("proofType", proofType);
+          proofFormData.append("file", file);
+
+          await apiClient.post("/api/reviews/upload-proof", proofFormData);
+        }
       } else {
         const formData = new FormData();
         formData.append("hospitalId", String(hospitalId));

@@ -22,4 +22,5 @@ public class HospitalRequestDTO {
     private String createdAt;
     private String reviewedAt;
     private String createdClinicId;
+    private String requesterEmail;
 }

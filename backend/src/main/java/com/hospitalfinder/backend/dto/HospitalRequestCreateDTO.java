@@ -22,4 +22,7 @@ public class HospitalRequestCreateDTO {
     private String imageUrl;
     @Getter @Setter
     private String specializations;
+
+    @Getter @Setter
+    private String requesterEmail;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital } from "./HospitalCard";
+import { useTheme } from "../context/ThemeContext";
 
 const sortByDistance = (items: Hospital[]) =>
   [...items].sort((a, b) => {
@@ -15,6 +16,7 @@ interface NearbyHospitalsProps {
 }
 
 const NearbyHospitals = ({ latitude, longitude }: NearbyHospitalsProps) => {
+  const { theme } = useTheme();
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,11 @@ const NearbyHospitals = ({ latitude, longitude }: NearbyHospitalsProps) => {
       try {
         const data = await apiRequest<Hospital[]>(
           `/api/clinics/nearby?lat=${latitude}&lng=${longitude}`,
-          "GET"
+          "GET",
+          undefined,
+          {
+            cacheTtlMs: 60 * 1000,
+          }
         );
         setHospitals(sortByDistance(data || []));
       } catch (err) {
@@ -77,7 +83,7 @@ const NearbyHospitals = ({ latitude, longitude }: NearbyHospitalsProps) => {
           <HospitalCardComponent
             key={hospital.clinicId || hospital.id}
             hospital={hospital}
-            theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+            theme={theme}
           />
         ))}
       </div>

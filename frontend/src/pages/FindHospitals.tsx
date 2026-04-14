@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import HospitalSearch from "../components/HospitalSearch";
 import { apiRequest } from "../api";
+import type { RootState } from "../store/store";
+import { useTheme } from "../context/ThemeContext";
 
 import NearbyHospitals from "../components/NearbyHospitals";
 import HospitalCardComponent, { type Hospital as HospitalType } from "../components/HospitalCard";
@@ -101,6 +104,8 @@ const resolveCityFromCoordinates = async (latitude: number, longitude: number) =
 
 const FindHospitals = () => {
   const location = useLocation();
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const { theme } = useTheme();
 
   // Parse URL params on mount
   const [query, setQuery] = useState("");
@@ -256,7 +261,9 @@ const FindHospitals = () => {
           ? `/api/clinics/sorted-by-distance${queryString ? `?${queryString}` : ""}`
           : `/api/clinics${queryString ? `?${queryString}` : ""}`;
 
-        const data = await apiRequest<Hospital[]>(url, "GET");
+        const data = await apiRequest<Hospital[]>(url, "GET", undefined, {
+          cacheTtlMs: 2 * 60 * 1000,
+        });
 
         if (!cancelled) {
           setHospitals(data || []);
@@ -344,6 +351,7 @@ const FindHospitals = () => {
         longitude: parsedLongitude,
         imageUrl: hospitalRequestForm.imageUrl.trim() || undefined,
         specializations: hospitalRequestForm.specializations.trim() || undefined,
+        requesterEmail: authUser?.email?.trim() || undefined,
       });
 
       setHospitalRequestSuccess("Request sent successfully. Admin will review and approve/disapprove.");
@@ -507,7 +515,7 @@ const FindHospitals = () => {
                     <HospitalCardComponent
                       key={hospital.id || hospital.clinicId}
                       hospital={hospital}
-                      theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                      theme={theme}
                     />
                   ))}
                 </div>
@@ -661,7 +669,7 @@ const FindHospitals = () => {
                               ? Number(hospitalRequestForm.longitude)
                               : undefined,
                           }}
-                          theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                          theme={theme}
                         />
                       </div>
                     )}

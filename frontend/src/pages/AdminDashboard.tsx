@@ -4,6 +4,7 @@ import { Building2, CheckCircle2, RefreshCcw, Save, UserPlus, UserRoundPlus, XCi
 import { API_BASE_URL, apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital as HospitalCardData } from "../components/HospitalCard";
 import type { RootState } from "../store/store";
+import { useTheme } from "../context/ThemeContext";
 
 type ClinicListItem = {
   clinicId?: string;
@@ -70,6 +71,7 @@ type ModerationReview = {
   proofType?: string;
   proofUrl?: string;
   badgeType?: string;
+  reviewerEmail?: string;
 };
 
 type HospitalAddRequest = {
@@ -85,6 +87,7 @@ type HospitalAddRequest = {
   createdAt?: string;
   reviewedAt?: string;
   createdClinicId?: string;
+  requesterEmail?: string;
 };
 
 type ClinicImageUploadResponse = {
@@ -240,6 +243,7 @@ const toHospitalCardPreview = (id: string, form: ClinicFormState, imageUrlOverri
 };
 
 export default function AdminDashboard() {
+  const { theme } = useTheme();
   const authUser = useSelector((state: RootState) => state.auth.user);
   const isAdmin = authUser?.role?.toUpperCase() === "ADMIN";
 
@@ -855,7 +859,10 @@ export default function AdminDashboard() {
                   const busy = hospitalRequestActionId === String(request.id);
                   return (
                     <tr key={request.id} className="border-b border-gray-100 dark:border-slate-700/60">
-                      <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">{request.id}</td>
+                      <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">
+                        <div>{request.id}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400 break-all">{request.requesterEmail || "-"}</div>
+                      </td>
                       <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">{request.hospitalName}</td>
                       <td className="w-[250px] py-3 pr-4 text-sm text-gray-700 dark:text-slate-300 whitespace-normal break-words">{request.address}</td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">{request.city}</td>
@@ -983,7 +990,7 @@ export default function AdminDashboard() {
               <div className="max-w-sm pointer-events-none">
                 <HospitalCardComponent
                   hospital={previewHospitalRequestCard}
-                  theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                  theme={theme}
                 />
               </div>
             </div>
@@ -1023,7 +1030,10 @@ export default function AdminDashboard() {
                   const busy = moderationActionId === String(review.id);
                   return (
                     <tr key={String(review.id)} className="border-b border-gray-100 dark:border-slate-700/60">
-                      <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">{String(review.id)}</td>
+                      <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">
+                        <div>{String(review.id)}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400 break-all">{review.reviewerEmail || "-"}</div>
+                      </td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">{getClinicDisplay(review)}</td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">{review.proofType || "other"}</td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">

@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { Phone, AlertTriangle, Ambulance, ChevronFirst as FirstAid, MapPin, Clock } from 'lucide-react';
 import { apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital } from "../components/HospitalCard";
+import { useTheme } from "../context/ThemeContext";
 
 type NearbyFacility = Hospital;
 
 export default function Emergency() {
+  const { theme } = useTheme();
   const [facilities, setFacilities] = useState<NearbyFacility[]>([]);
   const [loadingNearby, setLoadingNearby] = useState<boolean>(false);
   const [errorNearby, setErrorNearby] = useState<string | null>(null);
@@ -25,7 +27,11 @@ export default function Emergency() {
           const { latitude, longitude } = position.coords;
           const data = await apiRequest<NearbyFacility[]>(
             `/api/clinics/nearby?lat=${latitude}&lng=${longitude}`,
-            "GET"
+            "GET",
+            undefined,
+            {
+              cacheTtlMs: 60 * 1000,
+            }
           );
 
           const sorted = data
@@ -159,7 +165,7 @@ export default function Emergency() {
             <HospitalCardComponent
               key={facility.clinicId || facility.id}
               hospital={facility}
-              theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+              theme={theme}
             />
           ))}
         </div>

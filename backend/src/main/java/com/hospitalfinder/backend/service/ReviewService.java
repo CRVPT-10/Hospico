@@ -222,15 +222,45 @@ public class ReviewService {
         Role role = authUser.getRole();
 
         if (Role.ADMIN.equals(role)) {
-            return fetchReviews("SELECT * FROM reviews WHERE proof_status = 'pending'");
+            return attachReviewerEmails(fetchReviews("SELECT * FROM reviews WHERE proof_status = 'pending'"));
         }
 
         if (Role.HOSPITAL.equals(role)) {
             Long clinicId = extractClinicIdFromHospitalAccount(authUser);
-            return fetchReviews("SELECT * FROM reviews WHERE clinic_id = '" + clinicId + "' AND proof_status = 'pending'");
+            return attachReviewerEmails(
+                    fetchReviews("SELECT * FROM reviews WHERE clinic_id = '" + clinicId + "' AND proof_status = 'pending'"));
         }
 
         throw new IllegalStateException("Only ADMIN or HOSPITAL accounts can moderate proof documents");
+    }
+
+    private List<Review> attachReviewerEmails(List<Review> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return reviews;
+        }
+
+        Map<Long, String> emailByUserId = new HashMap<>();
+        for (Review review : reviews) {
+            if (review == null || review.getUserId() == null) {
+                continue;
+            }
+
+            Long userId = review.getUserId();
+            String cached = emailByUserId.get(userId);
+            if (cached != null) {
+                review.setReviewerEmail(cached);
+                continue;
+            }
+
+            UserData user = userStoreService.findById(userId);
+            String email = user != null ? user.getEmail() : null;
+            if (email != null && !email.isBlank()) {
+                review.setReviewerEmail(email);
+                emailByUserId.put(userId, email);
+            }
+        }
+
+        return reviews;
     }
 
     public Review moderateProofStatus(Long reviewId, String status) {
