@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Edit, File, FileText, Image as ImageIcon, Mail, Phone, Save, User, X } from "lucide-react";
 import { useAppDispatch, type RootState } from "../store/store";
 import { fetchUserRecords } from "../features/medicalRecords/medicalRecordsSlice";
@@ -39,6 +39,7 @@ export default function Profile() {
   const { files: healthRecords } = useSelector((state: RootState) => state.medicalRecords);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -322,6 +323,18 @@ export default function Profile() {
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
+          </div>
+        )}
+
+        {location.search.includes("complete=1") && !isEditing && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-center justify-between gap-3">
+            <span>Please complete your profile details (phone, age, and gender) for a better booking experience.</span>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors"
+            >
+              Complete now
+            </button>
           </div>
         )}
 

@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
 import { useAppDispatch } from "../store/store";
 import { useSelector } from "react-redux";
-import { signup } from "../features/auth/authSlice";
+import { signupWithEmailOtp } from "../features/auth/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import type { RootState } from "../store/store";
+import { apiRequest } from "../api";
+
+type OtpVerifyResponse = {
+  success: boolean;
+  message: string;
+  verified: boolean;
+  verificationToken?: string;
+};
 
 const Signup = () => {
   const dispatch = useAppDispatch();
@@ -13,7 +21,14 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [verificationToken, setVerificationToken] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -21,12 +36,88 @@ const Signup = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  const handleRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError(null);
+    setInfoMessage(null);
+
+    if (!name.trim() || !email.trim()) {
+      setLocalError("Please enter your name and email first");
+      return;
+    }
+
+    try {
+      setSendingOtp(true);
+      await apiRequest<{ success: boolean; message: string }, { name: string; email: string }>(
+        "/api/auth/signup/request-otp",
+        "POST",
+        { name: name.trim(), email: email.trim().toLowerCase() }
+      );
+
+      setIsOtpSent(true);
+      setInfoMessage("OTP sent to your email. Please verify to continue.");
+    } catch (err) {
+      setLocalError((err as Error).message || "Failed to send OTP");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setLocalError(null);
+    setInfoMessage(null);
+
+    if (!otp.trim()) {
+      setLocalError("Please enter the OTP from your email");
+      return;
+    }
+
+    try {
+      setVerifyingOtp(true);
+      const response = await apiRequest<OtpVerifyResponse, { name: string; email: string; otp: string }>(
+        "/api/auth/signup/verify-otp",
+        "POST",
+        {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          otp: otp.trim(),
+        }
+      );
+
+      if (!response.verified || !response.verificationToken) {
+        setLocalError(response.message || "OTP verification failed");
+        return;
+      }
+
+      setVerificationToken(response.verificationToken);
+      setIsOtpVerified(true);
+      setInfoMessage("Email verified. Create your password to finish signup.");
+    } catch (err) {
+      setLocalError((err as Error).message || "OTP verification failed");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Do not send role, backend will default to USER
-    const resultAction = await dispatch(signup({ email, password, name, phone }));
+    setLocalError(null);
 
-    if (signup.fulfilled.match(resultAction)) {
+    if (!isOtpVerified || !verificationToken) {
+      setLocalError("Please verify your email OTP before creating password");
+      return;
+    }
+
+    const resultAction = await dispatch(
+      signupWithEmailOtp({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        verificationToken,
+      })
+    );
+
+    if (signupWithEmailOtp.fulfilled.match(resultAction)) {
       navigate("/dashboard"); // Redirect to dashboard after successful signup
     }
   };
@@ -48,6 +139,7 @@ const Signup = () => {
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={isOtpSent}
             />
             <input
               className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
@@ -56,30 +148,58 @@ const Signup = () => {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isOtpSent}
             />
-            <input
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-              placeholder="Phone"
-              type="tel"
-              autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <input
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-              placeholder="Password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="w-full px-4 py-2 sm:py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors text-sm sm:text-base"
-              disabled={!email || !password || status === "loading"}
-            >
-              {status === "loading" ? "Creating account..." : "Create account"}
-            </button>
+
+            {!isOtpSent ? (
+              <button
+                type="button"
+                onClick={handleRequestOtp}
+                className="w-full px-4 py-2 sm:py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors text-sm sm:text-base"
+                disabled={!name.trim() || !email.trim() || sendingOtp}
+              >
+                {sendingOtp ? "Sending OTP..." : "Verify email"}
+              </button>
+            ) : !isOtpVerified ? (
+              <>
+                <input
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  className="w-full px-4 py-2 sm:py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors text-sm sm:text-base"
+                  disabled={!otp.trim() || verifyingOtp}
+                >
+                  {verifyingOtp ? "Verifying OTP..." : "Verify OTP"}
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  placeholder="Password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="w-full px-4 py-2 sm:py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors text-sm sm:text-base"
+                  disabled={!password || status === "loading"}
+                >
+                  {status === "loading" ? "Creating account..." : "Create account"}
+                </button>
+              </>
+            )}
+
+            {infoMessage && (
+              <p className="text-emerald-500 dark:text-emerald-400 text-sm text-center">{infoMessage}</p>
+            )}
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center">
               Have an account?{" "}
               <Link
@@ -91,8 +211,8 @@ const Signup = () => {
             </p>
           </div>
         </form>
-        {error && (
-          <p className="text-red-500 dark:text-red-400 text-sm text-center mt-2">{error}</p>
+        {(error || localError) && (
+          <p className="text-red-500 dark:text-red-400 text-sm text-center mt-2">{localError || error}</p>
         )}
       </div>
     </div>

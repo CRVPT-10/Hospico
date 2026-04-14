@@ -3,10 +3,12 @@ package com.hospitalfinder.backend.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -66,7 +68,9 @@ public class ClinicService {
         List<String> normalizedSpecs = specializations == null ? List.of()
                 : specializations.stream()
                         .filter(spec -> spec != null && !spec.isBlank())
-                        .map(spec -> spec.toLowerCase())
+                .map(SpecializationNameNormalizer::toCanonicalKey)
+                .filter(key -> !key.isBlank())
+                .distinct()
                         .collect(Collectors.toList());
 
         if (!normalizedSpecs.isEmpty()) {
@@ -83,7 +87,11 @@ public class ClinicService {
             clinics = clinics.stream()
                     .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
                             (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
-                            (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)))
+                    (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)) ||
+                    clinic.getSpecializations().stream()
+                        .map(Specialization::getName)
+                        .filter(name -> name != null && !name.isBlank())
+                        .anyMatch(name -> specializationMatchesSearch(name, searchLower)))
                     .collect(Collectors.toList());
         }
 
@@ -114,10 +122,15 @@ public class ClinicService {
         }
 
         if (specialization != null && !specialization.isEmpty()) {
+            String requestedCanonical = SpecializationNameNormalizer.toCanonicalKey(specialization);
             clinics = clinics.stream()
                     .filter(c -> c.getSpecializations().stream()
-                            .anyMatch(spec -> spec.getName().toLowerCase()
-                                    .contains(specialization.toLowerCase())))
+                    .anyMatch(spec -> {
+                    String canonical = SpecializationNameNormalizer.toCanonicalKey(spec.getName());
+                    return !canonical.isBlank()
+                        && (canonical.equals(requestedCanonical)
+                            || canonical.contains(requestedCanonical));
+                    }))
                     .collect(Collectors.toList());
         }
 
@@ -139,6 +152,7 @@ public class ClinicService {
                     return dto;
                 })
                 .filter(dto -> dto != null)
+                .sorted(Comparator.comparingDouble(dto -> dto.getDistanceKm() != null ? dto.getDistanceKm() : Double.MAX_VALUE))
                 .collect(Collectors.toList());
     }
 
@@ -155,13 +169,23 @@ public class ClinicService {
         }
 
         List<String> normalizedSpecs = spec == null ? List.of()
-                : spec.stream().map(String::toLowerCase).collect(Collectors.toList());
+            : spec.stream()
+                .filter(s -> s != null && !s.isBlank())
+                .map(SpecializationNameNormalizer::toCanonicalKey)
+                .filter(key -> !key.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
 
         if (search != null && !search.isEmpty()) {
             String searchLower = search.toLowerCase();
             clinics = clinics.stream()
                     .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
-                            (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)))
+                    (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
+                    (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)) ||
+                    clinic.getSpecializations().stream()
+                        .map(Specialization::getName)
+                        .filter(name -> name != null && !name.isBlank())
+                        .anyMatch(name -> specializationMatchesSearch(name, searchLower)))
                     .collect(Collectors.toList());
         }
 
@@ -271,7 +295,7 @@ public class ClinicService {
                         .filter(s -> !s.isBlank())
                         .map(name -> {
                             Specialization sp = new Specialization();
-                            sp.setName(name);
+                            sp.setName(SpecializationNameNormalizer.toDisplayName(name));
                             return sp;
                         })
                         .collect(Collectors.toList()));
@@ -301,10 +325,24 @@ public class ClinicService {
                 if (specIds.isEmpty()) {
                     continue;
                 }
+                Set<String> existingCanonical = clinic.getSpecializations().stream()
+                        .map(Specialization::getName)
+                        .map(SpecializationNameNormalizer::toCanonicalKey)
+                        .filter(key -> !key.isBlank())
+                        .collect(Collectors.toSet());
                 for (Long specId : specIds) {
                     Specialization specialization = specMap.get(specId);
                     if (specialization != null) {
-                        clinic.getSpecializations().add(specialization);
+                        String canonical = SpecializationNameNormalizer.toCanonicalKey(specialization.getName());
+                        if (canonical.isBlank() || existingCanonical.contains(canonical)) {
+                            continue;
+                        }
+
+                        Specialization normalized = new Specialization();
+                        normalized.setId(specialization.getId());
+                        normalized.setName(SpecializationNameNormalizer.toDisplayName(specialization.getName()));
+                        clinic.getSpecializations().add(normalized);
+                        existingCanonical.add(canonical);
                     }
                 }
             }
@@ -326,6 +364,9 @@ public class ClinicService {
                 for (JsonNode node : specsResult) {
                     JsonNode data = node.has("specializations") ? node.get("specializations") : node;
                     Specialization specialization = objectMapper.convertValue(data, Specialization.class);
+                    if (specialization != null && specialization.getName() != null) {
+                        specialization.setName(SpecializationNameNormalizer.toDisplayName(specialization.getName()));
+                    }
                     if (specialization != null && specialization.getId() != null) {
                         specMap.putIfAbsent(specialization.getId(), specialization);
                     }
@@ -433,23 +474,28 @@ public class ClinicService {
         List<String> specNames = request.getSpecializations();
 
         if ((specIds == null || specIds.isEmpty()) && specNames != null && !specNames.isEmpty()) {
-            specIds = new ArrayList<>();
+            Set<Long> uniqueSpecIds = new LinkedHashSet<>();
             Map<String, Long> nameToId = loadSpecializationNameMap();
             for (String name : specNames) {
                 if (name == null || name.isBlank()) {
                     continue;
                 }
-                Long id = nameToId.get(name.toLowerCase());
+                String canonical = SpecializationNameNormalizer.toCanonicalKey(name);
+                if (canonical.isBlank()) {
+                    continue;
+                }
+                Long id = nameToId.get(canonical);
                 if (id == null) {
                     id = createSpecialization(name);
                     if (id != null) {
-                        nameToId.put(name.toLowerCase(), id);
+                        nameToId.put(canonical, id);
                     }
                 }
                 if (id != null) {
-                    specIds.add(id);
+                    uniqueSpecIds.add(id);
                 }
             }
+            specIds = new ArrayList<>(uniqueSpecIds);
         }
 
         if (clinicId != null && specIds != null && !specIds.isEmpty()) {
@@ -502,20 +548,25 @@ public class ClinicService {
         List<String> specNames = request.getSpecializations();
 
         if ((specIds == null || specIds.isEmpty()) && specNames != null && !specNames.isEmpty()) {
-            specIds = new ArrayList<>();
+            Set<Long> uniqueSpecIds = new LinkedHashSet<>();
             Map<String, Long> nameToId = loadSpecializationNameMap();
             for (String name : specNames) {
                 if (name == null || name.isBlank())
                     continue;
-                Long specId = nameToId.get(name.toLowerCase());
+                String canonical = SpecializationNameNormalizer.toCanonicalKey(name);
+                if (canonical.isBlank()) {
+                    continue;
+                }
+                Long specId = nameToId.get(canonical);
                 if (specId == null) {
                     specId = createSpecialization(name);
                     if (specId != null)
-                        nameToId.put(name.toLowerCase(), specId);
+                        nameToId.put(canonical, specId);
                 }
                 if (specId != null)
-                    specIds.add(specId);
+                    uniqueSpecIds.add(specId);
             }
+            specIds = new ArrayList<>(uniqueSpecIds);
         }
 
         if (specIds != null && !specIds.isEmpty()) {
@@ -543,11 +594,17 @@ public class ClinicService {
                 JsonNode data = node.has("specializations") ? node.get("specializations") : node;
                 Specialization spec = objectMapper.convertValue(data, Specialization.class);
                 if (spec.getName() != null && spec.getId() != null) {
-                    map.put(spec.getName().toLowerCase(), spec.getId());
+                    String canonical = SpecializationNameNormalizer.toCanonicalKey(spec.getName());
+                    if (!canonical.isBlank()) {
+                        map.putIfAbsent(canonical, spec.getId());
+                    }
                 } else if (spec.getName() != null) {
                     Long id = extractId(data);
                     if (id != null) {
-                        map.put(spec.getName().toLowerCase(), id);
+                        String canonical = SpecializationNameNormalizer.toCanonicalKey(spec.getName());
+                        if (!canonical.isBlank()) {
+                            map.putIfAbsent(canonical, id);
+                        }
                     }
                 }
             }
@@ -556,8 +613,13 @@ public class ClinicService {
     }
 
     private Long createSpecialization(String name) {
+        String displayName = SpecializationNameNormalizer.toDisplayName(name);
+        if (displayName.isBlank()) {
+            displayName = name;
+        }
+
         Map<String, Object> values = new HashMap<>();
-        values.put("name", name);
+        values.put("name", displayName);
         JsonNode created = dataStoreService.insertRecord("specializations", values);
         Long createdId = extractId(created);
         if (createdId != null) {
@@ -567,7 +629,7 @@ public class ClinicService {
 
         // Some deployments expose column as "specialization" instead of "name".
         Map<String, Object> fallbackValues = new HashMap<>();
-        fallbackValues.put("specialization", name);
+        fallbackValues.put("specialization", displayName);
         JsonNode fallbackCreated = dataStoreService.insertRecord("specializations", fallbackValues);
         invalidateSpecializationsCache();
         return extractId(fallbackCreated);
@@ -646,11 +708,27 @@ public class ClinicService {
     private int getMatchCount(Clinic clinic, List<String> normalizedSpecs) {
         if (normalizedSpecs == null || normalizedSpecs.isEmpty())
             return 0;
+
         return (int) clinic.getSpecializations().stream()
                 .map(Specialization::getName)
                 .filter(spec -> spec != null && !spec.isBlank())
-                .map(String::toLowerCase)
+                .map(SpecializationNameNormalizer::toCanonicalKey)
+                .filter(key -> !key.isBlank())
+                .distinct()
                 .filter(normalizedSpecs::contains)
                 .count();
+    }
+
+    private boolean specializationMatchesSearch(String specializationName, String searchLower) {
+        if (specializationName == null || specializationName.isBlank()) {
+            return false;
+        }
+        String canonicalSpec = SpecializationNameNormalizer.toCanonicalKey(specializationName);
+        String canonicalSearch = SpecializationNameNormalizer.toCanonicalKey(searchLower);
+        return specializationName.toLowerCase().contains(searchLower)
+                || (!canonicalSpec.isBlank()
+                        && (!canonicalSearch.isBlank()
+                                ? canonicalSpec.contains(canonicalSearch)
+                                : canonicalSpec.contains(searchLower)));
     }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
 
@@ -6,6 +6,200 @@ interface Specialization {
   id: string | number;
   name: string;
 }
+
+const SPECIALTY_CANONICAL_ALIASES: Record<string, string> = {
+  general: "general medicine",
+  "general physician": "general medicine",
+  "internal medicine": "general medicine",
+  "family medicine": "family medicine",
+  "general surgery": "general surgery",
+  "surgical oncology": "oncology",
+  oncology: "oncology",
+  "surgical gastroenterology": "gastroenterology",
+  gastroenterology: "gastroenterology",
+  "anaesthesia": "anesthesiology",
+  "anaesthesiology": "anesthesiology",
+  "anaethesiology": "anesthesiology",
+  "orthopaedics": "orthopedics",
+  "paediatrics": "pediatrics",
+  pediatrics: "pediatrics",
+  dermatology: "dermatology",
+  dermatologist: "dermatology",
+  cardiology: "cardiology",
+  cardiologist: "cardiology",
+  neurology: "neurology",
+  neurologist: "neurology",
+  nephrology: "nephrology",
+  nephrologist: "nephrology",
+  pulmonology: "pulmonology",
+  pulmonologist: "pulmonology",
+  urology: "urology",
+  urologist: "urology",
+  radiology: "radiology",
+  radiologist: "radiology",
+  pathology: "pathology",
+  pathologist: "pathology",
+  psychiatry: "psychiatry",
+  psychiatrist: "psychiatry",
+  rheumatology: "rheumatology",
+  geriatrics: "geriatrics",
+  endocrinology: "endocrinology",
+  hematology: "hematology",
+  "emergency medicine": "emergency medicine",
+  "plastic surgery": "plastic surgery",
+  "nuclear medicine": "nuclear medicine",
+  "physiotherapy": "physiotherapy",
+  "physical medicine": "physiotherapy",
+  "physical medicine and rehabilitation": "physiotherapy",
+  "dentist": "dentist",
+  "dentistry": "dentist",
+  "dental surgery": "dentist",
+  "dental": "dentist",
+  "ent specialist": "ent",
+  "ear nose throat": "ent",
+  "ear nose and throat": "ent",
+  "ear nose & throat": "ent",
+  "neuro surgery": "neurosurgery",
+  "cardiothoracic surgery": "ct surgery",
+  "cardio thoracic surgery": "ct surgery",
+  "obg": "gynecology obstetrics",
+  gynecology: "gynecology obstetrics",
+  gynaecology: "gynecology obstetrics",
+  obstetrics: "gynecology obstetrics",
+  "obstetrics and gynecology": "gynecology obstetrics",
+  "obstetrics & gynecology": "gynecology obstetrics",
+  "obstetrics and gynaecology": "gynecology obstetrics",
+  "obstetrics & gynaecology": "gynecology obstetrics",
+};
+
+const SPECIALTY_DISPLAY_NAMES: Record<string, string> = {
+  "general surgery": "General Surgery",
+  "general medicine": "General Medicine",
+  pediatrics: "Pediatrics",
+  orthopedics: "Orthopedics",
+  "gynecology obstetrics": "Gynecology & Obstetrics",
+  dermatology: "Dermatology",
+  ent: "ENT",
+  cardiology: "Cardiology",
+  dentist: "Dentistry",
+  neurology: "Neurology",
+  anesthesiology: "Anesthesiology",
+  nephrology: "Nephrology",
+  urology: "Urology",
+  gastroenterology: "Gastroenterology",
+  pulmonology: "Pulmonology",
+  radiology: "Radiology",
+  pathology: "Pathology",
+  psychiatry: "Psychiatry",
+  endocrinology: "Endocrinology",
+  oncology: "Oncology",
+  hematology: "Hematology",
+  rheumatology: "Rheumatology",
+  geriatrics: "Geriatrics",
+  "family medicine": "Family Medicine",
+  "emergency medicine": "Emergency Medicine",
+  physiotherapy: "Physiotherapy",
+  "plastic surgery": "Plastic Surgery",
+  neurosurgery: "Neurosurgery",
+  "ct surgery": "CT Surgery",
+  "nuclear medicine": "Nuclear Medicine",
+  dialysis: "Dialysis",
+};
+
+const SPECIALTY_PRIORITY_ORDER = [
+  "general surgery",
+  "general medicine",
+  "pediatrics",
+  "orthopedics",
+  "gynecology obstetrics",
+  "dermatology",
+  "ent",
+  "cardiology",
+  "dentist",
+  "neurology",
+  "anesthesiology",
+  "nephrology",
+  "urology",
+  "gastroenterology",
+  "pulmonology",
+  "radiology",
+  "psychiatry",
+  "family medicine",
+  "emergency medicine",
+  "pathology",
+  "endocrinology",
+  "oncology",
+  "hematology",
+  "rheumatology",
+  "geriatrics",
+  "physiotherapy",
+  "plastic surgery",
+  "neurosurgery",
+  "ct surgery",
+  "nuclear medicine",
+  "dialysis",
+] as const;
+
+const SPECIALTY_PRIORITY_RANK = new Map<string, number>(
+  SPECIALTY_PRIORITY_ORDER.map((specialty, index) => [specialty, index])
+);
+
+const toCanonicalSpecialty = (value: string) => {
+  const normalized = (value || "")
+    .toLowerCase()
+    .replace(/&/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  return SPECIALTY_CANONICAL_ALIASES[normalized] || normalized;
+};
+
+const toDisplaySpecialty = (value: string) => {
+  const canonical = toCanonicalSpecialty(value);
+  return SPECIALTY_DISPLAY_NAMES[canonical] || value;
+};
+
+const resolveCityFromCoordinates = async (latitude: number, longitude: number) => {
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    );
+    const data = await response.json();
+
+    const primary = (data.city || "").trim();
+    if (primary) {
+      return primary;
+    }
+  } catch (e) {
+    console.error("Error getting location name from BigDataCloud:", e);
+  }
+
+  try {
+    const fallbackResponse = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+    );
+    const fallbackData = await fallbackResponse.json();
+    const address = fallbackData?.address || {};
+
+    return (
+      address.city ||
+      address.town ||
+      address.municipality ||
+      address.county ||
+      address.state_district ||
+      address.state ||
+      "Vijayawada"
+    );
+  } catch (e) {
+    console.error("Error getting location name from Nominatim:", e);
+    return "Vijayawada";
+  }
+};
 
 const HospitalSearch = () => {
   const navigate = useNavigate();
@@ -20,14 +214,8 @@ const HospitalSearch = () => {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const response = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            const data = await response.json();
-            if (data.city) setSelectedLocation(data.city);
-            else if (data.locality) setSelectedLocation(data.locality);
-            else if (data.principalSubdivision) setSelectedLocation(data.principalSubdivision);
-            else setSelectedLocation("Vijayawada");
+            const city = await resolveCityFromCoordinates(latitude, longitude);
+            setSelectedLocation(city);
           } catch (e) {
             console.error("Error getting location name:", e);
             setSelectedLocation("Vijayawada");
@@ -49,8 +237,8 @@ const HospitalSearch = () => {
 
   const handleSearch = () => {
     const params = new URLSearchParams({
-      q: encodeURIComponent(searchText),
-      loc: encodeURIComponent(selectedLocation),
+      q: searchText,
+      loc: selectedLocation,
     });
     navigate(`/find-hospitals?${params.toString()}`);
   };
@@ -61,23 +249,19 @@ const HospitalSearch = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
+          let resolvedCity = "Vijayawada";
           try {
-            const response = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            const data = await response.json();
-            if (data.city) setSelectedLocation(data.city);
-            else if (data.locality) setSelectedLocation(data.locality);
-            else setSelectedLocation(`${data.principalSubdivision} (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+            resolvedCity = await resolveCityFromCoordinates(latitude, longitude);
+            setSelectedLocation(resolvedCity);
           } catch (e) {
             console.error("Error getting location name:", e);
-            setSelectedLocation(`(${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+            setSelectedLocation("Vijayawada");
           } finally {
             setIsGettingLocation(false);
             const params = new URLSearchParams({
               lat: latitude.toString(),
               lng: longitude.toString(),
-              loc: selectedLocation,
+              loc: resolvedCity,
             });
             navigate(`/find-hospitals?${params.toString()}`);
           }
@@ -207,6 +391,33 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
   const [specialties, setSpecialties] = useState<Specialization[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const navigate = useNavigate();
+  const uniqueSpecialties = useMemo(() => {
+    const seen = new Map<string, Specialization>();
+
+    for (const spec of specialties) {
+      const canonical = toCanonicalSpecialty(spec.name);
+      if (!canonical || seen.has(canonical)) {
+        continue;
+      }
+      seen.set(canonical, {
+        ...spec,
+        name: toDisplaySpecialty(spec.name),
+      });
+    }
+
+    return Array.from(seen.entries())
+      .sort(([leftCanonical, leftSpec], [rightCanonical, rightSpec]) => {
+        const leftRank = SPECIALTY_PRIORITY_RANK.get(leftCanonical) ?? Number.MAX_SAFE_INTEGER;
+        const rightRank = SPECIALTY_PRIORITY_RANK.get(rightCanonical) ?? Number.MAX_SAFE_INTEGER;
+
+        if (leftRank !== rightRank) {
+          return leftRank - rightRank;
+        }
+
+        return leftSpec.name.localeCompare(rightSpec.name);
+      })
+      .map(([, spec]) => spec);
+  }, [specialties]);
 
   useEffect(() => {
     const fetchSpecialties = async () => {
@@ -220,14 +431,16 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
         console.error("Failed to fetch specializations:", error);
         // Fallback to hardcoded list if API fails
         setSpecialties([
-          { id: 1, name: "Dermatologist" },
-          { id: 2, name: "Dentist" },
-          { id: 3, name: "Cardiologist" },
-          { id: 4, name: "ENT Specialist" },
-          { id: 5, name: "General Physician" },
-          { id: 6, name: "Pediatrician" },
-          { id: 7, name: "Gynecologist" },
-          { id: 8, name: "Neurologist" },
+          { id: 1, name: "General Surgery" },
+          { id: 2, name: "General Medicine" },
+          { id: 3, name: "Pediatrics" },
+          { id: 4, name: "Orthopedics" },
+          { id: 5, name: "Gynecology & Obstetrics" },
+          { id: 6, name: "Dermatology" },
+          { id: 7, name: "ENT" },
+          { id: 8, name: "Cardiology" },
+          { id: 9, name: "Dentistry" },
+          { id: 10, name: "Neurology" },
         ]);
       }
     };
@@ -245,12 +458,12 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
 
     // Build params for navigation using current search text and selected location
     const params = new URLSearchParams({
-      q: encodeURIComponent(searchText),
-      loc: encodeURIComponent(selectedLocation),
+      q: searchText,
+      loc: selectedLocation,
     });
 
     // Append all selected specs as repeated params
-    nextSelection.forEach((spec) => params.append("spec", encodeURIComponent(spec)));
+    nextSelection.forEach((spec) => params.append("spec", spec));
 
     navigate(`/find-hospitals?${params.toString()}`);
   };
@@ -287,9 +500,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
         id="specialties-container"
         className="flex flex-1 gap-2 overflow-x-auto pb-2"
       >
-        {specialties
-          .filter((s, i, arr) => arr.findIndex(x => x.name === s.name) === i)
-          .map((s, index) => (
+        {uniqueSpecialties.map((s, index) => (
             <button
               key={`${s.id}-${index}`}
               className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors border ${selectedSpecializations.includes(s.name)
@@ -298,9 +509,7 @@ function SpecialtyFilters({ searchText, selectedLocation }: {
                 }`}
               onClick={() => handleSpecializationClick(s.name)}
             >
-              {s.name === "ENT" || s.name === "ENT Specialist"
-                ? "Ear, Nose & Throat"
-                : s.name}
+              {s.name}
             </button>
           ))}
       </div>

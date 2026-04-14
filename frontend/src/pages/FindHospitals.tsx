@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import HospitalSearch from "../components/HospitalSearch";
-import ProtectedRoute from "../components/ProtectedRoute";
 import { apiRequest } from "../api";
 
 import NearbyHospitals from "../components/NearbyHospitals";
@@ -65,6 +64,41 @@ const dataUrlToFile = async (dataUrl: string, fileName: string) => {
   return new File([blob], fileName, { type: "image/jpeg" });
 };
 
+const resolveCityFromCoordinates = async (latitude: number, longitude: number) => {
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    );
+    const data = await response.json();
+    const primary = (data.city || "").trim();
+    if (primary) {
+      return primary;
+    }
+  } catch (error) {
+    console.error("Error getting location from BigDataCloud:", error);
+  }
+
+  try {
+    const fallbackResponse = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+    );
+    const fallbackData = await fallbackResponse.json();
+    const address = fallbackData?.address || {};
+    return (
+      address.city ||
+      address.town ||
+      address.municipality ||
+      address.county ||
+      address.state_district ||
+      address.state ||
+      "Vijayawada"
+    );
+  } catch (error) {
+    console.error("Error getting location from Nominatim:", error);
+    return "Vijayawada";
+  }
+};
+
 const FindHospitals = () => {
   const location = useLocation();
 
@@ -107,7 +141,7 @@ const FindHospitals = () => {
 
     // If location is in URL params, use it; otherwise it will be detected from geolocation
     if (locParam) {
-      setSelectedLocation(decodeURIComponent(locParam));
+      setSelectedLocation(locParam);
     } else {
       // Try to detect user's city from geolocation
       const detectLocation = async () => {
@@ -142,19 +176,8 @@ const FindHospitals = () => {
         if (coords) {
           try {
             const { latitude, longitude } = coords;
-            const response = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            const data = await response.json();
-            if (data.city) {
-              setSelectedLocation(data.city);
-            } else if (data.locality) {
-              setSelectedLocation(data.locality);
-            } else if (data.principalSubdivision) {
-              setSelectedLocation(data.principalSubdivision);
-            } else {
-              setSelectedLocation("Vijayawada");
-            }
+            const city = await resolveCityFromCoordinates(latitude, longitude);
+            setSelectedLocation(city);
           } catch (error) {
             console.error("Error getting location:", error);
             setSelectedLocation("Vijayawada");
@@ -177,7 +200,7 @@ const FindHospitals = () => {
     setQuery(urlParams.get("q") || "");
     const specsParam = urlParams.getAll("spec");
     if (specsParam.length > 0) {
-      setSelectedSpecializations(specsParam.map((s) => decodeURIComponent(s)));
+      setSelectedSpecializations(specsParam);
     } else {
       setSelectedSpecializations([]);
     }
@@ -286,8 +309,8 @@ const FindHospitals = () => {
     setHospitalRequestError(null);
     setHospitalRequestSuccess(null);
 
-    if (!hospitalRequestForm.hospitalName.trim() || !hospitalRequestForm.address.trim() || !hospitalRequestForm.city.trim()) {
-      setHospitalRequestError("Hospital name, address, and city are required");
+    if (!hospitalRequestForm.hospitalName.trim() || !hospitalRequestForm.address.trim() || !hospitalRequestForm.city.trim() || !hospitalRequestForm.specializations.trim()) {
+      setHospitalRequestError("Hospital name, address, city, and specializations are required");
       return;
     }
 
@@ -416,7 +439,6 @@ const FindHospitals = () => {
 
 
   return (
-    <ProtectedRoute>
       <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
           <HospitalSearch />
@@ -515,7 +537,7 @@ const FindHospitals = () => {
             <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-5 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
-                  {showHospitalRequestForm ? "Send Hospital Add Request" : "Hospital Not Found"}
+                  {showHospitalRequestForm ? "Send Hospital Request" : "Hospital Not Found"}
                 </h3>
                 <button
                   type="button"
@@ -544,25 +566,37 @@ const FindHospitals = () => {
                 </div>
               ) : (
                 <form className="space-y-3" onSubmit={submitHospitalRequest}>
-                  <input
-                    value={hospitalRequestForm.hospitalName}
-                    onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, hospitalName: event.target.value }))}
-                    placeholder="Hospital Name"
-                    className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
-                  />
-                  <input
-                    value={hospitalRequestForm.address}
-                    onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, address: event.target.value }))}
-                    placeholder="Address"
-                    className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-gray-700 dark:text-slate-300 mb-1">Hospital Name *</label>
                     <input
-                      value={hospitalRequestForm.city}
-                      onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, city: event.target.value }))}
-                      placeholder="City"
+                      required
+                      value={hospitalRequestForm.hospitalName}
+                      onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, hospitalName: event.target.value }))}
+                      placeholder="Hospital Name"
                       className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 dark:text-slate-300 mb-1">Address *</label>
+                    <input
+                      required
+                      value={hospitalRequestForm.address}
+                      onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, address: event.target.value }))}
+                      placeholder="Address"
+                      className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-700 dark:text-slate-300 mb-1">City *</label>
+                      <input
+                        required
+                        value={hospitalRequestForm.city}
+                        onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, city: event.target.value }))}
+                        placeholder="City"
+                        className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
+                      />
+                    </div>
                     <input
                       value={hospitalRequestForm.phone}
                       onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, phone: event.target.value }))}
@@ -632,12 +666,16 @@ const FindHospitals = () => {
                       </div>
                     )}
                   </div>
-                  <input
-                    value={hospitalRequestForm.specializations}
-                    onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, specializations: event.target.value }))}
-                    placeholder="Specializations (comma separated)"
-                    className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
-                  />
+                  <div>
+                    <label className="block text-sm text-gray-700 dark:text-slate-300 mb-1">Specializations *</label>
+                    <input
+                      required
+                      value={hospitalRequestForm.specializations}
+                      onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, specializations: event.target.value }))}
+                      placeholder="Specializations (comma separated)"
+                      className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
+                    />
+                  </div>
 
                   {hospitalRequestError && (
                     <p className="text-sm text-red-600 dark:text-red-400">{hospitalRequestError}</p>
@@ -660,7 +698,6 @@ const FindHospitals = () => {
         )}
 
       </div>
-    </ProtectedRoute>
   );
 };
 

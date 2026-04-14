@@ -47,13 +47,13 @@ const proofTypes = [
 const CUSTOM_REVIEW_DOCTOR_META_KEY = "custom_review_doctor_meta_v1";
 
 const emptyRatings = {
-  explanationClarity: 5,
-  timeSpent: 5,
-  diagnosisConfidence: 5,
-  waitingTime: 5,
-  staffBehavior: 5,
-  cleanliness: 5,
-  overallExperience: 5,
+  explanationClarity: 0,
+  timeSpent: 0,
+  diagnosisConfidence: 0,
+  waitingTime: 0,
+  staffBehavior: 0,
+  cleanliness: 0,
+  overallExperience: 0,
 };
 
 export default function VerifiedReviewModal({
@@ -80,13 +80,13 @@ export default function VerifiedReviewModal({
   const [doctorName, setDoctorName] = useState("");
   const [doctorSpecialization, setDoctorSpecialization] = useState("");
   const [ratings, setRatings] = useState(editingReview?.ratings ? {
-    explanationClarity: editingReview.ratings.explanationClarity ?? 5,
-    timeSpent: editingReview.ratings.timeSpent ?? 5,
-    diagnosisConfidence: editingReview.ratings.diagnosisConfidence ?? 5,
-    waitingTime: editingReview.ratings.waitingTime ?? 5,
-    staffBehavior: editingReview.ratings.staffBehavior ?? 5,
-    cleanliness: editingReview.ratings.cleanliness ?? 5,
-    overallExperience: editingReview.ratings.overallExperience ?? 5,
+    explanationClarity: editingReview.ratings.explanationClarity ?? 0,
+    timeSpent: editingReview.ratings.timeSpent ?? 0,
+    diagnosisConfidence: editingReview.ratings.diagnosisConfidence ?? 0,
+    waitingTime: editingReview.ratings.waitingTime ?? 0,
+    staffBehavior: editingReview.ratings.staffBehavior ?? 0,
+    cleanliness: editingReview.ratings.cleanliness ?? 0,
+    overallExperience: editingReview.ratings.overallExperience ?? 0,
   } : emptyRatings);
   const [comment, setComment] = useState(editingReview?.comment ?? "");
   const [proofType, setProofType] = useState("");
@@ -110,13 +110,13 @@ export default function VerifiedReviewModal({
 
       if (editingReview?.ratings) {
         setRatings({
-          explanationClarity: editingReview.ratings.explanationClarity ?? 5,
-          timeSpent: editingReview.ratings.timeSpent ?? 5,
-          diagnosisConfidence: editingReview.ratings.diagnosisConfidence ?? 5,
-          waitingTime: editingReview.ratings.waitingTime ?? 5,
-          staffBehavior: editingReview.ratings.staffBehavior ?? 5,
-          cleanliness: editingReview.ratings.cleanliness ?? 5,
-          overallExperience: editingReview.ratings.overallExperience ?? 5,
+          explanationClarity: editingReview.ratings.explanationClarity ?? 0,
+          timeSpent: editingReview.ratings.timeSpent ?? 0,
+          diagnosisConfidence: editingReview.ratings.diagnosisConfidence ?? 0,
+          waitingTime: editingReview.ratings.waitingTime ?? 0,
+          staffBehavior: editingReview.ratings.staffBehavior ?? 0,
+          cleanliness: editingReview.ratings.cleanliness ?? 0,
+          overallExperience: editingReview.ratings.overallExperience ?? 0,
         });
       } else {
         setRatings(emptyRatings);
@@ -201,8 +201,7 @@ export default function VerifiedReviewModal({
       return String(doctors[0].id);
     }
 
-    // Project phase fallback: allow review submission even when hospital has no doctors configured yet.
-    return "0";
+    return "";
   };
 
   const handleStep1Next = () => {
@@ -220,6 +219,11 @@ export default function VerifiedReviewModal({
 
   const handleStep2Next = () => {
     setError(null);
+    const ratingValues = Object.values(ratings);
+    if (ratingValues.some((value) => value < 1 || value > 5)) {
+      setError("Please rate all categories before continuing");
+      return;
+    }
     if (!comment.trim()) {
       setError("Required: Describe your experience");
       return;
@@ -303,7 +307,9 @@ export default function VerifiedReviewModal({
       } else {
         const formData = new FormData();
         formData.append("hospitalId", String(hospitalId));
-        formData.append("doctorId", String(resolvedDoctorId));
+        if (resolvedDoctorId) {
+          formData.append("doctorId", String(resolvedDoctorId));
+        }
         formData.append("explanationClarity", String(ratings.explanationClarity));
         formData.append("timeSpent", String(ratings.timeSpent));
         formData.append("diagnosisConfidence", String(ratings.diagnosisConfidence));
@@ -442,7 +448,7 @@ export default function VerifiedReviewModal({
 
           {step === 1 && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 dark:text-slate-300">Step 1: Enter Doc details and rate ur visit</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Step 1: Enter doctor details and rate your visit (all fields are required *)</p>
               <input
                 list="doctor-name-options"
                 value={doctorName}

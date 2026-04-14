@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,12 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hospitalfinder.backend.dto.ClinicResponseDTO;
 import com.hospitalfinder.backend.dto.LoginResponse;
+import com.hospitalfinder.backend.dto.SignupCompleteRequestDTO;
+import com.hospitalfinder.backend.dto.SignupOtpRequestDTO;
+import com.hospitalfinder.backend.dto.SignupOtpVerifyDTO;
+import com.hospitalfinder.backend.dto.SignupOtpVerifyResponseDTO;
 import com.hospitalfinder.backend.dto.SignupRequest;
 import com.hospitalfinder.backend.dto.UserData;
 import com.hospitalfinder.backend.entity.Role;
 import com.hospitalfinder.backend.entity.User;
 import com.hospitalfinder.backend.service.ClinicService;
 import com.hospitalfinder.backend.service.JwtService;
+import com.hospitalfinder.backend.service.SignupOtpService;
 import com.hospitalfinder.backend.service.UserStoreService;
 
 import jakarta.servlet.http.Cookie;
@@ -34,17 +40,102 @@ public class SignupController {
     private final JwtService jwtService;
     private final UserStoreService userStoreService;
     private final ClinicService clinicService;
+    private final SignupOtpService signupOtpService;
 
     public SignupController(
-            JwtService jwtService, UserStoreService userStoreService, ClinicService clinicService) {
+            JwtService jwtService,
+            UserStoreService userStoreService,
+            ClinicService clinicService,
+            SignupOtpService signupOtpService) {
         this.jwtService = jwtService;
         this.userStoreService = userStoreService;
         this.clinicService = clinicService;
+        this.signupOtpService = signupOtpService;
     }
 
     @PostMapping("/signup")
     public ResponseEntity<LoginResponse> signup(@RequestBody SignupRequest request, HttpServletResponse response) {
-        return signupWithMongo(request, response);
+        return ResponseEntity.status(HttpStatus.GONE)
+                .body(new LoginResponse(false, "Use OTP-based signup flow", null, null, null, null, null));
+    }
+
+    @PostMapping("/signup/request-otp")
+    public ResponseEntity<?> requestSignupOtp(@RequestBody SignupOtpRequestDTO request) {
+        try {
+            if (request == null || request.getName() == null || request.getName().isBlank()
+                    || request.getEmail() == null || request.getEmail().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Name and email are required"));
+            }
+
+            String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+            if (userStoreService.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email already registered"));
+            }
+
+            signupOtpService.requestOtp(request.getName(), email);
+            return ResponseEntity.ok(Map.of("success", true, "message", "OTP sent to your email"));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("success", false, "message", ex.getMessage()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("success", false, "message", "Failed to send OTP email"));
+        }
+    }
+
+    @PostMapping("/signup/verify-otp")
+    public ResponseEntity<SignupOtpVerifyResponseDTO> verifySignupOtp(@RequestBody SignupOtpVerifyDTO request) {
+        try {
+            if (request == null || request.getName() == null || request.getName().isBlank()
+                    || request.getEmail() == null || request.getEmail().isBlank()
+                    || request.getOtp() == null || request.getOtp().isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(new SignupOtpVerifyResponseDTO(false, "Name, email and OTP are required", false, null));
+            }
+
+            String token = signupOtpService.verifyOtp(request.getName(), request.getEmail(), request.getOtp());
+            return ResponseEntity.ok(new SignupOtpVerifyResponseDTO(true, "Email verified", true, token));
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                    .body(new SignupOtpVerifyResponseDTO(false, ex.getMessage(), false, null));
+        }
+    }
+
+    @PostMapping("/signup/complete")
+    public ResponseEntity<LoginResponse> completeSignup(
+            @RequestBody SignupCompleteRequestDTO request,
+            HttpServletResponse response) {
+        if (request == null || request.getName() == null || request.getName().isBlank()
+                || request.getEmail() == null || request.getEmail().isBlank()
+                || request.getPassword() == null || request.getPassword().isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(new LoginResponse(false, "Name, email and password are required", null, null, null, null, null));
+        }
+
+        boolean validToken = signupOtpService.consumeVerificationToken(
+                request.getName(),
+                request.getEmail(),
+                request.getVerificationToken());
+
+        if (!validToken) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new LoginResponse(false, "Email verification required", null, null, null, null, null));
+        }
+
+        if (userStoreService.existsByEmail(request.getEmail().trim().toLowerCase(Locale.ROOT))) {
+            return ResponseEntity.badRequest()
+                    .body(new LoginResponse(false, "Email already registered", null, null, null, null, null));
+        }
+
+        SignupRequest signupRequest = new SignupRequest();
+        signupRequest.setName(request.getName());
+        signupRequest.setEmail(request.getEmail().trim().toLowerCase(Locale.ROOT));
+        signupRequest.setPassword(request.getPassword());
+        signupRequest.setPhone("");
+
+        return signupWithMongo(signupRequest, response);
     }
 
     @PostMapping("/partner/bootstrap")

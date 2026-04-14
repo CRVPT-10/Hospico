@@ -76,7 +76,7 @@ public class ReviewService {
             phoneVerified = true;
         }
 
-        enforceReviewThrottle(userId, reviewerPhone, reviewerIp, request.getDoctorId());
+        enforceReviewThrottle(userId, reviewerPhone, reviewerIp, request.getDoctorId(), request.getHospitalId());
 
         Review review = new Review();
         review.setHospitalId(request.getHospitalId());
@@ -447,9 +447,6 @@ public class ReviewService {
         if (request.getHospitalId() == null) {
             throw new IllegalArgumentException("hospitalId is required");
         }
-        if (request.getDoctorId() == null) {
-            throw new IllegalArgumentException("doctorId is required");
-        }
         if (request.getRatings() == null) {
             throw new IllegalArgumentException("ratings are required");
         }
@@ -469,22 +466,26 @@ public class ReviewService {
         }
     }
 
-        private void enforceReviewThrottle(Long userId, String reviewerPhone, String reviewerIp, Long doctorId) {
+        private void enforceReviewThrottle(Long userId, String reviewerPhone, String reviewerIp, Long doctorId, Long hospitalId) {
         LocalDateTime threshold = LocalDateTime.now().minusDays(30);
         String thresholdText = threshold.format(DATASTORE_DATE_TIME);
 
         String safeIp = sanitizeSqlValue(reviewerIp);
 
+        String doctorClause = doctorId != null
+            ? " AND doctor_id = '" + doctorId + "'"
+            : " AND clinic_id = '" + hospitalId + "'";
+
         String baseByUser = (userId != null && reviewerIp != null && !reviewerIp.isBlank())
             ? "SELECT * FROM reviews WHERE user_id = '" + userId + "' AND reviewer_ip = '" + safeIp
-                + "' AND doctor_id = '" + doctorId + "' AND created_at >= '" + thresholdText + "'"
+                + "'" + doctorClause + " AND created_at >= '" + thresholdText + "'"
             : null;
 
         String baseByPhone = (reviewerPhone != null && !reviewerPhone.isBlank() && reviewerIp != null
             && !reviewerIp.isBlank())
                 ? "SELECT * FROM reviews WHERE reviewer_phone = '" + sanitizeSqlValue(reviewerPhone)
-                    + "' AND reviewer_ip = '" + safeIp + "' AND doctor_id = '" + doctorId
-                    + "' AND created_at >= '" + thresholdText + "'"
+                    + "' AND reviewer_ip = '" + safeIp + "'" + doctorClause
+                    + " AND created_at >= '" + thresholdText + "'"
                 : null;
 
         if (existsAny(baseByUser) || existsAny(baseByPhone)) {

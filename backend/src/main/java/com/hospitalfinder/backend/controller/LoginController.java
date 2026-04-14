@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.hospitalfinder.backend.dto.GoogleLoginRequest;
 import com.hospitalfinder.backend.dto.LoginRequest;
 import com.hospitalfinder.backend.dto.LoginResponse;
 import com.hospitalfinder.backend.dto.UserData;
 import com.hospitalfinder.backend.entity.Role;
 import com.hospitalfinder.backend.entity.User;
+import com.hospitalfinder.backend.service.GoogleTokenVerifierService;
 import com.hospitalfinder.backend.service.JwtService;
 import com.hospitalfinder.backend.service.UserStoreService;
 
@@ -28,11 +31,17 @@ public class LoginController {
     private final UserStoreService userStoreService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final GoogleTokenVerifierService googleTokenVerifierService;
 
-    public LoginController(UserStoreService userStoreService, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public LoginController(
+            UserStoreService userStoreService,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            GoogleTokenVerifierService googleTokenVerifierService) {
         this.userStoreService = userStoreService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.googleTokenVerifierService = googleTokenVerifierService;
     }
 
     @PostMapping("/login")
@@ -43,6 +52,64 @@ public class LoginController {
     @PostMapping("/doctor/login")
     public ResponseEntity<LoginResponse> doctorLogin(@RequestBody LoginRequest request, HttpServletResponse response) {
         return performLogin(request, response, Role.DOCTOR, "Doctor login successful");
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request, HttpServletResponse response) {
+        if (request == null || request.getIdToken() == null || request.getIdToken().isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(new LoginResponse(false, "Google ID token is required", null, null, null, null, null));
+        }
+
+        try {
+            GoogleIdToken.Payload payload = googleTokenVerifierService.verify(request.getIdToken());
+            String email = payload.getEmail();
+
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new LoginResponse(false, "Google account email is missing", null, null, null, null, null));
+            }
+
+            UserData userData = userStoreService.findByEmail(email);
+            if (userData == null) {
+                String name = payload.get("name") != null ? payload.get("name").toString() : "Google User";
+                userData = userStoreService.createUser(
+                        name,
+                        email,
+                    "",
+                        java.util.UUID.randomUUID().toString(),
+                        Role.USER);
+            }
+
+            if (userData == null || userData.getId() == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new LoginResponse(false, "Failed to login with Google", null, null, null, null, null));
+            }
+
+            User user = new User();
+            user.setId(userData.getId());
+            user.setEmail(userData.getEmail());
+            user.setName(userData.getName());
+            user.setRole(userData.getRole() != null ? userData.getRole() : Role.USER);
+
+            String jwtToken = jwtService.generateToken(user);
+            setAuthCookies(response, jwtToken, user.getEmail());
+
+            return ResponseEntity.ok(new LoginResponse(
+                    true,
+                    "Google login successful",
+                    user.getId(),
+                    user.getEmail(),
+                    user.getName(),
+                    user.getRole(),
+                    jwtToken));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new LoginResponse(false, ex.getMessage(), null, null, null, null, null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new LoginResponse(false, "Invalid Google token", null, null, null, null, null));
+        }
     }
 
     private ResponseEntity<LoginResponse> performLogin(
@@ -72,23 +139,7 @@ public class LoginController {
         // Generate JWT token
         String jwtToken = jwtService.generateToken(user);
 
-        // Create JWT cookie
-        Cookie jwtCookie = new Cookie("jwt_token", jwtToken);
-        jwtCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
-        jwtCookie.setPath("/");
-        jwtCookie.setHttpOnly(true); // For security - prevents XSS
-        jwtCookie.setSecure(true); // Only sent over HTTPS
-        jwtCookie.setAttribute("SameSite", "None");
-        response.addCookie(jwtCookie);
-
-        // Create user info cookie (for frontend convenience)
-        Cookie userCookie = new Cookie("user_info", user.getEmail());
-        userCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
-        userCookie.setPath("/");
-        userCookie.setHttpOnly(false); // Allow JavaScript access
-        userCookie.setSecure(true);
-        userCookie.setAttribute("SameSite", "None");
-        response.addCookie(userCookie);
+        setAuthCookies(response, jwtToken, user.getEmail());
 
         return ResponseEntity.ok(new LoginResponse(
                 true,
@@ -156,5 +207,23 @@ public class LoginController {
                 userData.getName(),
                 userData.getRole(),
                 token));
+    }
+
+    private void setAuthCookies(HttpServletResponse response, String jwtToken, String email) {
+        Cookie jwtCookie = new Cookie("jwt_token", jwtToken);
+        jwtCookie.setMaxAge(7 * 24 * 60 * 60);
+        jwtCookie.setPath("/");
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true);
+        jwtCookie.setAttribute("SameSite", "None");
+        response.addCookie(jwtCookie);
+
+        Cookie userCookie = new Cookie("user_info", email);
+        userCookie.setMaxAge(7 * 24 * 60 * 60);
+        userCookie.setPath("/");
+        userCookie.setHttpOnly(false);
+        userCookie.setSecure(true);
+        userCookie.setAttribute("SameSite", "None");
+        response.addCookie(userCookie);
     }
 }

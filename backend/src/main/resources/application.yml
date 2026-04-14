@@ -8,6 +8,11 @@ groq:
   api:
     key: ${GROQ_API_KEY:}
 
+google:
+  oauth:
+    client-id: ${GOOGLE_CLIENT_ID:739900909331-8c366u1mjq8s99s9mdjr01eqvvjg67oc.apps.googleusercontent.com}
+    client-ids: ${GOOGLE_CLIENT_IDS:}
+
 server:
   port: ${X_ZOHO_CATALYST_LISTEN_PORT:${PORT:8080}}
   address: 0.0.0.0
@@ -15,6 +20,17 @@ server:
 spring:
   profiles:
     active: zoho
+  mail:
+    host: ${SPRING_MAIL_HOST:}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
   servlet:
     multipart:
       max-file-size: 25MB
@@ -55,3 +71,10 @@ springdoc:
 
 application:
   name: hospital-booking-backend
+
+app:
+  mail:
+    from: ${APP_MAIL_FROM:${SPRING_MAIL_USERNAME:}}
+  signup:
+    otp:
+      allow-console-fallback: ${APP_SIGNUP_OTP_ALLOW_CONSOLE_FALLBACK:false}

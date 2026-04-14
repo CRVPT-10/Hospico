@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 import defaultDoctorImage from "../assets/images/default-doctor.jpeg";
 import { API_BASE_URL, apiRequest } from "../api";
@@ -85,6 +85,7 @@ const CUSTOM_REVIEW_DOCTOR_META_KEY = "custom_review_doctor_meta_v1";
 
 const HospitalProfile = () => {
   const { id: routeId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const currentUserId = user?.id ? Number(user.id) : null;
 
@@ -103,6 +104,14 @@ const HospitalProfile = () => {
   const [defaultDoctorIdToReview, setDefaultDoctorIdToReview] = useState<string | number | null>(null);
   const [showBadgeInfo, setShowBadgeInfo] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+
+  const requireAuthForAction = () => {
+    if (user?.id) {
+      return true;
+    }
+    navigate("/login", { state: { from: `/find-hospital/${routeId}` } });
+    return false;
+  };
 
   const customReviewDoctorMeta = useMemo(() => {
     try {
@@ -351,9 +360,12 @@ const HospitalProfile = () => {
 
   const mapLatitude = parseCoordinate(hospital.latitude);
   const mapLongitude = parseCoordinate(hospital.longitude);
+  const fallbackMapParts = [hospital.name, hospital.address, hospital.city]
+    .map((part) => (part ?? "").trim())
+    .filter(Boolean);
   const mapQuery = mapLatitude != null && mapLongitude != null
     ? `${mapLatitude},${mapLongitude}`
-    : hospital.address?.trim();
+    : (fallbackMapParts.length > 0 ? fallbackMapParts.join(", ") : null);
   const mapOpenHref = mapQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`
     : null;
@@ -493,6 +505,7 @@ const HospitalProfile = () => {
           </div>
           <button
             onClick={() => {
+              if (!requireAuthForAction()) return;
               setEditingReview(null);
               setDefaultDoctorIdToReview(null);
               setShowReviewModal(true);
@@ -632,6 +645,7 @@ const HospitalProfile = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
+                            if (!requireAuthForAction()) return;
                             setEditingReview(review);
                             setShowReviewModal(true);
                           }}
@@ -866,6 +880,7 @@ const HospitalProfile = () => {
                     <div className="flex flex-col gap-3 items-stretch lg:items-end justify-center flex-shrink-0 lg:border-l border-gray-200 dark:border-slate-700 lg:pl-6 pt-4 lg:pt-0">
                       <button
                         onClick={() => {
+                          if (!requireAuthForAction()) return;
                           setActiveTab({});
                           setSelectedDoctorId(doctor.id);
                           setShowBookingModal(true);
@@ -876,6 +891,7 @@ const HospitalProfile = () => {
                       </button>
                       <button
                         onClick={() => {
+                          if (!requireAuthForAction()) return;
                           setEditingReview(null);
                           setDefaultDoctorIdToReview(doctor.id);
                           setShowReviewModal(true);

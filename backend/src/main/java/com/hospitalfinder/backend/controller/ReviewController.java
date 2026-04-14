@@ -65,7 +65,7 @@ public class ReviewController {
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createReview(
             @RequestParam("hospitalId") Long hospitalId,
-            @RequestParam("doctorId") Long doctorId,
+            @RequestParam(value = "doctorId", required = false) Long doctorId,
             @RequestParam("explanationClarity") Integer explanationClarity,
             @RequestParam("timeSpent") Integer timeSpent,
             @RequestParam("diagnosisConfidence") Integer diagnosisConfidence,

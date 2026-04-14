@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital } from "./HospitalCard";
 
+const sortByDistance = (items: Hospital[]) =>
+  [...items].sort((a, b) => {
+    const aDistance = a.distanceKm ?? a.distance ?? Number.POSITIVE_INFINITY;
+    const bDistance = b.distanceKm ?? b.distance ?? Number.POSITIVE_INFINITY;
+    return aDistance - bDistance;
+  });
+
 interface NearbyHospitalsProps {
   latitude: number;
   longitude: number;
@@ -21,7 +28,7 @@ const NearbyHospitals = ({ latitude, longitude }: NearbyHospitalsProps) => {
           `/api/clinics/nearby?lat=${latitude}&lng=${longitude}`,
           "GET"
         );
-        setHospitals(data);
+        setHospitals(sortByDistance(data || []));
       } catch (err) {
         setError((err as Error)?.message || "Failed to load nearby hospitals");
       } finally {

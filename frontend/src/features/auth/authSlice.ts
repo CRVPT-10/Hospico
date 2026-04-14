@@ -25,7 +25,9 @@ export type AuthState = {
 };
 
 type Credentials = { email: string; password: string };
+type GoogleCredentials = { idToken: string };
 type SignupPayload = { email: string; password: string; name?: string; phone?: string };
+type OtpCompleteSignupPayload = { email: string; password: string; name: string; verificationToken: string };
 const AUTH_USER_STORAGE_KEY = "auth_user";
 
 const persistAuthUser = (user: AuthUser) => {
@@ -93,6 +95,23 @@ export const doctorLogin = createAsyncThunk<AuthResponse, Credentials>(
   }
 );
 
+export const googleLogin = createAsyncThunk<AuthResponse, GoogleCredentials>(
+  "auth/googleLogin",
+  async (body, { rejectWithValue }) => {
+    try {
+      const result = await apiRequest<AuthResponse, GoogleCredentials>(
+        "/api/auth/google",
+        "POST",
+        body
+      );
+
+      return result;
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  }
+);
+
 export const partnerLogin = createAsyncThunk<AuthResponse, Credentials>(
   "auth/partnerLogin",
   async (body, { rejectWithValue }) => {
@@ -120,6 +139,23 @@ export const signup = createAsyncThunk<AuthResponse, SignupPayload>(
     try {
       const result = await apiRequest<AuthResponse, SignupPayload>(
         "/api/auth/signup",
+        "POST",
+        body
+      );
+
+      return result;
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  }
+);
+
+export const signupWithEmailOtp = createAsyncThunk<AuthResponse, OtpCompleteSignupPayload>(
+  "auth/signupWithEmailOtp",
+  async (body, { rejectWithValue }) => {
+    try {
+      const result = await apiRequest<AuthResponse, OtpCompleteSignupPayload>(
+        "/api/auth/signup/complete",
         "POST",
         body
       );
@@ -264,6 +300,43 @@ const authSlice = createSlice({
         state.initialized = true;
       });
 
+    // GOOGLE LOGIN
+    builder
+      .addCase(googleLogin.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.initialized = false;
+      })
+      .addCase(
+        googleLogin.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.status = "succeeded";
+          if (action.payload && action.payload.id) {
+            state.user = {
+              id: action.payload.id.toString(),
+              email: action.payload.email,
+              name: action.payload.name || undefined,
+              role: action.payload.role,
+            };
+            persistAuthUser(state.user);
+          }
+
+          if (action.payload && action.payload.token) {
+            localStorage.setItem('jwt_token', action.payload.token);
+          }
+
+          state.isAuthenticated = true;
+          state.initialized = true;
+        }
+      )
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.status = "failed";
+        state.error =
+          (action.payload as string) ?? action.error.message ?? "Google login failed";
+        state.isAuthenticated = false;
+        state.initialized = true;
+      });
+
     // PARTNER LOGIN
     builder
       .addCase(partnerLogin.pending, (state) => {
@@ -333,6 +406,41 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error =
           (action.payload as string) ?? action.error.message ?? "Signup failed";
+        state.isAuthenticated = false;
+        state.initialized = true;
+      });
+
+    // OTP SIGNUP COMPLETE
+    builder
+      .addCase(signupWithEmailOtp.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.initialized = false;
+      })
+      .addCase(
+        signupWithEmailOtp.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.status = "succeeded";
+          if (action.payload && action.payload.id) {
+            state.user = {
+              id: action.payload.id.toString(),
+              email: action.payload.email,
+              name: action.payload.name || undefined,
+              role: action.payload.role,
+            };
+            persistAuthUser(state.user);
+          }
+          if (action.payload && action.payload.token) {
+            localStorage.setItem('jwt_token', action.payload.token);
+          }
+          state.isAuthenticated = true;
+          state.initialized = true;
+        }
+      )
+      .addCase(signupWithEmailOtp.rejected, (state, action) => {
+        state.status = "failed";
+        state.error =
+          (action.payload as string) ?? action.error.message ?? "OTP signup failed";
         state.isAuthenticated = false;
         state.initialized = true;
       });
