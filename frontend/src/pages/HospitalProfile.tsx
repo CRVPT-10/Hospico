@@ -346,18 +346,6 @@ const HospitalProfile = () => {
 
   const hasReviewData = (reviewSummary?.totalReviews ?? reviews.length) > 0;
 
-  const parseCoordinate = (value: number | string | undefined) => {
-    if (typeof value === "number") {
-      return Number.isFinite(value) ? value : null;
-    }
-    if (typeof value === "string") {
-      const normalized = value.trim().replace(/,/g, ".");
-      const parsed = Number.parseFloat(normalized);
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-    return null;
-  };
-
   const fallbackMapParts = [hospital.name, hospital.address, hospital.city]
     .map((part) => (part ?? "").trim())
     .filter(Boolean);
