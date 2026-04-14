@@ -125,6 +125,28 @@ const splitCsv = (value: string) =>
     .map((entry) => entry.trim())
     .filter(Boolean);
 
+const formatDisplayDateTime = (value?: string) => {
+  if (!value) {
+    return "-";
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "-";
+  }
+
+  // Datastore values like "yyyy-MM-dd HH:mm:ss" are timezone-less; treat as UTC.
+  const normalized = trimmed.includes("T") ? trimmed : trimmed.replace(" ", "T");
+  const withZone = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(normalized) ? normalized : `${normalized}Z`;
+  const parsed = new Date(withZone);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed;
+  }
+
+  return parsed.toLocaleString();
+};
+
 const toClinicForm = (clinic: ClinicDetails): ClinicFormState => ({
   name: clinic.name || "",
   address: clinic.address || "",
@@ -331,6 +353,26 @@ export default function AdminDashboard() {
       }
       return `${API_BASE_URL}${value}`;
     }
+    return value;
+  };
+
+  const resolveApiUrl = (value?: string) => {
+    if (!value) {
+      return "";
+    }
+    if (/^(https?:|data:|blob:)/i.test(value)) {
+      return value;
+    }
+
+    if (value.startsWith("/")) {
+      if (!API_BASE_URL || API_BASE_URL === "/api") {
+        return value;
+      }
+
+      const base = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      return `${base}${value}`;
+    }
+
     return value;
   };
 
@@ -855,7 +897,7 @@ export default function AdminDashboard() {
                         </button>
                       </td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">
-                        {request.createdAt ? new Date(request.createdAt).toLocaleString() : "-"}
+                        {formatDisplayDateTime(request.createdAt)}
                       </td>
                       <td className="py-3 pr-4">
                         <div className="flex flex-col items-start gap-2">
@@ -985,13 +1027,13 @@ export default function AdminDashboard() {
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">{getClinicDisplay(review)}</td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">{review.proofType || "other"}</td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">
-                        {review.createdAt ? new Date(review.createdAt).toLocaleString() : "-"}
+                        {formatDisplayDateTime(review.createdAt)}
                       </td>
                       <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300 max-w-xs truncate">{review.comment || "-"}</td>
                       <td className="py-3 pr-4 text-sm">
                         {review.proofUrl ? (
                           <a
-                            href={review.proofUrl}
+                            href={resolveApiUrl(review.proofUrl)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 dark:text-blue-400 hover:underline"
