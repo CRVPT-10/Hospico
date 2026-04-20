@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Building2, CheckCircle2, RefreshCcw, Save, UserPlus, UserRoundPlus, XCircle } from "lucide-react";
 import { API_BASE_URL, apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital as HospitalCardData } from "../components/HospitalCard";
+import SpecializationDropdown from "../components/SpecializationDropdown";
 import type { RootState } from "../store/store";
 import { useTheme } from "../context/ThemeContext";
 
@@ -93,6 +94,11 @@ type HospitalAddRequest = {
 type ClinicImageUploadResponse = {
   imageUrl?: string;
   fileName?: string;
+};
+
+type SpecializationOption = {
+  id: string | number;
+  name: string;
 };
 
 const emptyClinicForm: ClinicFormState = {
@@ -227,6 +233,11 @@ const dataUrlToFile = async (dataUrl: string, fileName: string) => {
   return new File([blob], fileName, { type: "image/jpeg" });
 };
 
+const dedupeSpecializationNames = (items: SpecializationOption[]) =>
+  Array.from(new Set((items || []).map((item) => (item.name || "").trim()).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
 const toHospitalCardPreview = (id: string, form: ClinicFormState, imageUrlOverride?: string): HospitalCardData => {
   const parsedLatitude = form.latitude.trim() ? Number(form.latitude) : undefined;
   const parsedLongitude = form.longitude.trim() ? Number(form.longitude) : undefined;
@@ -253,6 +264,7 @@ export default function AdminDashboard() {
   const [selectedClinicId, setSelectedClinicId] = useState("");
   const [hospitalError, setHospitalError] = useState<string | null>(null);
   const [hospitalSuccess, setHospitalSuccess] = useState<string | null>(null);
+  const [specializationOptions, setSpecializationOptions] = useState<string[]>([]);
 
   const [addHospitalForm, setAddHospitalForm] = useState<ClinicFormState>(emptyClinicForm);
   const [editHospitalForm, setEditHospitalForm] = useState<ClinicFormState>(emptyClinicForm);
@@ -352,7 +364,7 @@ export default function AdminDashboard() {
       return value;
     }
     if (value.startsWith("/")) {
-      if (!API_BASE_URL || API_BASE_URL === "/api" || API_BASE_URL.endsWith("/api")) {
+      if (!API_BASE_URL || API_BASE_URL === "/api") {
         return value;
       }
       return `${API_BASE_URL}${value}`;
@@ -398,6 +410,17 @@ export default function AdminDashboard() {
       setHospitalError((err as Error).message || "Failed to load hospitals");
     } finally {
       setLoadingHospitals(false);
+    }
+  };
+
+  const loadSpecializations = async () => {
+    try {
+      const response = await apiRequest<SpecializationOption[]>("/api/specializations", "GET", undefined, {
+        cacheTtlMs: 10 * 60 * 1000,
+      });
+      setSpecializationOptions(dedupeSpecializationNames(response || []));
+    } catch {
+      setSpecializationOptions([]);
     }
   };
 
@@ -613,6 +636,7 @@ export default function AdminDashboard() {
     void loadHospitals();
     void loadPendingProofs();
     void loadPendingHospitalRequests();
+    void loadSpecializations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1231,11 +1255,12 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
-              <input
-                value={editHospitalForm.specializations}
-                onChange={(event) => setEditHospitalForm((prev) => ({ ...prev, specializations: event.target.value }))}
-                placeholder="Specializations (comma separated)"
-                className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
+              <SpecializationDropdown
+                label="Specializations"
+                required
+                options={specializationOptions}
+                valueCsv={editHospitalForm.specializations}
+                onChangeCsv={(value) => setEditHospitalForm((prev) => ({ ...prev, specializations: value }))}
               />
               <button
                 type="submit"
@@ -1333,11 +1358,12 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
-              <input
-                value={addHospitalForm.specializations}
-                onChange={(event) => setAddHospitalForm((prev) => ({ ...prev, specializations: event.target.value }))}
-                placeholder="Specializations (comma separated)"
-                className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
+              <SpecializationDropdown
+                label="Specializations"
+                required
+                options={specializationOptions}
+                valueCsv={addHospitalForm.specializations}
+                onChangeCsv={(value) => setAddHospitalForm((prev) => ({ ...prev, specializations: value }))}
               />
               <button
                 type="submit"

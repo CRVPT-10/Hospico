@@ -45,7 +45,7 @@ const HospitalCard = ({
             return value;
         }
         if (value.startsWith("/")) {
-            if (!API_BASE_URL || API_BASE_URL === "/api" || API_BASE_URL.endsWith("/api")) {
+            if (!API_BASE_URL || API_BASE_URL === "/api") {
                 return value;
             }
             return `${API_BASE_URL}${value}`;

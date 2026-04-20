@@ -7,6 +7,7 @@ import HospitalSearch from "../components/HospitalSearch";
 import { apiRequest } from "../api";
 import type { RootState } from "../store/store";
 import { useTheme } from "../context/ThemeContext";
+import SpecializationDropdown from "../components/SpecializationDropdown";
 
 import NearbyHospitals from "../components/NearbyHospitals";
 import HospitalCardComponent, { type Hospital as HospitalType } from "../components/HospitalCard";
@@ -15,6 +16,11 @@ type Hospital = HospitalType;
 
 const INITIAL_HOSPITAL_BATCH = 12;
 const LOAD_MORE_BATCH = 12;
+
+type SpecializationOption = {
+  id: string | number;
+  name: string;
+};
 
 const isAllowedHospitalImageType = (file: File) =>
   ["image/jpeg", "image/jpg", "image/png"].includes(file.type.toLowerCase());
@@ -66,6 +72,11 @@ const dataUrlToFile = async (dataUrl: string, fileName: string) => {
   const blob = await response.blob();
   return new File([blob], fileName, { type: "image/jpeg" });
 };
+
+const dedupeSpecializationNames = (items: SpecializationOption[]) =>
+  Array.from(new Set((items || []).map((item) => (item.name || "").trim()).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b)
+  );
 
 const resolveCityFromCoordinates = async (latitude: number, longitude: number) => {
   try {
@@ -139,6 +150,22 @@ const FindHospitals = () => {
   const [hospitalRequestImagePreview, setHospitalRequestImagePreview] = useState<string | null>(null);
   const [showHospitalRequestImagePreview, setShowHospitalRequestImagePreview] = useState(false);
   const [hospitalRequestImageUploading, setHospitalRequestImageUploading] = useState(false);
+  const [specializationOptions, setSpecializationOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadSpecializations = async () => {
+      try {
+        const response = await apiRequest<SpecializationOption[]>("/api/specializations", "GET", undefined, {
+          cacheTtlMs: 10 * 60 * 1000,
+        });
+        setSpecializationOptions(dedupeSpecializationNames(response || []));
+      } catch {
+        setSpecializationOptions([]);
+      }
+    };
+
+    void loadSpecializations();
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -674,16 +701,13 @@ const FindHospitals = () => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-700 dark:text-slate-300 mb-1">Specializations *</label>
-                    <input
-                      required
-                      value={hospitalRequestForm.specializations}
-                      onChange={(event) => setHospitalRequestForm((prev) => ({ ...prev, specializations: event.target.value }))}
-                      placeholder="Specializations (comma separated)"
-                      className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-gray-900 dark:text-slate-100"
-                    />
-                  </div>
+                  <SpecializationDropdown
+                    label="Specializations"
+                    required
+                    options={specializationOptions}
+                    valueCsv={hospitalRequestForm.specializations}
+                    onChangeCsv={(value) => setHospitalRequestForm((prev) => ({ ...prev, specializations: value }))}
+                  />
 
                   {hospitalRequestError && (
                     <p className="text-sm text-red-600 dark:text-red-400">{hospitalRequestError}</p>

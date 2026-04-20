@@ -296,7 +296,7 @@ const HospitalProfile = () => {
     }
 
     if (imageUrl.startsWith("/")) {
-      if (!API_BASE_URL || API_BASE_URL === "/api" || API_BASE_URL.endsWith("/api")) {
+      if (!API_BASE_URL || API_BASE_URL === "/api") {
         return imageUrl;
       }
       return `${API_BASE_URL}${imageUrl}`;
