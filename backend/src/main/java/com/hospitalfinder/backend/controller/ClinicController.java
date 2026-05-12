@@ -21,8 +21,8 @@ import com.hospitalfinder.backend.dto.ClinicRequestDTO;
 import com.hospitalfinder.backend.dto.ClinicResponseDTO;
 import com.hospitalfinder.backend.dto.ClinicSummaryDTO;
 import com.hospitalfinder.backend.dto.NearbyClinicDTO;
-import com.hospitalfinder.backend.service.ClinicImageStorageService;
 import com.hospitalfinder.backend.service.ClinicService;
+import com.hospitalfinder.backend.service.ZohoFileStorageService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class ClinicController {
 
     private final ClinicService clinicService;
-    private final ClinicImageStorageService clinicImageStorageService;
+    private final ZohoFileStorageService zohoFileStorageService;
 
     @GetMapping
     public List<ClinicSummaryDTO> getClinics(
@@ -90,7 +90,8 @@ public class ClinicController {
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadClinicImage(@RequestParam("file") MultipartFile file) {
         try {
-            ClinicImageStorageService.StoredClinicImage storedImage = clinicImageStorageService.storeImage(file);
+            // Use Zoho File Store (integrated with your Zoho account)
+            ZohoFileStorageService.StoredClinicImage storedImage = zohoFileStorageService.storeImage(file);
             return ResponseEntity.ok(Map.of(
                     "imageUrl", storedImage.getImageUrl(),
                     "fileName", storedImage.getFileName()));
@@ -104,9 +105,10 @@ public class ClinicController {
     @GetMapping("/image/{fileName:.+}")
     public ResponseEntity<byte[]> getClinicImage(@PathVariable String fileName) {
         try {
-            byte[] data = clinicImageStorageService.readImage(fileName);
+            // Retrieve from Zoho File Store
+            byte[] data = zohoFileStorageService.readImage(fileName);
             return ResponseEntity.ok()
-                    .contentType(clinicImageStorageService.resolveImageMediaType(fileName))
+                    .contentType(zohoFileStorageService.resolveImageMediaType(fileName))
                     .body(data);
         } catch (IOException e) {
             return ResponseEntity.notFound().build();

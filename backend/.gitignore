@@ -1,5 +1,6 @@
 HELP.md
 target/
+uploads/
 # Local secrets — never commit
 src/main/resources/application-zoho.properties
 !.mvn/wrapper/maven-wrapper.jar

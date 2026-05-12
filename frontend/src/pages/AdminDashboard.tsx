@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Building2, CheckCircle2, RefreshCcw, Save, UserPlus, UserRoundPlus, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, RefreshCcw, Save, Trash2, UserPlus, UserRoundPlus, XCircle } from "lucide-react";
 import { API_BASE_URL, apiRequest } from "../api";
 import HospitalCardComponent, { type Hospital as HospitalCardData } from "../components/HospitalCard";
 import SpecializationDropdown from "../components/SpecializationDropdown";
@@ -133,6 +133,52 @@ const splitCsv = (value: string) =>
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
+
+const NAME_STOP_WORDS = new Set([
+  "p",
+  "pvt",
+  "private",
+  "ltd",
+  "limited",
+  "llp",
+  "inc",
+  "co",
+  "company",
+  "the",
+]);
+
+const normalizeHospitalName = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0 && !NAME_STOP_WORDS.has(token))
+    .join(" ");
+
+const isPotentialNameDuplicate = (typedName: string, existingName: string) => {
+  const typed = normalizeHospitalName(typedName);
+  const existing = normalizeHospitalName(existingName);
+
+  if (!typed || !existing) {
+    return false;
+  }
+
+  if (typed === existing || typed.includes(existing) || existing.includes(typed)) {
+    return true;
+  }
+
+  const typedTokens = typed.split(" ");
+  const existingTokens = new Set(existing.split(" "));
+  const commonCount = typedTokens.filter((token) => existingTokens.has(token)).length;
+
+  if (typedTokens.length === 1) {
+    const token = typedTokens[0];
+    return token.length >= 3 && Array.from(existingTokens).some((existingToken) => existingToken.startsWith(token));
+  }
+
+  return commonCount / typedTokens.length >= 0.6;
+};
 
 const formatDisplayDateTime = (value?: string) => {
   if (!value) {
@@ -276,6 +322,8 @@ export default function AdminDashboard() {
   const [showEditHospitalImagePreview, setShowEditHospitalImagePreview] = useState(false);
   const [showAddHospitalImagePreview, setShowAddHospitalImagePreview] = useState(false);
   const [hospitalImageUploading, setHospitalImageUploading] = useState<"add" | "edit" | null>(null);
+  const [showDeleteHospitalConfirm, setShowDeleteHospitalConfirm] = useState(false);
+  const [deletingHospital, setDeletingHospital] = useState(false);
 
   const [doctorCreateForm, setDoctorCreateForm] = useState<DoctorFormState>(emptyDoctorForm);
   const [doctorAssignForm, setDoctorAssignForm] = useState<DoctorFormState>(emptyDoctorForm);
@@ -338,6 +386,21 @@ export default function AdminDashboard() {
     () => hospitals.find((hospital) => hospital.clinicId === selectedClinicId) || null,
     [hospitals, selectedClinicId]
   );
+
+  const duplicateHospitalsForNewEntry = useMemo(() => {
+    const typedName = addHospitalForm.name.trim();
+    const typedCity = addHospitalForm.city.trim();
+
+    if (!typedName || !typedCity) {
+      return [] as ClinicListItem[];
+    }
+
+    return hospitals.filter((hospital) => {
+      const hospitalName = (hospital.name || "").trim();
+      const hospitalCity = (hospital.city || "").trim();
+      return cityMatches(hospitalCity, typedCity) && isPotentialNameDuplicate(typedName, hospitalName);
+    });
+  }, [hospitals, addHospitalForm.name, addHospitalForm.city]);
 
   const clinicNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -705,6 +768,31 @@ export default function AdminDashboard() {
       setHospitalError((err as Error).message || "Failed to update hospital");
     } finally {
       setSavingHospital(false);
+    }
+  };
+
+  const handleDeleteHospital = async () => {
+    clearMessages();
+
+    if (!selectedClinicId) {
+      setHospitalError("Select a hospital to delete");
+      return;
+    }
+
+    setDeletingHospital(true);
+    try {
+      await apiRequest(`/api/clinics/id?id=${selectedClinicId}`, "DELETE");
+      setHospitalSuccess("Hospital deleted successfully");
+      setShowDeleteHospitalConfirm(false);
+      setSelectedClinicId("");
+      setEditHospitalForm(emptyClinicForm);
+      setEditHospitalImagePreview(null);
+      setShowEditHospitalImagePreview(false);
+      await loadHospitals();
+    } catch (err) {
+      setHospitalError((err as Error).message || "Failed to delete hospital");
+    } finally {
+      setDeletingHospital(false);
     }
   };
 
@@ -1270,6 +1358,16 @@ export default function AdminDashboard() {
                 <Save size={16} />
                 {savingHospital ? "Saving..." : "Save Hospital Changes"}
               </button>
+
+              <button
+                type="button"
+                disabled={!selectedClinicId || deletingHospital}
+                onClick={() => setShowDeleteHospitalConfirm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white"
+              >
+                <Trash2 size={16} />
+                Delete Hospital
+              </button>
             </form>
           </article>
 
@@ -1358,6 +1456,32 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+
+              <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 p-3 space-y-2">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">Possible Duplicate Hospitals</h3>
+
+                {!addHospitalForm.name.trim() || !addHospitalForm.city.trim() ? (
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Enter both hospital name and city to check duplicates.
+                  </p>
+                ) : duplicateHospitalsForNewEntry.length === 0 ? (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">No exact duplicate found for this name and city.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {duplicateHospitalsForNewEntry.map((hospital) => (
+                      <div
+                        key={hospital.clinicId || hospital.publicId || hospital.name}
+                        className="rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 p-2"
+                      >
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">{hospital.name}</p>
+                        <p className="text-xs text-amber-700/90 dark:text-amber-300/80">{hospital.city || "-"}</p>
+                        <p className="text-xs text-amber-700/90 dark:text-amber-300/80">Clinic ID: {hospital.clinicId || "-"}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <SpecializationDropdown
                 label="Specializations"
                 required
@@ -1376,6 +1500,39 @@ export default function AdminDashboard() {
             </form>
           </article>
         </section>
+
+        {showDeleteHospitalConfirm && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-2xl p-5">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Delete Hospital</h3>
+              <p className="mt-2 text-sm text-gray-700 dark:text-slate-300">
+                Are you sure you want to delete
+                <span className="font-semibold"> {selectedHospital?.name || "this hospital"}</span>?
+              </p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">This action cannot be undone.</p>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={deletingHospital}
+                  onClick={() => setShowDeleteHospitalConfirm(false)}
+                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm text-gray-700 dark:text-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deletingHospital}
+                  onClick={() => void handleDeleteHospital()}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-sm"
+                >
+                  <Trash2 size={14} />
+                  {deletingHospital ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <article className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 space-y-4">

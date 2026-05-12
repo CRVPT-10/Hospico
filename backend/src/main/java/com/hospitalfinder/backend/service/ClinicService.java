@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -127,7 +128,7 @@ public class ClinicService {
                     .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
                             (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
                     (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)) ||
-                    clinic.getSpecializations().stream()
+                    getSafeSpecializations(clinic).stream()
                         .map(Specialization::getName)
                         .filter(name -> name != null && !name.isBlank())
                         .anyMatch(name -> specializationMatchesSearch(name, searchLower)))
@@ -172,7 +173,7 @@ public class ClinicService {
         if (specialization != null && !specialization.isEmpty()) {
             String requestedCanonical = SpecializationNameNormalizer.toCanonicalKey(specialization);
             clinics = clinics.stream()
-                    .filter(c -> c.getSpecializations().stream()
+                    .filter(c -> getSafeSpecializations(c).stream()
                     .anyMatch(spec -> {
                     String canonical = SpecializationNameNormalizer.toCanonicalKey(spec.getName());
                     return !canonical.isBlank()
@@ -240,7 +241,7 @@ public class ClinicService {
                     .filter(clinic -> clinic.getName().toLowerCase().contains(searchLower) ||
                     (clinic.getAddress() != null && clinic.getAddress().toLowerCase().contains(searchLower)) ||
                     (clinic.getCity() != null && clinic.getCity().toLowerCase().contains(searchLower)) ||
-                    clinic.getSpecializations().stream()
+                    getSafeSpecializations(clinic).stream()
                         .map(Specialization::getName)
                         .filter(name -> name != null && !name.isBlank())
                         .anyMatch(name -> specializationMatchesSearch(name, searchLower)))
@@ -926,7 +927,7 @@ public class ClinicService {
         if (normalizedSpecs == null || normalizedSpecs.isEmpty())
             return 0;
 
-        return (int) clinic.getSpecializations().stream()
+        return (int) getSafeSpecializations(clinic).stream()
                 .map(Specialization::getName)
                 .filter(spec -> spec != null && !spec.isBlank())
                 .map(SpecializationNameNormalizer::toCanonicalKey)
@@ -934,6 +935,13 @@ public class ClinicService {
                 .distinct()
                 .filter(normalizedSpecs::contains)
                 .count();
+    }
+
+    private Collection<Specialization> getSafeSpecializations(Clinic clinic) {
+        if (clinic == null || clinic.getSpecializations() == null) {
+            return Collections.emptyList();
+        }
+        return clinic.getSpecializations();
     }
 
     private boolean specializationMatchesSearch(String specializationName, String searchLower) {

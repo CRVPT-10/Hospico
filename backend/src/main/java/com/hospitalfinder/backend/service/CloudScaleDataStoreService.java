@@ -301,6 +301,12 @@ public class CloudScaleDataStoreService implements DataStoreService {
         return headers;
     }
 
+    private HttpHeaders authHeadersWithoutContentType() {
+        HttpHeaders headers = authHeaders();
+        headers.remove(HttpHeaders.CONTENT_TYPE);
+        return headers;
+    }
+
     private JsonNode parseResponse(ResponseEntity<String> response) {
         try {
             if (response.getBody() != null) {
@@ -320,5 +326,94 @@ public class CloudScaleDataStoreService implements DataStoreService {
 
     private String escapeZcql(String value) {
         return value != null ? value.replace("'", "\\'") : "";
+    }
+
+    // ── File Store Operations ────────────────────────────────────
+
+    /**
+     * Store a file in Zoho File Store.
+     * 
+     * @param folder Folder name (e.g., "clinic-images")
+     * @param fileName File name to store as
+     * @param fileContent File bytes
+     * @param contentType MIME type
+     * @return JsonNode with file store response
+     */
+    public JsonNode storeFile(String folder, String fileName, byte[] fileContent, String contentType) {
+        String url = config.getBaseUrl() + "/file";
+        try {
+            log.debug("Storing file to Zoho File Store: folder={}, fileName={}, size={} bytes", 
+                    folder, fileName, fileContent.length);
+
+            HttpHeaders headers = authHeadersWithoutContentType();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.http.client.MultipartBodyBuilder builder = new org.springframework.http.client.MultipartBodyBuilder();
+            builder.part("file", new org.springframework.core.io.ByteArrayResource(fileContent) {
+                @Override
+                public String getFilename() {
+                    return fileName;
+                }
+            });
+            builder.part("folder", folder);
+
+            HttpEntity<?> request = new HttpEntity<>(builder.build(), headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+            log.info("File store response status={}, body={}", response.getStatusCode(), response.getBody());
+            return parseResponse(response);
+        } catch (Exception e) {
+            log.error("Failed to store file in Zoho File Store: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to store file in Zoho File Store: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Retrieve a file from Zoho File Store.
+     * 
+     * @param folder Folder name
+     * @param fileName File name to retrieve
+     * @return File bytes
+     */
+    public byte[] retrieveFile(String folder, String fileName) {
+        String url = config.getBaseUrl() + "/file?folder=" + folder + "&name=" + fileName;
+        try {
+            log.debug("Retrieving file from Zoho File Store: folder={}, fileName={}", folder, fileName);
+
+            HttpEntity<Void> request = new HttpEntity<>(authHeadersWithoutContentType());
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+            byte[] responseBody = response.getBody();
+
+            if (response.getStatusCode().is2xxSuccessful() && responseBody != null) {
+                log.debug("Retrieved file from Zoho File Store: size={} bytes", responseBody.length);
+                return responseBody;
+            }
+
+            throw new RuntimeException("Failed to retrieve file: " + response.getStatusCode());
+        } catch (Exception e) {
+            log.error("Failed to retrieve file from Zoho File Store: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve file from Zoho File Store: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete a file from Zoho File Store.
+     * 
+     * @param folder Folder name
+     * @param fileName File name to delete
+     */
+    public void deleteFile(String folder, String fileName) {
+        String url = config.getBaseUrl() + "/file?folder=" + folder + "&name=" + fileName;
+        try {
+            log.debug("Deleting file from Zoho File Store: folder={}, fileName={}", folder, fileName);
+
+            HttpEntity<Void> request = new HttpEntity<>(authHeadersWithoutContentType());
+            restTemplate.exchange(url, HttpMethod.DELETE, request, Void.class);
+
+            log.debug("Deleted file from Zoho File Store");
+        } catch (Exception e) {
+            log.error("Failed to delete file from Zoho File Store: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to delete file from Zoho File Store: " + e.getMessage(), e);
+        }
     }
 }
