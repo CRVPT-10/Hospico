@@ -7,18 +7,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Zoho File Store based image storage service.
- * Stores hospital images in Zoho CloudScale File Store for persistence and scalability.
+ * Zoho Stratus based image storage service.
+ * Stores hospital images in Zoho CloudScale Stratus for persistence and scalability.
  * Images are stored permanently and accessible via Zoho's managed infrastructure.
  */
 @Service
@@ -29,9 +28,15 @@ public class ZohoFileStorageService {
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             MediaType.IMAGE_JPEG_VALUE,
             MediaType.IMAGE_PNG_VALUE);
-    private static final String CLINIC_IMAGES_FOLDER = "clinic-images";
+    private static final String LEGACY_FILE_STORE_FOLDER = "clinic-images";
 
     private final CloudScaleDataStoreService dataStoreService;
+
+    @Value("${zoho.stratus.bucket:clinic-images}")
+    private String stratusBucket;
+
+    @Value("${zoho.stratus.prefix:clinic-images}")
+    private String stratusPrefix;
 
     @Getter
     public static class StoredClinicImage {
@@ -45,8 +50,7 @@ public class ZohoFileStorageService {
     }
 
     /**
-     * Stores an image in Zoho File Store and records metadata in DataStore.
-     * Returns a URL and file reference that can be used to retrieve the image later.
+     * Stores an image in Zoho Stratus and records metadata in DataStore.
      */
     public StoredClinicImage storeImage(MultipartFile file) throws IOException {
         validateFile(file);
@@ -56,16 +60,8 @@ public class ZohoFileStorageService {
         String fileName = UUID.randomUUID().toString().replace("-", "") + extension;
         
         try {
-            // Store in Zoho File Store
-            JsonNode fileStoreResult = dataStoreService.storeFile(
-                    CLINIC_IMAGES_FOLDER,
-                    fileName,
-                    file.getBytes(),
-                    contentType);
-
-            if (fileStoreResult == null) {
-                throw new IOException("Failed to store image in Zoho File Store");
-            }
+            String objectKey = buildObjectKey(fileName);
+            dataStoreService.putStratusObject(stratusBucket, objectKey, file.getBytes(), contentType);
 
             // Record metadata in DataStore for tracking
             Map<String, Object> metadata = new HashMap<>();
@@ -74,7 +70,9 @@ public class ZohoFileStorageService {
             metadata.put("size", file.getSize());
             metadata.put("contentType", contentType);
             metadata.put("uploadedAt", System.currentTimeMillis());
-            metadata.put("fileStoreId", fileStoreResult.has("id") ? fileStoreResult.get("id").asText() : fileName);
+            metadata.put("storageType", "stratus");
+            metadata.put("bucket", stratusBucket);
+            metadata.put("objectKey", objectKey);
 
             try {
                 dataStoreService.insertRecord("clinic_image_metadata", metadata);
@@ -87,12 +85,13 @@ public class ZohoFileStorageService {
 
             return new StoredClinicImage(fileName, imageUrl);
         } catch (Exception e) {
-            throw new IOException("Failed to upload hospital image to Zoho File Store: " + e.getMessage(), e);
+            throw new IOException("Failed to upload hospital image to Zoho Stratus: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Retrieves image data from Zoho File Store.
+     * Retrieves image data from Zoho Stratus.
+     * Falls back to legacy File Store to keep old image URLs working.
      */
     public byte[] readImage(String fileName) throws IOException {
         if (fileName == null || fileName.isBlank()) {
@@ -100,9 +99,14 @@ public class ZohoFileStorageService {
         }
 
         try {
-            return dataStoreService.retrieveFile(CLINIC_IMAGES_FOLDER, fileName);
-        } catch (Exception e) {
-            throw new IOException("Failed to retrieve image from Zoho File Store: " + e.getMessage(), e);
+            return dataStoreService.getStratusObject(stratusBucket, buildObjectKey(fileName));
+        } catch (Exception primaryError) {
+            try {
+                return dataStoreService.retrieveFile(LEGACY_FILE_STORE_FOLDER, fileName);
+            } catch (Exception legacyError) {
+                throw new IOException("Failed to retrieve image from Stratus or legacy File Store: "
+                        + primaryError.getMessage(), primaryError);
+            }
         }
     }
 
@@ -153,5 +157,16 @@ public class ZohoFileStorageService {
         }
         
         return ".jpg";
+    }
+
+    private String buildObjectKey(String fileName) {
+        String prefix = stratusPrefix == null ? "" : stratusPrefix.trim();
+        if (prefix.isEmpty()) {
+            return fileName;
+        }
+        if (prefix.endsWith("/")) {
+            return prefix + fileName;
+        }
+        return prefix + "/" + fileName;
     }
 }

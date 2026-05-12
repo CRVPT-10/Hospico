@@ -1,5 +1,7 @@
 package com.hospitalfinder.backend.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -415,5 +417,71 @@ public class CloudScaleDataStoreService implements DataStoreService {
             log.error("Failed to delete file from Zoho File Store: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to delete file from Zoho File Store: " + e.getMessage(), e);
         }
+    }
+
+    // ── Stratus Object Storage Operations ───────────────────────
+
+    /**
+     * Store an object in Zoho Stratus bucket.
+     */
+    public void putStratusObject(String bucketName, String objectKey, byte[] content, String contentType) {
+        String url = buildStratusObjectUrl(bucketName, objectKey);
+        try {
+            HttpHeaders headers = authHeadersWithoutContentType();
+            headers.setContentType(contentType != null && !contentType.isBlank()
+                    ? MediaType.parseMediaType(contentType)
+                    : MediaType.APPLICATION_OCTET_STREAM);
+
+            HttpEntity<byte[]> request = new HttpEntity<>(content, headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, request, String.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Unexpected status while storing Stratus object: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store object in Stratus: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Retrieve an object from Zoho Stratus bucket.
+     */
+    public byte[] getStratusObject(String bucketName, String objectKey) {
+        String url = buildStratusObjectUrl(bucketName, objectKey);
+        try {
+            HttpEntity<Void> request = new HttpEntity<>(authHeadersWithoutContentType());
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            throw new RuntimeException("Unexpected status while retrieving Stratus object: " + response.getStatusCode());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve object from Stratus: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete an object from Zoho Stratus bucket.
+     */
+    public void deleteStratusObject(String bucketName, String objectKey) {
+        String url = buildStratusObjectUrl(bucketName, objectKey);
+        try {
+            HttpEntity<Void> request = new HttpEntity<>(authHeadersWithoutContentType());
+            ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.DELETE, request, Void.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Unexpected status while deleting Stratus object: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete object from Stratus: " + e.getMessage(), e);
+        }
+    }
+
+    private String buildStratusObjectUrl(String bucketName, String objectKey) {
+        String safeBucket = bucketName == null ? "" : bucketName.trim();
+        String safeKey = objectKey == null ? "" : objectKey.trim();
+        String encodedKey = URLEncoder.encode(safeKey, StandardCharsets.UTF_8).replace("+", "%20");
+        return config.getBaseUrl() + "/bucket/" + safeBucket + "/object/" + encodedKey;
     }
 }

@@ -663,6 +663,15 @@ export default function AdminDashboard() {
         throw new Error("Invalid image data");
       }
 
+      // Show local preview immediately; upload can continue in background.
+      if (mode === "edit") {
+        setEditHospitalImagePreview(previewDataUrl);
+        setShowEditHospitalImagePreview(true);
+      } else {
+        setAddHospitalImagePreview(previewDataUrl);
+        setShowAddHospitalImagePreview(true);
+      }
+
       const uploadFile = await dataUrlToFile(
         previewDataUrl,
         `${file.name.replace(/\.[^.]+$/, "") || "hospital-image"}.jpg`
@@ -679,12 +688,8 @@ export default function AdminDashboard() {
 
       if (mode === "edit") {
         setEditHospitalForm((prev) => ({ ...prev, imageUrl }));
-        setEditHospitalImagePreview(previewDataUrl);
-        setShowEditHospitalImagePreview(true);
       } else {
         setAddHospitalForm((prev) => ({ ...prev, imageUrl }));
-        setAddHospitalImagePreview(previewDataUrl);
-        setShowAddHospitalImagePreview(true);
       }
 
       setHospitalError(null);

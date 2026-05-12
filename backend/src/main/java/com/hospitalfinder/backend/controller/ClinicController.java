@@ -90,7 +90,7 @@ public class ClinicController {
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadClinicImage(@RequestParam("file") MultipartFile file) {
         try {
-            // Use Zoho File Store (integrated with your Zoho account)
+            // Use Zoho Stratus storage (integrated with your Zoho account)
             ZohoFileStorageService.StoredClinicImage storedImage = zohoFileStorageService.storeImage(file);
             return ResponseEntity.ok(Map.of(
                     "imageUrl", storedImage.getImageUrl(),
@@ -105,7 +105,7 @@ public class ClinicController {
     @GetMapping("/image/{fileName:.+}")
     public ResponseEntity<byte[]> getClinicImage(@PathVariable String fileName) {
         try {
-            // Retrieve from Zoho File Store
+            // Retrieve from Zoho Stratus (with legacy File Store fallback)
             byte[] data = zohoFileStorageService.readImage(fileName);
             return ResponseEntity.ok()
                     .contentType(zohoFileStorageService.resolveImageMediaType(fileName))
