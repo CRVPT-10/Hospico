@@ -6,9 +6,6 @@
 		"http": 9000
 	},
 	"health_check_path": "/api/health",
-	"env_variables": {
-		"GOOGLE_CLIENT_ID": "739900909331-8c366u1mjq8s99s9mdjr01eqvvjg67oc.apps.googleusercontent.com"
-	},
 	"memory": 1024,
 	"platform": "javase",
 	"scripts": {
