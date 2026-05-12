@@ -35,7 +35,10 @@ public class ZohoFileStorageService {
     @Value("${zoho.stratus.bucket:clinic-images}")
     private String stratusBucket;
 
-    @Value("${zoho.stratus.prefix:clinic-images}")
+    @Value("${zoho.stratus.bucket-url:}")
+    private String stratusBucketUrl;
+
+    @Value("${zoho.stratus.prefix:}")
     private String stratusPrefix;
 
     @Getter

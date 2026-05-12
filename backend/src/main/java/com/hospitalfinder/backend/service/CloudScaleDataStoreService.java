@@ -4,6 +4,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,9 @@ public class CloudScaleDataStoreService implements DataStoreService {
 
     @Value("${zoho.environment:Development}")
     private String environment;
+
+    @Value("${zoho.stratus.bucket-url:}")
+    private String stratusBucketUrl;
 
     // ── CRUD Operations ──────────────────────────────────────────
 
@@ -479,9 +483,23 @@ public class CloudScaleDataStoreService implements DataStoreService {
     }
 
     private String buildStratusObjectUrl(String bucketName, String objectKey) {
-        String safeBucket = bucketName == null ? "" : bucketName.trim();
         String safeKey = objectKey == null ? "" : objectKey.trim();
         String encodedKey = URLEncoder.encode(safeKey, StandardCharsets.UTF_8).replace("+", "%20");
-        return config.getBaseUrl() + "/bucket/" + safeBucket + "/object/" + encodedKey;
+
+        String bucketUrl = stratusBucketUrl == null ? "" : stratusBucketUrl.trim();
+        if (!bucketUrl.isEmpty()) {
+            if (bucketUrl.endsWith("/")) {
+                return bucketUrl + encodedKey;
+            }
+            return bucketUrl + "/" + encodedKey;
+        }
+
+        String safeBucketName = bucketName == null ? "" : bucketName.trim();
+        String envSlug = environment == null ? "development" : environment.trim().toLowerCase(Locale.ROOT);
+        if (safeBucketName.isEmpty()) {
+            return config.getBaseUrl() + "/bucket/object/" + encodedKey;
+        }
+
+        return "https://" + safeBucketName + "-" + envSlug + ".zohostratus.in/" + encodedKey;
     }
 }

@@ -4,7 +4,8 @@ zoho:
     collection: users
   stratus:
     bucket: ${ZOHO_STRATUS_BUCKET:clinic-images}
-    prefix: ${ZOHO_STRATUS_PREFIX:clinic-images}
+    bucket-url: ${ZOHO_STRATUS_BUCKET_URL:}
+    prefix: ${ZOHO_STRATUS_PREFIX:}
 
 # Groq API key — read from env var on deployed server, overridden by profile properties locally
 groq:
