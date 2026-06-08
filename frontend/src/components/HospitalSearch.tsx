@@ -7,6 +7,18 @@ interface Specialization {
   name: string;
 }
 
+type CityAnchor = {
+  city: string;
+  latitude: number;
+  longitude: number;
+};
+
+type HospitalRecord = {
+  city?: string;
+  latitude?: number | string;
+  longitude?: number | string;
+};
+
 const SPECIALTY_CANONICAL_ALIASES: Record<string, string> = {
   general: "general medicine",
   "general physician": "general medicine",
@@ -164,41 +176,61 @@ const toDisplaySpecialty = (value: string) => {
   return SPECIALTY_DISPLAY_NAMES[canonical] || value;
 };
 
-const resolveCityFromCoordinates = async (latitude: number, longitude: number) => {
-  try {
-    const response = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-    );
-    const data = await response.json();
+const haversineDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(lat2 - lat1);
+  const deltaLng = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
 
-    const primary = (data.city || "").trim();
-    if (primary) {
-      return primary;
+const buildCityAnchors = (clinics: HospitalRecord[]) => {
+  const totalsByCity = new Map<string, { city: string; latitudeSum: number; longitudeSum: number; count: number }>();
+
+  clinics.forEach((clinic) => {
+    const city = (clinic.city || "").trim();
+    const latitude = Number(clinic.latitude);
+    const longitude = Number(clinic.longitude);
+
+    if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return;
     }
-  } catch (e) {
-    console.error("Error getting location name from BigDataCloud:", e);
-  }
 
-  try {
-    const fallbackResponse = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
-    );
-    const fallbackData = await fallbackResponse.json();
-    const address = fallbackData?.address || {};
+    const key = city.toLowerCase();
+    const existing = totalsByCity.get(key);
+    if (existing) {
+      existing.latitudeSum += latitude;
+      existing.longitudeSum += longitude;
+      existing.count += 1;
+    } else {
+      totalsByCity.set(key, { city, latitudeSum: latitude, longitudeSum: longitude, count: 1 });
+    }
+  });
 
-    return (
-      address.city ||
-      address.town ||
-      address.municipality ||
-      address.county ||
-      address.state_district ||
-      address.state ||
-      "Vijayawada"
-    );
-  } catch (e) {
-    console.error("Error getting location name from Nominatim:", e);
-    return "Vijayawada";
-  }
+  return Array.from(totalsByCity.values()).map((entry) => ({
+    city: entry.city,
+    latitude: entry.latitudeSum / entry.count,
+    longitude: entry.longitudeSum / entry.count,
+  }));
+};
+
+const getNearestCity = (latitude: number, longitude: number, anchors: CityAnchor[]) => {
+  let bestCity = "";
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  anchors.forEach((anchor) => {
+    const distance = haversineDistanceKm(latitude, longitude, anchor.latitude, anchor.longitude);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestCity = anchor.city;
+    }
+  });
+
+  return bestCity;
 };
 
 const HospitalSearch = () => {
@@ -206,40 +238,72 @@ const HospitalSearch = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(true);
+  const [cityAnchors, setCityAnchors] = useState<CityAnchor[]>([]);
 
-  // Detect user's location on mount
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const city = await resolveCityFromCoordinates(latitude, longitude);
-            setSelectedLocation(city);
-          } catch (e) {
-            console.error("Error getting location name:", e);
-            setSelectedLocation("Vijayawada");
-          } finally {
-            setIsGettingLocation(false);
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setSelectedLocation("Vijayawada");
-          setIsGettingLocation(false);
-        }
-      );
-    } else {
-      setSelectedLocation("Vijayawada");
-      setIsGettingLocation(false);
-    }
+    const loadCityAnchors = async () => {
+      try {
+        const response = await apiRequest<HospitalRecord[]>('/api/clinics', 'GET', undefined, {
+          cacheTtlMs: 10 * 60 * 1000,
+          cacheKey: 'hospital-search-city-anchors',
+        });
+        setCityAnchors(buildCityAnchors(response || []));
+      } catch {
+        setCityAnchors([]);
+      }
+    };
+
+    void loadCityAnchors();
   }, []);
 
+  // Detect user's location on mount
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+
+  const locParam = params.get("loc");
+
+  // If URL already has a city, use it
+  if (locParam) {
+    setSelectedLocation(locParam);
+    setIsGettingLocation(false);
+    return;
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const city = getNearestCity(latitude, longitude, cityAnchors);
+          setSelectedLocation(city);
+        } catch (e) {
+          console.error("Error getting location name:", e);
+          setSelectedLocation("");
+        } finally {
+          setIsGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setSelectedLocation("");
+        setIsGettingLocation(false);
+      }
+    );
+  } else {
+    setSelectedLocation("");
+    setIsGettingLocation(false);
+  }
+}, [cityAnchors]);
+
   const handleSearch = () => {
-    const params = new URLSearchParams({
-      q: searchText,
-      loc: selectedLocation,
-    });
+    const params = new URLSearchParams();
+    if (searchText.trim()) {
+      params.set("q", searchText.trim());
+    }
+    if (selectedLocation.trim()) {
+      params.set("loc", selectedLocation.trim());
+    }
     navigate(`/find-hospitals?${params.toString()}`);
   };
 
@@ -249,21 +313,23 @@ const HospitalSearch = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          let resolvedCity = "Vijayawada";
           try {
-            resolvedCity = await resolveCityFromCoordinates(latitude, longitude);
+            const resolvedCity = getNearestCity(latitude, longitude, cityAnchors);
             setSelectedLocation(resolvedCity);
-          } catch (e) {
-            console.error("Error getting location name:", e);
-            setSelectedLocation("Vijayawada");
-          } finally {
-            setIsGettingLocation(false);
             const params = new URLSearchParams({
               lat: latitude.toString(),
               lng: longitude.toString(),
-              loc: resolvedCity,
             });
+            if (resolvedCity) {
+              params.set("loc", resolvedCity);
+            }
             navigate(`/find-hospitals?${params.toString()}`);
+          } catch (e) {
+            console.error("Error getting location name:", e);
+            setSelectedLocation("");
+            navigate(`/find-hospitals?lat=${latitude}&lng=${longitude}`);
+          } finally {
+            setIsGettingLocation(false);
           }
         },
         (error) => {

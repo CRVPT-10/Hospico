@@ -113,75 +113,6 @@ const resolveCityFromCoordinates = async (latitude: number, longitude: number) =
   }
 };
 
-type CityAnchor = {
-  city: string;
-  latitude: number;
-  longitude: number;
-};
-
-const haversineDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-  const toRadians = (value: number) => (value * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-  const deltaLat = toRadians(lat2 - lat1);
-  const deltaLng = toRadians(lng2 - lng1);
-  const a =
-    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
-  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const getNearestCity = (latitude: number, longitude: number, anchors: CityAnchor[]) => {
-  let bestCity = "";
-  let bestDistance = Number.POSITIVE_INFINITY;
-
-  anchors.forEach((anchor) => {
-    const distance = haversineDistanceKm(latitude, longitude, anchor.latitude, anchor.longitude);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestCity = anchor.city;
-    }
-  });
-
-  return bestCity;
-};
-
-const normalizeCityKey = (value: string) => value.trim().toLowerCase();
-
-const buildCityAnchors = (clinics: Hospital[]) => {
-  const totalsByCity = new Map<string, { city: string; latitudeSum: number; longitudeSum: number; count: number }>();
-
-  clinics.forEach((clinic) => {
-    const city = (clinic.city || "").trim();
-    const latitude = typeof clinic.latitude === "number" ? clinic.latitude : Number(clinic.latitude);
-    const longitude = typeof clinic.longitude === "number" ? clinic.longitude : Number(clinic.longitude);
-
-    if (!city || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      return;
-    }
-
-    const key = normalizeCityKey(city);
-    const existing = totalsByCity.get(key);
-    if (existing) {
-      existing.latitudeSum += latitude;
-      existing.longitudeSum += longitude;
-      existing.count += 1;
-    } else {
-      totalsByCity.set(key, {
-        city,
-        latitudeSum: latitude,
-        longitudeSum: longitude,
-        count: 1,
-      });
-    }
-  });
-
-  return Array.from(totalsByCity.values()).map((entry) => ({
-    city: entry.city,
-    latitude: entry.latitudeSum / entry.count,
-    longitude: entry.longitudeSum / entry.count,
-  }));
-};
 
 const FindHospitals = () => {
   const location = useLocation();
@@ -199,7 +130,6 @@ const FindHospitals = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cityAnchors, setCityAnchors] = useState<CityAnchor[]>([]);
   const [showHospitalRequestModal, setShowHospitalRequestModal] = useState(false);
   const [showHospitalRequestForm, setShowHospitalRequestForm] = useState(false);
   const [submittingHospitalRequest, setSubmittingHospitalRequest] = useState(false);
@@ -239,110 +169,135 @@ const FindHospitals = () => {
   }, []);
 
   useEffect(() => {
-    const loadCityAnchors = async () => {
-      try {
-        const response = await apiRequest<Hospital[]>("/api/clinics", "GET", undefined, {
-          cacheTtlMs: 10 * 60 * 1000,
-          cacheKey: "find-hospitals-city-anchors",
-        });
-        setCityAnchors(buildCityAnchors(response || []));
-      } catch {
-        setCityAnchors([]);
-      }
-    };
-
-    void loadCityAnchors();
-
+  const initializePage = async () => {
     const urlParams = new URLSearchParams(window.location.search);
+
+    const latParam = urlParams.get("lat");
+    const lngParam = urlParams.get("lng");
     const locParam = urlParams.get("loc");
 
-    // If location is in URL params, use it; otherwise it will be detected from geolocation
-    if (locParam) {
-      setSelectedLocation(locParam);
-    } else {
-      // Try to detect user's city from geolocation
-      const detectLocation = async () => {
-        let coords = null;
-
-        if (Capacitor.isNativePlatform()) {
-          try {
-            const status = await Geolocation.checkPermissions();
-            if (status.location !== 'granted') {
-              await Geolocation.requestPermissions();
-            }
-            // Increased timeout to 30s and enabled high accuracy for better results
-            const pos = await Geolocation.getCurrentPosition({
-              enableHighAccuracy: true,
-              timeout: 30000,
-              maximumAge: Infinity // Accept any cached position to be faster
-            });
-            coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-          } catch (e) {
-            console.error("Native location error:", e);
-            // Fallback is handled below (coords remains null)
-          }
-        } else if (navigator.geolocation) {
-          try {
-            const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-              navigator.geolocation.getCurrentPosition(resolve, reject)
-            );
-            coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-          } catch (e) { console.error(e); }
-        }
-
-        if (coords) {
-          try {
-            const { latitude, longitude } = coords;
-            const city = await resolveCityFromCoordinates(latitude, longitude);
-            setSelectedLocation(city);
-          } catch (error) {
-            console.error("Error getting location:", error);
-            setSelectedLocation("Vijayawada");
-          }
-        } else {
-          setSelectedLocation("Vijayawada");
-        }
-      };
-
-      detectLocation();
-    }
-
-    // Always try to get real position for distance calculation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        setCurrentRealPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      });
-    }
-
+    // Query params
     setQuery(urlParams.get("q") || "");
+
     const specsParam = urlParams.getAll("spec");
-    if (specsParam.length > 0) {
-      setSelectedSpecializations(specsParam);
-    } else {
-      setSelectedSpecializations([]);
+    setSelectedSpecializations(specsParam.length > 0 ? specsParam : []);
+
+    // -------------------------------------------------
+    // CASE 1: Nearby search (lat/lng present)
+    // -------------------------------------------------
+    if (latParam && lngParam) {
+      const lat = parseFloat(latParam);
+      const lng = parseFloat(lngParam);
+
+      setUserCoordinates({ lat, lng });
+
+      try {
+        const city = await resolveCityFromCoordinates(lat, lng);
+        setSelectedLocation(city);
+      } catch (error) {
+        console.error("Failed to resolve city from coordinates:", error);
+
+        // fallback to loc if available
+        if (locParam) {
+          setSelectedLocation(locParam);
+        } else {
+          setSelectedLocation("");
+        }
+      }
     }
 
-    // Check if we have coordinates in the URL for nearby hospitals
-    const lat = urlParams.get("lat");
-    const lng = urlParams.get("lng");
-    if (lat && lng) {
-      setUserCoordinates({ lat: parseFloat(lat), lng: parseFloat(lng) });
-    } else {
+    // -------------------------------------------------
+    // CASE 2: Normal city search (?loc=Vijayawada)
+    // -------------------------------------------------
+    else if (locParam) {
+      setSelectedLocation(locParam);
       setUserCoordinates(null);
     }
-  }, [location]);
 
-  useEffect(() => {
-    const activeCoordinates = userCoordinates || currentRealPosition;
-    if (!activeCoordinates || cityAnchors.length === 0) {
-      return;
+    // -------------------------------------------------
+    // CASE 3: First page load -> detect current location
+    // -------------------------------------------------
+    else {
+      let coords: { latitude: number; longitude: number } | null = null;
+
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const status = await Geolocation.checkPermissions();
+
+          if (status.location !== "granted") {
+            await Geolocation.requestPermissions();
+          }
+
+          const pos = await Geolocation.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 30000,
+            maximumAge: Infinity,
+          });
+
+          coords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          };
+        } catch (e) {
+          console.error("Native location error:", e);
+        }
+      } else if (navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>(
+            (resolve, reject) =>
+              navigator.geolocation.getCurrentPosition(resolve, reject)
+          );
+
+          coords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          };
+        } catch (e) {
+          console.error("Browser location error:", e);
+        }
+      }
+
+      if (coords) {
+        try {
+          const city = await resolveCityFromCoordinates(
+            coords.latitude,
+            coords.longitude
+          );
+
+          setSelectedLocation(city);
+          setCurrentRealPosition({
+            lat: coords.latitude,
+            lng: coords.longitude,
+          });
+        } catch (error) {
+          console.error("Error getting city:", error);
+          setSelectedLocation("");
+        }
+      } else {
+        setSelectedLocation("");
+      }
     }
 
-    const nearestCity = getNearestCity(activeCoordinates.lat, activeCoordinates.lng, cityAnchors);
-    if (nearestCity && nearestCity !== selectedLocation) {
-      setSelectedLocation(nearestCity);
+    // Always keep user's real position for distance calculations
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCurrentRealPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error("Real position error:", err);
+        }
+      );
     }
-  }, [userCoordinates, currentRealPosition, cityAnchors, selectedLocation]);
+  };
+
+  initializePage();
+}, [location]);
+
+
 
   useEffect(() => {
     let cancelled = false;
