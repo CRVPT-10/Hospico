@@ -637,7 +637,7 @@ const HospitalProfile = () => {
                 <div className="py-2 border-b border-gray-200 dark:border-slate-700">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Top reviews {hospital.city ? `from ${hospital.city}` : ""}</h3>
                 </div>
-                {(showAllReviews ? filteredReviews : filteredReviews.slice(0, 5)).map((review, index) => {
+                {(showAllReviews ? filteredReviews : filteredReviews.slice(0, 5)).map((review) => {
               const reviewDoctor = hospital?.doctors?.find(d => String(d.id) === String(review.doctorId));
               const doctorMeta = customReviewDoctorMeta[String(review.id)];
               const displayDoctorName = doctorMeta?.name || reviewDoctor?.name;
