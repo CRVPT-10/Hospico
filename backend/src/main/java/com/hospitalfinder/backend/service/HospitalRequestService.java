@@ -60,6 +60,13 @@ public class HospitalRequestService {
                 .collect(Collectors.toList());
     }
 
+    public List<HospitalRequestDTO> getAllRequests() {
+        return requests.values().stream()
+                .sorted(Comparator.comparing((HospitalRequestRecord r) -> r.createdAt).reversed())
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     public HospitalRequestDTO decideRequest(Long id, String rawStatus) {
         HospitalRequestRecord record = requests.get(id);
         if (record == null) {

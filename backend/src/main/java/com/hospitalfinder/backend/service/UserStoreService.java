@@ -16,5 +16,7 @@ public interface UserStoreService {
 
     UserData updateUserRole(String email, Role role);
 
+    UserData markUserActive(String email);
+
     UserData markPhoneVerified(String email, String phone);
 }

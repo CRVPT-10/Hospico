@@ -71,6 +71,8 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
             data.put("phone", phone);
             data.put("password", passwordEncoder.encode(password));
             data.put("role", role.name());
+            data.put("last_active_at", nowText());
+            data.put("updated_at", nowText());
 
             JsonNode created = dataStoreService.insertRecord(usersTable, data);
             log.info("✅ User created: {}", email);
@@ -155,6 +157,31 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
     }
 
     @Override
+    public UserData markUserActive(String email) {
+        try {
+            JsonNode existing = dataStoreService.findByField(usersTable, "email", email);
+            if (existing == null) {
+                return null;
+            }
+
+            Long rowId = extractRowId(existing);
+            if (rowId == null) {
+                return null;
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("last_active_at", nowText());
+            updates.put("updated_at", nowText());
+
+            JsonNode updated = dataStoreService.updateRecord(usersTable, rowId, updates);
+            return updated != null ? mapToUserData(updated) : null;
+        } catch (Exception e) {
+            log.error("Error marking user active for: {}", email, e);
+            return null;
+        }
+    }
+
+    @Override
     public UserData markPhoneVerified(String email, String phone) {
         try {
             JsonNode existing = dataStoreService.findByField(usersTable, "email", email);
@@ -233,5 +260,9 @@ public class CloudScaleNoSqlUserService implements UserStoreService {
         if (data.has("_id") && !data.get("_id").isNull())
             return data.get("_id").asLong();
         return null;
+    }
+
+    private String nowText() {
+        return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
     }
 }

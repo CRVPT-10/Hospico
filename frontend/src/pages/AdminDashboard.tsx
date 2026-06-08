@@ -91,6 +91,28 @@ type HospitalAddRequest = {
   requesterEmail?: string;
 };
 
+type HospitalMistakeReport = {
+  id: number;
+  clinicId?: string;
+  hospitalName?: string;
+  hospitalAddress?: string;
+  comment?: string;
+  status: "pending" | "resolved" | "dismissed";
+  createdAt?: string;
+  reviewedAt?: string;
+  requesterEmail?: string;
+};
+
+type AdminStatistics = {
+  activeUsers: number;
+  totalUsers: number;
+  dailyRequests: number;
+  weeklyRequests: number;
+  monthlyRequests: number;
+  hospitalRequests: number;
+  mistakeReports: number;
+};
+
 type ClinicImageUploadResponse = {
   imageUrl?: string;
   fileName?: string;
@@ -192,7 +214,7 @@ const formatDisplayDateTime = (value?: string) => {
 
   // Datastore values like "yyyy-MM-dd HH:mm:ss" are timezone-less; treat as UTC.
   const normalized = trimmed.includes("T") ? trimmed : trimmed.replace(" ", "T");
-  const withZone = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(normalized) ? normalized : `${normalized}Z`;
+  const withZone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized) ? normalized : `${normalized}Z`;
   const parsed = new Date(withZone);
 
   if (Number.isNaN(parsed.getTime())) {
@@ -345,6 +367,13 @@ export default function AdminDashboard() {
   const [hospitalRequestSuccess, setHospitalRequestSuccess] = useState<string | null>(null);
   const [previewHospitalRequestImageUrl, setPreviewHospitalRequestImageUrl] = useState<string | null>(null);
   const [previewHospitalRequestCard, setPreviewHospitalRequestCard] = useState<HospitalCardData | null>(null);
+  const [pendingMistakeReports, setPendingMistakeReports] = useState<HospitalMistakeReport[]>([]);
+  const [loadingMistakeReports, setLoadingMistakeReports] = useState(false);
+  const [mistakeReportActionId, setMistakeReportActionId] = useState<string | null>(null);
+  const [mistakeReportError, setMistakeReportError] = useState<string | null>(null);
+  const [mistakeReportSuccess, setMistakeReportSuccess] = useState<string | null>(null);
+  const [adminStats, setAdminStats] = useState<AdminStatistics | null>(null);
+  const [loadingAdminStats, setLoadingAdminStats] = useState(false);
 
   const cityMatches = (hospitalCity?: string, selectedCity?: string) =>
     (hospitalCity || "").trim().toLowerCase() === (selectedCity || "").trim().toLowerCase();
@@ -513,6 +542,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadPendingMistakeReports = async () => {
+    setLoadingMistakeReports(true);
+    setMistakeReportError(null);
+    try {
+      const response = await apiRequest<HospitalMistakeReport[]>('/api/hospital-mistake-reports/pending', 'GET');
+      setPendingMistakeReports(response || []);
+    } catch (err) {
+      setMistakeReportError((err as Error).message || 'Failed to load pending mistake reports');
+    } finally {
+      setLoadingMistakeReports(false);
+    }
+  };
+
+  const loadAdminStats = async () => {
+    setLoadingAdminStats(true);
+    try {
+      const response = await apiRequest<AdminStatistics>("/api/admin/stats", "GET");
+      setAdminStats(response);
+    } catch {
+      setAdminStats(null);
+    } finally {
+      setLoadingAdminStats(false);
+    }
+  };
+
   const handleHospitalRequestDecision = async (requestId: number, status: 'approved' | 'disapproved') => {
     setHospitalRequestError(null);
     setHospitalRequestSuccess(null);
@@ -530,6 +584,26 @@ export default function AdminDashboard() {
       setHospitalRequestError((err as Error).message || 'Failed to update hospital request');
     } finally {
       setHospitalRequestActionId(null);
+    }
+  };
+
+  const handleMistakeReportDecision = async (reportId: number, status: 'resolved' | 'dismissed') => {
+    setMistakeReportError(null);
+    setMistakeReportSuccess(null);
+    setMistakeReportActionId(String(reportId));
+
+    try {
+      await apiRequest(`/api/hospital-mistake-reports/${reportId}/status`, 'PUT', { status });
+      setMistakeReportSuccess(
+        status === 'resolved'
+          ? 'Mistake report marked as resolved'
+          : 'Mistake report dismissed'
+      );
+      await loadPendingMistakeReports();
+    } catch (err) {
+      setMistakeReportError((err as Error).message || 'Failed to update mistake report');
+    } finally {
+      setMistakeReportActionId(null);
     }
   };
 
@@ -704,8 +778,9 @@ export default function AdminDashboard() {
     void loadHospitals();
     void loadPendingProofs();
     void loadPendingHospitalRequests();
+    void loadPendingMistakeReports();
+    void loadAdminStats();
     void loadSpecializations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -901,6 +976,8 @@ export default function AdminDashboard() {
               void loadHospitals();
               void loadPendingProofs();
               void loadPendingHospitalRequests();
+              void loadPendingMistakeReports();
+              void loadAdminStats();
             }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800"
           >
@@ -908,6 +985,66 @@ export default function AdminDashboard() {
             Refresh Data
           </button>
         </div>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Active Users</p>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+                  {loadingAdminStats ? "..." : adminStats?.activeUsers ?? 0}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Users active in the last 30 days</p>
+              </div>
+              <UserRoundPlus className="w-10 h-10 text-indigo-500" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Requests Today</p>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+                  {loadingAdminStats ? "..." : adminStats?.dailyRequests ?? 0}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Hospital requests + mistake reports</p>
+              </div>
+              <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Requests This Week</p>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+                  {loadingAdminStats ? "..." : adminStats?.weeklyRequests ?? 0}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Last 7 days</p>
+              </div>
+              <RefreshCcw className="w-10 h-10 text-blue-500" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Requests This Month</p>
+            <div className="mt-2 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
+                  {loadingAdminStats ? "..." : adminStats?.monthlyRequests ?? 0}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Last 30 days</p>
+              </div>
+              <Building2 className="w-10 h-10 text-amber-500" />
+            </div>
+          </div>
+        </section>
+
+        {adminStats && (
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 text-sm text-blue-800 dark:text-blue-200">
+            Total users: {adminStats.totalUsers} | Hospital requests: {adminStats.hospitalRequests} | Mistake reports: {adminStats.mistakeReports}
+          </div>
+        )}
 
         {(hospitalError || doctorError) && (
           <div className="rounded-lg border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 p-3 text-red-700 dark:text-red-300">
@@ -930,6 +1067,15 @@ export default function AdminDashboard() {
             : "border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
             }`}>
             {hospitalRequestError || hospitalRequestSuccess}
+          </div>
+        )}
+
+        {(mistakeReportError || mistakeReportSuccess) && (
+          <div className={`rounded-lg p-3 ${mistakeReportError
+            ? "border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+            : "border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+            }`}>
+            {mistakeReportError || mistakeReportSuccess}
           </div>
         )}
 
@@ -1113,6 +1259,95 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        <section className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">Pending Mistake Reports</h2>
+              <p className="text-sm text-gray-600 dark:text-slate-400">Review hospital detail corrections submitted by users.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void loadPendingMistakeReports()}
+              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-sm text-gray-700 dark:text-slate-200"
+            >
+              Refresh Queue
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px]">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-slate-700">
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Report ID</th>
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Hospital</th>
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Clinic</th>
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Comment</th>
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Submitted</th>
+                  <th className="text-left py-3 pr-4 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingMistakeReports.map((report) => {
+                  const busy = mistakeReportActionId === String(report.id);
+                  return (
+                    <tr key={report.id} className="border-b border-gray-100 dark:border-slate-700/60">
+                      <td className="py-3 pr-4 text-sm text-gray-900 dark:text-slate-100">
+                        <div>{report.id}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400 break-all">{report.requesterEmail || "-"}</div>
+                      </td>
+                      <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">
+                        <div className="font-medium text-gray-900 dark:text-slate-100">{report.hospitalName || "-"}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400">{report.hospitalAddress || "-"}</div>
+                      </td>
+                      <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300 break-all">{report.clinicId || "-"}</td>
+                      <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300 max-w-md whitespace-normal break-words">
+                        {report.comment || "-"}
+                      </td>
+                      <td className="py-3 pr-4 text-sm text-gray-700 dark:text-slate-300">
+                        {formatDisplayDateTime(report.createdAt)}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-col items-start gap-2">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void handleMistakeReportDecision(report.id, 'resolved')}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs"
+                          >
+                            <CheckCircle2 size={14} /> Resolve
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void handleMistakeReportDecision(report.id, 'dismissed')}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-xs"
+                          >
+                            <XCircle size={14} /> Dismiss
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!loadingMistakeReports && pendingMistakeReports.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">
+                      No pending mistake reports.
+                    </td>
+                  </tr>
+                )}
+                {loadingMistakeReports && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-sm text-gray-500 dark:text-slate-400">
+                      Loading pending mistake reports...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -1355,24 +1590,26 @@ export default function AdminDashboard() {
                 valueCsv={editHospitalForm.specializations}
                 onChangeCsv={(value) => setEditHospitalForm((prev) => ({ ...prev, specializations: value }))}
               />
-              <button
-                type="submit"
-                disabled={savingHospital || !selectedClinicId || hospitalImageUploading === "edit"}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white"
-              >
-                <Save size={16} />
-                {savingHospital ? "Saving..." : "Save Hospital Changes"}
-              </button>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={savingHospital || !selectedClinicId || hospitalImageUploading === "edit"}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white"
+                >
+                  <Save size={16} />
+                  {savingHospital ? "Saving..." : "Save Hospital Changes"}
+                </button>
 
-              <button
-                type="button"
-                disabled={!selectedClinicId || deletingHospital}
-                onClick={() => setShowDeleteHospitalConfirm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white"
-              >
-                <Trash2 size={16} />
-                Delete Hospital
-              </button>
+                <button
+                  type="button"
+                  disabled={!selectedClinicId || deletingHospital}
+                  onClick={() => setShowDeleteHospitalConfirm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white"
+                >
+                  <Trash2 size={16} />
+                  Delete Hospital
+                </button>
+              </div>
             </form>
           </article>
 
@@ -1463,7 +1700,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 p-3 space-y-2">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">Possible Duplicate Hospitals</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">Possible Duplicate Hospitals / Already Available</h3>
 
                 {!addHospitalForm.name.trim() || !addHospitalForm.city.trim() ? (
                   <p className="text-xs text-gray-500 dark:text-slate-400">

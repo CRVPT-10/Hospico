@@ -2,28 +2,45 @@
 
 A full-stack hospital booking application with React frontend and Spring Boot backend.
 
-## Deployment to Render
+## Deployment on Zoho
 
-This application is configured for deployment to Render using the `render.yaml` file.
+This application is deployed with a Zoho-first setup:
 
 ### Services Included:
-1. **Frontend** - React application (hospital-finder-frontend)
-   https://www.hospiico.onslate.com/
+1. **Frontend** - Zoho Slate hosted React application
+   - URL: `https://www.hospiico.onslate.com/`
 
-2. **Backend** - Spring Boot API (hospital-finder-backend)
-   https://hospiico-backend-50037434927.development.catalystappsail.in/
-    
-4. **Database** - PostgreSQL (hospital-db)
+2. **Backend** - Zoho Catalyst AppSail Spring Boot API
+   - URL: `https://hospiico-backend-50037434927.development.catalystappsail.in/`
+
+3. **Database** - Zoho Catalyst Data Store
 
 ### Environment Variables Needed:
-- `REACT_APP_API_URL` - URL of the backend service (set automatically by Render)
-- Database credentials are managed by Render
+- `ZOHO_PROJECT_ID`
+- `ZOHO_CLIENT_ID`
+- `ZOHO_CLIENT_SECRET`
+- `ZOHO_REFRESH_TOKEN`
+- `ZOHO_REGION`
+- `ZOHO_STRATUS_BUCKET`
+- `GROQ_API_KEY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_MAPS_API_KEY`
+- `SPRING_MAIL_HOST`
+- `SPRING_MAIL_PORT`
+- `SPRING_MAIL_USERNAME`
+- `SPRING_MAIL_PASSWORD`
 
-### Deployment Steps:
-1. Fork this repository to your GitHub account
-2. Connect your GitHub repository to Render
-3. Import the `render.yaml` blueprint
-4. Deploy the services
+### Deployment Notes:
+- Backend runtime settings are defined in `app-config.json` and `catalyst.json`.
+- AppSail health checks use `/api/health`.
+- Frontend requests should point to the AppSail backend base URL through `VITE_API_BASE_URL`.
+- The backend reads its Zoho Data Store and Stratus settings from `application.yml`.
+
+### Status Checks:
+1. Open the backend health endpoint: `/api/health`.
+2. Open the root endpoint: `/` to confirm the API is up.
+3. Confirm the frontend loads from the Zoho Slate host.
+4. Verify clinic image upload and retrieval against Zoho Stratus.
 
 ### Local Development:
 ```bash
@@ -39,5 +56,5 @@ docker-compose up -d
 ### Tech Stack:
 - **Frontend**: React, TypeScript, Tailwind CSS
 - **Backend**: Spring Boot, Java
-- **Database**: PostgreSQL
-- **Deployment**: Docker, Render
+- **Database**: Zoho Catalyst Data Store
+- **Deployment**: Zoho Slate, AppSail, Catalyst Stratus

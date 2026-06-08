@@ -88,7 +88,7 @@ function App() {
     <ConnectivityHandler>
       <BrowserRouter>
         <TitleUpdater />
-        <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 transition-colors duration-200">
+        <div className="min-h-screen overflow-x-hidden bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
           <Navbar />
           <Routes>
             <Route path="/login" element={<Login />} />

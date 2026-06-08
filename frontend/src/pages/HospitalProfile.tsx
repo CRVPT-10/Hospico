@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import defaultHospitalImage from "../assets/images/default-hospital.jpg";
 import defaultDoctorImage from "../assets/images/default-doctor.jpeg";
+import defaultUserImage from "../assets/images/user.png";
 import { API_BASE_URL, apiRequest } from "../api";
 import AppointmentBooking from "../components/AppointmentBooking";
 import VerifiedReviewModal from "../components/VerifiedReviewModal";
@@ -104,6 +105,11 @@ const HospitalProfile = () => {
   const [defaultDoctorIdToReview, setDefaultDoctorIdToReview] = useState<string | number | null>(null);
   const [showBadgeInfo, setShowBadgeInfo] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showMistakeReportModal, setShowMistakeReportModal] = useState(false);
+  const [mistakeReportComment, setMistakeReportComment] = useState("");
+  const [mistakeReportLoading, setMistakeReportLoading] = useState(false);
+  const [mistakeReportError, setMistakeReportError] = useState<string | null>(null);
+  const [mistakeReportSuccess, setMistakeReportSuccess] = useState<string | null>(null);
 
   const requireAuthForAction = () => {
     if (user?.id) {
@@ -111,6 +117,41 @@ const HospitalProfile = () => {
     }
     navigate("/login", { state: { from: `/find-hospital/${routeId}` } });
     return false;
+  };
+
+  const submitMistakeReport = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMistakeReportError(null);
+    setMistakeReportSuccess(null);
+
+    if (!hospital?.clinicId) {
+      setMistakeReportError("Hospital details are not available right now");
+      return;
+    }
+
+    if (!mistakeReportComment.trim()) {
+      setMistakeReportError("Please enter the mistake details before sending");
+      return;
+    }
+
+    setMistakeReportLoading(true);
+    try {
+      await apiRequest("/api/hospital-mistake-reports", "POST", {
+        clinicId: String(hospital.clinicId),
+        hospitalName: hospital.name,
+        hospitalAddress: hospital.address,
+        comment: mistakeReportComment.trim(),
+        requesterEmail: user?.email?.trim() || undefined,
+      });
+
+      setMistakeReportSuccess("Report sent to the admin successfully.");
+      setMistakeReportComment("");
+      setShowMistakeReportModal(false);
+    } catch (err) {
+      setMistakeReportError((err as Error).message || "Failed to send report");
+    } finally {
+      setMistakeReportLoading(false);
+    }
   };
 
   const customReviewDoctorMeta = useMemo(() => {
@@ -487,17 +528,37 @@ const HospitalProfile = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={() => {
-              if (!requireAuthForAction()) return;
-              setEditingReview(null);
-              setDefaultDoctorIdToReview(null);
-              setShowReviewModal(true);
-            }}
-            className="self-start md:mt-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
-          >
-            Write a Review
-          </button>
+            <div className="flex flex-col items-start gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    if (!requireAuthForAction()) return;
+                    setEditingReview(null);
+                    setDefaultDoctorIdToReview(null);
+                    setShowReviewModal(true);
+                  }}
+                  className="self-start md:mt-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+                >
+                  Write a Review
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMistakeReportError(null);
+                    setMistakeReportSuccess(null);
+                    setShowMistakeReportModal(true);
+                  }}
+                  className="self-start md:mt-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+                >
+                  Report a Mistake
+                </button>
+              </div>
+              {mistakeReportSuccess && (
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {mistakeReportSuccess}
+                </p>
+              )}
+            </div>
         </div>
 
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
@@ -600,9 +661,7 @@ const HospitalProfile = () => {
                   >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
-                        {String.fromCharCode(65 + (index % 26))}
-                      </div>
+                      <img src={defaultUserImage} alt="User" className="w-10 h-10 rounded-full object-cover shadow-md flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm">Verified Patient</p>
                         <div className="mt-1 flex items-center gap-2 flex-wrap">
@@ -950,6 +1009,76 @@ const HospitalProfile = () => {
         editingReview={editingReview}
         isLoggedIn={Boolean(user?.id)}
       />
+
+      {showMistakeReportModal && hospital && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-2xl p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Report Mistake in Hospital Details</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
+                  Help us correct the listing for {hospital.name}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMistakeReportModal(false);
+                  setMistakeReportError(null);
+                }}
+                className="text-gray-500 dark:text-slate-300 hover:text-gray-700 dark:hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <form onSubmit={submitMistakeReport} className="mt-4 space-y-4">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+                <p className="font-medium text-slate-900 dark:text-slate-100">Hospital details</p>
+                <p>{hospital.address}</p>
+                <p>{hospital.city}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                  Report Mistake
+                </label>
+                <textarea
+                  value={mistakeReportComment}
+                  onChange={(event) => setMistakeReportComment(event.target.value)}
+                  placeholder="Type the mistake you want the admin to review..."
+                  rows={5}
+                  className="w-full rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-3 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 resize-none"
+                />
+              </div>
+
+              {mistakeReportError && (
+                <p className="text-sm text-red-600 dark:text-red-400">{mistakeReportError}</p>
+              )}
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMistakeReportModal(false);
+                    setMistakeReportError(null);
+                  }}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={mistakeReportLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white"
+                >
+                  {mistakeReportLoading ? "Sending..." : "Send Report"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

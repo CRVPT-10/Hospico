@@ -86,6 +86,8 @@ public class LoginController {
                         .body(new LoginResponse(false, "Failed to login with Google", null, null, null, null, null));
             }
 
+            userStoreService.markUserActive(userData.getEmail());
+
             User user = new User();
             user.setId(userData.getId());
             user.setEmail(userData.getEmail());
@@ -105,8 +107,8 @@ public class LoginController {
                     jwtToken));
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new LoginResponse(false, ex.getMessage(), null, null, null, null, null));
-        } catch (Exception ex) {
+                .body(new LoginResponse(false, ex.getMessage(), null, null, null, null, null));
+        } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "Invalid Google token", null, null, null, null, null));
         }
@@ -135,6 +137,8 @@ public class LoginController {
         user.setEmail(userData.getEmail());
         user.setName(userData.getName());
         user.setRole(userData.getRole());
+
+        userStoreService.markUserActive(user.getEmail());
 
         // Generate JWT token
         String jwtToken = jwtService.generateToken(user);
@@ -198,6 +202,8 @@ public class LoginController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new LoginResponse(false, "User not found", null, null, null, null, null));
         }
+
+        userStoreService.markUserActive(userData.getEmail());
 
         return ResponseEntity.ok(new LoginResponse(
                 true,

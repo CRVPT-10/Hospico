@@ -32,17 +32,21 @@ public class GoogleTokenVerifierService {
                 .build();
     }
 
-    public GoogleIdToken.Payload verify(String idTokenString) throws GeneralSecurityException, IOException {
+    public GoogleIdToken.Payload verify(String idTokenString) {
         if (audiences.isEmpty()) {
             throw new IllegalStateException("Google OAuth client ID is not configured");
         }
 
-        GoogleIdToken idToken = verifier.verify(idTokenString);
-        if (idToken == null) {
-            throw new IllegalArgumentException("Invalid Google ID token");
-        }
+        try {
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new IllegalArgumentException("Invalid Google ID token");
+            }
 
-        return idToken.getPayload();
+            return idToken.getPayload();
+        } catch (GeneralSecurityException | IOException ex) {
+            throw new IllegalStateException("Google token verification failed", ex);
+        }
     }
 
     private List<String> buildAudienceList(String singleClientId, String multipleClientIds) {
