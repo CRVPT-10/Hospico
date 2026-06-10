@@ -8,10 +8,10 @@ This application is deployed with a Zoho-first setup:
 
 ### Services Included:
 1. **Frontend** - Zoho Slate hosted React application
-   - URL: `https://www.hospiico.onslate.com/`
+   - URL: `https://www.hospiico.com/`
 
 2. **Backend** - Zoho Catalyst AppSail Spring Boot API
-   - URL: `https://hospiico-backend-50037434927.development.catalystappsail.in/`
+   
 
 3. **Database** - Zoho Catalyst Data Store
 
